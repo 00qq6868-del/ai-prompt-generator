@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>配置 API Key</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0d0d1a;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: #fff;
+    overflow-y: auto;
+  }
+
+  .container {
+    padding: 32px 36px 40px;
+  }
+
+  .header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header p  { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+  .notice {
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 24px;
+    line-height: 1.7;
+  }
+  .notice strong { color: #a78bfa; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  label span { color: #f87171; margin-left: 3px; }
+  label a {
+    float: right;
+    color: #818cf8;
+    text-decoration: none;
+    font-size: 11px;
+  }
+  label a:hover { text-decoration: underline; }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: rgba(99,102,241,0.6); }
+  input::placeholder { color: rgba(255,255,255,0.2); font-size: 12px; }
+
+  .divider {
+    margin: 22px 0 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    text-align: center;
+    position: relative;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 38%;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .divider::before { left: 0; }
+  .divider::after  { right: 0; }
+
+  .save-btn {
+    width: 100%;
+    margin-top: 28px;
+    padding: 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .save-btn:hover { opacity: 0.9; }
+
+  .err {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #f87171;
+    text-align: center;
+    display: none;
+  }
+  .tip-bottom {
+    margin-top: 16px;
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.25);
+    text-align: center;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">✦</div>
+    <div>
+      <h1>AI 提示词生成器</h1>
+      <p>首次运行 — 请填入至少一个 API Key</p>
+    </div>
+  </div>
+
+  <div class="notice">
+    <strong>Key 保存在哪？</strong><br>
+    保存在你的电脑本地，不会上传到任何服务器。<br>
+    每台电脑只需填一次，之后直接打开即可。
+  </div>
+
+  <!-- 推荐：有免费额度 -->
+  <label>
+    Anthropic (Claude) Key
+    <a href="#" onclick="open('https://console.anthropic.com/settings/keys')">点此获取 →</a>
+  </label>
+  <input type="password" id="anthropic" placeholder="sk-ant-api03-..." />
+
+  <label>
+    Groq Key  <span style="color:#4ade80;font-size:10px">★ 免费额度最多</span>
+    <a href="#" onclick="open('https://console.groq.com/keys')">点此获取 →</a>
+  </label>
+  <input type="password" id="groq" placeholder="gsk_..." />
+
+  <label>
+    Google Gemini Key  <span style="color:#4ade80;font-size:10px">★ 有免费额度</span>
+    <a href="#" onclick="open('https://aistudio.google.com/app/apikey')">点此获取 →</a>
+  </label>
+  <input type="password" id="google" placeholder="AIza..." />
+
+  <div class="divider">其他（可选）</div>
+
+  <label>
+    OpenAI (ChatGPT) Key
+    <a href="#" onclick="open('https://platform.openai.com/api-keys')">点此获取 →</a>
+  </label>
+  <input type="password" id="openai" placeholder="sk-..." />
+
+  <label>
+    DeepSeek Key
+    <a href="#" onclick="open('https://platform.deepseek.com/api_keys')">点此获取 →</a>
+  </label>
+  <input type="password" id="deepseek" placeholder="sk-..." />
+
+  <p class="err" id="err">请至少填一个 API Key</p>
+
+  <button class="save-btn" onclick="save()">保存并启动 →</button>
+
+  <p class="tip-bottom">
+    没有 Key？安装 <a href="#" onclick="open('https://ollama.com')" style="color:#818cf8">Ollama</a> 可免费使用本地模型<br>
+    之后可在 App 设置里随时修改
+  </p>
+</div>
+
+<script>
+  function open(url) {
+    // 通知主进程用系统浏览器打开
+    const { shell } = require && require("electron") || {};
+    window.open(url, "_blank");
+  }
+
+  function save() {
+    const keys = {
+      ANTHROPIC_API_KEY: document.getElementById("anthropic").value.trim(),
+      GROQ_API_KEY:      document.getElementById("groq").value.trim(),
+      GOOGLE_API_KEY:    document.getElementById("google").value.trim(),
+      OPENAI_API_KEY:    document.getElementById("openai").value.trim(),
+      DEEPSEEK_API_KEY:  document.getElementById("deepseek").value.trim(),
+    };
+    const hasAny = Object.values(keys).some(v => v.length > 5);
+    if (!hasAny) {
+      document.getElementById("err").style.display = "block";
+      return;
+    }
+    document.getElementById("err").style.display = "none";
+    if (window.electronAPI) {
+      window.electronAPI.saveKeys(keys);
+    }
+  }
+</script>
+</body>
+</html>

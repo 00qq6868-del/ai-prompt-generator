@@ -1,0 +1,38 @@
+{
+  "name": "AI 提示词生成器",
+  "short_name": "AI Prompt",
+  "description": "支持11+大模型的智能提示词生成器",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060610",
+  "theme_color": "#060610",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "zh-CN",
+  "shortcuts": [
+    {
+      "name": "最省Token模式",
+      "url": "/?mode=token",
+      "description": "打开最省Token生成模式"
+    },
+    {
+      "name": "最准确模式",
+      "url": "/?mode=accurate",
+      "description": "打开最准确生成模式"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "name": "ai-prompt-generator",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "dev:lan": "next dev --hostname 0.0.0.0",
+    "dev:https": "next dev --experimental-https --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "lint": "next lint",
+    "setup:icons": "node scripts/generate-icons.js",
+    "electron:dev": "electron .",
+    "electron:build": "npm run build && electron-builder --win --publish never"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@google/generative-ai": "^0.17.0",
+    "axios": "^1.7.0",
+    "framer-motion": "^11.3.0",
+    "lucide-react": "^0.400.0",
+    "next": "^14.2.0",
+    "openai": "^4.52.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-hot-toast": "^2.4.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.0",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "localtunnel": "^2.0.2",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0"
+  },
+  "build": {
+    "appId": "com.ai-prompt-generator.app",
+    "productName": "AI提示词生成器",
+    "copyright": "Copyright © 2025",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "!node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "app",
+        "filter": ["**/*"]
+      },
+      {
+        "from": ".next/static",
+        "to": "app/.next/static",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "public",
+        "to": "app/public",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "public/icons/icon-512.png"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "public/icons/icon-512.png",
+      "category": "public.app-category.productivity"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI提示词生成器",
+      "installerLanguages": ["zh_CN"],
+      "language": "2052"
+    }
+  }
+}
