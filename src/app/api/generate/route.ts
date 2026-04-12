@@ -28,6 +28,13 @@ export async function POST(req: NextRequest) {
       maxTokens = 1024,
     } = body;
 
+    // Parse user-supplied API keys from the request header
+    let userKeys: Record<string, string> = {};
+    const keysHeader = req.headers.get("X-User-Keys");
+    if (keysHeader) {
+      try { userKeys = JSON.parse(keysHeader); } catch { /* ignore bad JSON */ }
+    }
+
     if (!userIdea?.trim()) {
       return NextResponse.json({ error: "userIdea is required" }, { status: 400 });
     }
@@ -63,6 +70,7 @@ export async function POST(req: NextRequest) {
       userPrompt,
       maxTokens,
       temperature: mode === "accurate" ? 0.3 : mode === "aligned" ? 0.85 : 0.6,
+      userKeys,
     });
 
     // [S2 FIX] signed delta — positive = shorter, negative = longer (fine for accurate/aligned)

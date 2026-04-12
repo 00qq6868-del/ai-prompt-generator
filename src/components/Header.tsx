@@ -1,12 +1,14 @@
 "use client";
 
-import { Sparkles, QrCode, X, ExternalLink } from "lucide-react";
+import { Sparkles, QrCode, X, ExternalLink, KeyRound } from "lucide-react";
 import { NetworkStatus } from "./NetworkStatus";
+import { KeysSettings } from "./KeysSettings";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
-  const [showQR, setShowQR] = useState(false);
+  const [showQR, setShowQR]     = useState(false);
+  const [showKeys, setShowKeys] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/[0.08] bg-black/30 backdrop-blur-xl">
@@ -22,6 +24,15 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <NetworkStatus />
+
+        {/* API Key settings */}
+        <button
+          onClick={() => setShowKeys(true)}
+          title="配置 API Key"
+          className="text-white/30 hover:text-violet-400 transition-colors"
+        >
+          <KeyRound size={16} />
+        </button>
 
         {/* QR Code — only on desktop, phones scan rather than show */}
         <div className="relative hidden sm:block">
@@ -75,6 +86,8 @@ export function Header() {
           <ExternalLink size={16} />
         </a>
       </div>
+
+      <KeysSettings open={showKeys} onClose={() => setShowKeys(false)} />
     </header>
   );
 }

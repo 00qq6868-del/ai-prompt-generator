@@ -15,6 +15,7 @@ export interface GenerateOptions {
   userPrompt: string;
   maxTokens?: number;
   temperature?: number;
+  userKeys?: Record<string, string>; // keys supplied by the user at runtime
 }
 
 export interface GenerateResult {
@@ -39,19 +40,30 @@ const KEY_MAP: Record<string, string> = {
   baidu:     "BAIDU_API_KEY",
 };
 
-function assertKey(provider: string): void {
+/** Resolve an API key: user-supplied key takes priority over server env var */
+function resolveKey(provider: string, userKeys?: Record<string, string>): string {
   const envVar = KEY_MAP[provider];
-  if (envVar && !process.env[envVar]) {
+  if (!envVar) return "";
+  // User's own key wins
+  const userKey = userKeys?.[envVar]?.trim();
+  if (userKey) return userKey;
+  // Fall back to server env (admin default)
+  return process.env[envVar] ?? "";
+}
+
+function assertKey(provider: string, userKeys?: Record<string, string>): void {
+  const envVar = KEY_MAP[provider];
+  if (envVar && !resolveKey(provider, userKeys)) {
     throw new Error(
-      `缺少 ${provider} 的 API Key，请在 .env.local 中配置 ${envVar}`
+      `缺少 ${provider} 的 API Key，请点击右上角钥匙图标填入你的 ${envVar}`
     );
   }
 }
 
 // ─── OpenAI ──────────────────────────────────────────────────
 async function callOpenAI(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("openai");
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  assertKey("openai", opts.userKeys);
+  const client = new OpenAI({ apiKey: resolveKey("openai", opts.userKeys) });
   const t0 = Date.now();
   const res = await client.chat.completions.create({
     model: opts.model,
@@ -72,8 +84,8 @@ async function callOpenAI(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Anthropic ───────────────────────────────────────────────
 async function callAnthropic(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("anthropic");
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  assertKey("anthropic", opts.userKeys);
+  const client = new Anthropic({ apiKey: resolveKey("anthropic", opts.userKeys) });
   const t0 = Date.now();
   const res = await client.messages.create({
     model: opts.model,
@@ -95,8 +107,8 @@ async function callAnthropic(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Google Gemini ────────────────────────────────────────────
 async function callGoogle(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("google");
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY ?? "");
+  assertKey("google", opts.userKeys);
+  const genAI = new GoogleGenerativeAI(resolveKey("google", opts.userKeys));
   const t0 = Date.now();
   const model = genAI.getGenerativeModel({
     model: opts.model,
@@ -119,7 +131,7 @@ async function callGoogle(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Groq (Meta Llama) ────────────────────────────────────────
 async function callGroq(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("groq");
+  assertKey("groq", opts.userKeys);
   const t0 = Date.now();
   const res = await axios.post(
     "https://api.groq.com/openai/v1/chat/completions",
@@ -132,7 +144,7 @@ async function callGroq(opts: GenerateOptions): Promise<GenerateResult> {
         { role: "user",   content: opts.userPrompt },
       ],
     },
-    { headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` } }
+    { headers: { Authorization: `Bearer ${resolveKey("groq", opts.userKeys)}` } }
   );
   return {
     text: res.data.choices[0].message.content ?? "",
@@ -144,9 +156,9 @@ async function callGroq(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── xAI Grok ─────────────────────────────────────────────────
 async function callXAI(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("xai");
+  assertKey("xai", opts.userKeys);
   const client = new OpenAI({
-    apiKey: process.env.XAI_API_KEY,
+    apiKey: resolveKey("xai", opts.userKeys),
     baseURL: "https://api.x.ai/v1",
   });
   const t0 = Date.now();
@@ -169,7 +181,7 @@ async function callXAI(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Mistral AI ───────────────────────────────────────────────
 async function callMistral(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("mistral");
+  assertKey("mistral", opts.userKeys);
   const t0 = Date.now();
   const res = await axios.post(
     "https://api.mistral.ai/v1/chat/completions",
@@ -182,7 +194,7 @@ async function callMistral(opts: GenerateOptions): Promise<GenerateResult> {
         { role: "user",   content: opts.userPrompt },
       ],
     },
-    { headers: { Authorization: `Bearer ${process.env.MISTRAL_API_KEY}` } }
+    { headers: { Authorization: `Bearer ${resolveKey("mistral", opts.userKeys)}` } }
   );
   return {
     text: res.data.choices[0].message.content ?? "",
@@ -194,9 +206,9 @@ async function callMistral(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── DeepSeek ─────────────────────────────────────────────────
 async function callDeepSeek(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("deepseek");
+  assertKey("deepseek", opts.userKeys);
   const client = new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY,
+    apiKey: resolveKey("deepseek", opts.userKeys),
     baseURL: "https://api.deepseek.com/v1",
   });
   const t0 = Date.now();
@@ -219,7 +231,7 @@ async function callDeepSeek(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Zhipu GLM ────────────────────────────────────────────────
 async function callZhipu(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("zhipu");
+  assertKey("zhipu", opts.userKeys);
   const t0 = Date.now();
   const res = await axios.post(
     "https://open.bigmodel.cn/api/paas/v4/chat/completions",
@@ -232,7 +244,7 @@ async function callZhipu(opts: GenerateOptions): Promise<GenerateResult> {
         { role: "user",   content: opts.userPrompt },
       ],
     },
-    { headers: { Authorization: `Bearer ${process.env.ZHIPU_API_KEY}` } }
+    { headers: { Authorization: `Bearer ${resolveKey("zhipu", opts.userKeys)}` } }
   );
   return {
     text: res.data.choices[0].message.content ?? "",
@@ -244,9 +256,9 @@ async function callZhipu(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Moonshot Kimi ────────────────────────────────────────────
 async function callMoonshot(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("moonshot");
+  assertKey("moonshot", opts.userKeys);
   const client = new OpenAI({
-    apiKey: process.env.MOONSHOT_API_KEY,
+    apiKey: resolveKey("moonshot", opts.userKeys),
     baseURL: "https://api.moonshot.cn/v1",
   });
   const t0 = Date.now();
@@ -269,7 +281,7 @@ async function callMoonshot(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ─── Alibaba Qwen ──────────────────────────────────────────────
 async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("qwen");
+  assertKey("qwen", opts.userKeys);
   const t0 = Date.now();
   const res = await axios.post(
     "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
@@ -284,7 +296,7 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
     },
     {
       headers: {
-        Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+        Authorization: `Bearer ${resolveKey("qwen", opts.userKeys)}`,
         "Content-Type": "application/json",
       },
     }
@@ -298,20 +310,22 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
 }
 
 // ─── Baidu ERNIE ──────────────────────────────────────────────
-async function getBaiduToken(): Promise<string> {
-  if (!process.env.BAIDU_API_KEY || !process.env.BAIDU_SECRET_KEY) {
+async function getBaiduToken(userKeys?: Record<string, string>): Promise<string> {
+  const apiKey    = userKeys?.["BAIDU_API_KEY"]?.trim()    || process.env.BAIDU_API_KEY;
+  const secretKey = userKeys?.["BAIDU_SECRET_KEY"]?.trim() || process.env.BAIDU_SECRET_KEY;
+  if (!apiKey || !secretKey) {
     throw new Error(
-      "缺少 baidu 的 API Key，请在 .env.local 中配置 BAIDU_API_KEY 和 BAIDU_SECRET_KEY"
+      "缺少 baidu 的 API Key，请点击右上角钥匙图标填入 BAIDU_API_KEY 和 BAIDU_SECRET_KEY"
     );
   }
   const res = await axios.post(
-    `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${process.env.BAIDU_API_KEY}&client_secret=${process.env.BAIDU_SECRET_KEY}`
+    `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`
   );
   return res.data.access_token;
 }
 
 async function callBaidu(opts: GenerateOptions): Promise<GenerateResult> {
-  const token = await getBaiduToken();
+  const token = await getBaiduToken(opts.userKeys);
   const t0 = Date.now();
   const res = await axios.post(
     `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=${token}`,

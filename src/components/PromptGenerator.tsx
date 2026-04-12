@@ -7,11 +7,27 @@ import { OptimizationMode as OptMode } from "@/lib/models-registry";
 import { OptimizationMode } from "./OptimizationMode";
 import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
+import { loadUserKeys } from "./KeysSettings";
 import toast from "react-hot-toast";
 
 const DEFAULT_TARGET = "gpt-4o";
 
-// [HD3 FIX] Priority list — first provider with a configured key wins
+// Map provider name → the env-key name stored in localStorage
+const PROVIDER_KEY_MAP: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai:    "OPENAI_API_KEY",
+  google:    "GOOGLE_API_KEY",
+  groq:      "GROQ_API_KEY",
+  deepseek:  "DEEPSEEK_API_KEY",
+  mistral:   "MISTRAL_API_KEY",
+  xai:       "XAI_API_KEY",
+  zhipu:     "ZHIPU_API_KEY",
+  moonshot:  "MOONSHOT_API_KEY",
+  qwen:      "QWEN_API_KEY",
+  baidu:     "BAIDU_API_KEY",
+};
+
+// Priority list — first provider whose key is configured wins
 const PROVIDER_PRIORITY = [
   { provider: "anthropic", modelId: "claude-3-5-haiku-20241022" },
   { provider: "openai",    modelId: "gpt-4o-mini" },
@@ -21,7 +37,7 @@ const PROVIDER_PRIORITY = [
   { provider: "mistral",   modelId: "mistral-small-latest" },
   { provider: "xai",       modelId: "grok-3-mini" },
   { provider: "zhipu",     modelId: "glm-4-plus" },
-  { provider: "moonshot",  modelId: "moonshot-v1-8k" },
+  { provider: "moonshot",  modelId: "moonshot-v1-128k" },
   { provider: "qwen",      modelId: "qwen-turbo" },
   { provider: "baidu",     modelId: "ernie-4.0-8k" },
 ];
@@ -41,8 +57,17 @@ export function PromptGenerator() {
   }>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  // [HD3 FIX] Auto-select cheapest available generator based on configured API keys
+  // Auto-select cheapest available generator based on user's stored API keys
   useEffect(() => {
+    const userKeys = loadUserKeys();
+    for (const { provider, modelId } of PROVIDER_PRIORITY) {
+      const keyName = PROVIDER_KEY_MAP[provider];
+      if (keyName && userKeys[keyName]?.trim().length > 5) {
+        setGeneratorModelId(modelId);
+        return;
+      }
+    }
+    // No keys found locally — fall back to server-side keys check
     fetch("/api/keys")
       .then((r) => r.json())
       .then((data: { configured: string[] }) => {
@@ -52,7 +77,6 @@ export function PromptGenerator() {
             return;
           }
         }
-        // No keys — show first option so UI isn't empty; generate will give clear error
         setGeneratorModelId(PROVIDER_PRIORITY[0].modelId);
       })
       .catch(() => setGeneratorModelId(PROVIDER_PRIORITY[0].modelId));
@@ -64,16 +88,23 @@ export function PromptGenerator() {
       return;
     }
     if (!generatorModelId) {
-      toast.error("请先在 .env.local 中配置至少一个 API Key");
+      toast.error("请先点击右上角钥匙图标填入至少一个 API Key");
       return;
     }
     setLoading(true);
     setResult(null);
     const tid = toast.loading("AI 正在生成优化提示词…");
     try {
+      const userKeys = loadUserKeys();
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // Send user keys so server can use them (never stored server-side)
+          ...(Object.keys(userKeys).length > 0
+            ? { "X-User-Keys": JSON.stringify(userKeys) }
+            : {}),
+        },
         body: JSON.stringify({
           userIdea: idea,
           targetModelId,
