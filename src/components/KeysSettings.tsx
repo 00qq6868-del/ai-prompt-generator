@@ -152,11 +152,11 @@ export function KeysSettings({ open, onClose }: Props) {
             transition={{ duration: 0.18 }}
           >
             <div
-              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0d0d1a] shadow-2xl"
+              className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl border border-white/10 bg-[#0d0d1a] shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 标题栏 */}
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/8 bg-[#0d0d1a] px-6 py-4">
+              <div className="flex items-center justify-between border-b border-white/8 bg-[#0d0d1a] px-6 py-4 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20">
                     <Key size={16} className="text-violet-400" />
@@ -174,7 +174,7 @@ export function KeysSettings({ open, onClose }: Props) {
               </div>
 
               {/* Key 列表 */}
-              <div className="px-6 py-4 space-y-3">
+              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-3">
                 {/* 提示 */}
                 <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-[12px] text-white/60 leading-relaxed">
                   <span className="text-violet-400 font-medium">至少填一个</span> 即可使用。
@@ -228,7 +228,7 @@ export function KeysSettings({ open, onClose }: Props) {
               </div>
 
               {/* 底部按钮 */}
-              <div className="sticky bottom-0 border-t border-white/8 bg-[#0d0d1a] px-6 py-4">
+              <div className="border-t border-white/8 bg-[#0d0d1a] px-6 py-4 shrink-0">
                 <button
                   onClick={handleSave}
                   className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
