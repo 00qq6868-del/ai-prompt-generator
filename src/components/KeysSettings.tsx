@@ -145,14 +145,15 @@ export function KeysSettings({ open, onClose }: Props) {
 
           {/* 弹窗 */}
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 overflow-y-auto"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.18 }}
           >
+            <div className="flex min-h-full items-center justify-center p-4">
             <div
-              className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl border border-white/10 bg-[#0d0d1a] shadow-2xl"
+              className="relative w-full max-w-lg flex flex-col rounded-2xl border border-white/10 bg-[#0d0d1a] shadow-2xl my-4"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 标题栏 */}
@@ -239,6 +240,7 @@ export function KeysSettings({ open, onClose }: Props) {
                   保存后重新选择模型即可生效
                 </p>
               </div>
+            </div>
             </div>
           </motion.div>
         </>
