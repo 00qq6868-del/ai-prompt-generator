@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, KeyRound, CheckCircle, ExternalLink, Eye, EyeOff, Sparkles } from "lucide-react";
+import { X, KeyRound, CheckCircle, ExternalLink, Eye, EyeOff, Sparkles, ArrowRight } from "lucide-react";
 
-// Free providers shown first with priority
 const PROVIDERS = [
   {
     id: "GOOGLE_API_KEY",
@@ -13,8 +12,7 @@ const PROVIDERS = [
     url: "https://aistudio.google.com/app/apikey",
     free: true,
     color: "text-blue-400",
-    border: "border-blue-500/20",
-    bg: "bg-blue-500/5",
+    accent: "blue",
   },
   {
     id: "GROQ_API_KEY",
@@ -23,8 +21,7 @@ const PROVIDERS = [
     url: "https://console.groq.com/keys",
     free: true,
     color: "text-purple-400",
-    border: "border-purple-500/20",
-    bg: "bg-purple-500/5",
+    accent: "purple",
   },
   {
     id: "ANTHROPIC_API_KEY",
@@ -33,8 +30,7 @@ const PROVIDERS = [
     url: "https://console.anthropic.com/settings/keys",
     free: false,
     color: "text-orange-400",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "orange",
   },
   {
     id: "OPENAI_API_KEY",
@@ -43,8 +39,7 @@ const PROVIDERS = [
     url: "https://platform.openai.com/api-keys",
     free: false,
     color: "text-green-400",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "green",
   },
   {
     id: "DEEPSEEK_API_KEY",
@@ -53,8 +48,7 @@ const PROVIDERS = [
     url: "https://platform.deepseek.com/api_keys",
     free: false,
     color: "text-cyan-400",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "cyan",
   },
   {
     id: "XAI_API_KEY",
@@ -62,9 +56,8 @@ const PROVIDERS = [
     placeholder: "xai-...",
     url: "https://console.x.ai/",
     free: false,
-    color: "text-gray-300",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    color: "text-slate-300",
+    accent: "slate",
   },
   {
     id: "MISTRAL_API_KEY",
@@ -73,8 +66,7 @@ const PROVIDERS = [
     url: "https://console.mistral.ai/api-keys/",
     free: false,
     color: "text-orange-300",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "orange",
   },
   {
     id: "ZHIPU_API_KEY",
@@ -83,8 +75,7 @@ const PROVIDERS = [
     url: "https://open.bigmodel.cn/usercenter/apikeys",
     free: false,
     color: "text-red-400",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "red",
   },
   {
     id: "MOONSHOT_API_KEY",
@@ -93,8 +84,7 @@ const PROVIDERS = [
     url: "https://platform.moonshot.cn/console/api-keys",
     free: false,
     color: "text-indigo-400",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "indigo",
   },
   {
     id: "QWEN_API_KEY",
@@ -103,8 +93,7 @@ const PROVIDERS = [
     url: "https://dashscope.console.aliyun.com/apiKey",
     free: false,
     color: "text-yellow-400",
-    border: "border-white/8",
-    bg: "bg-white/[0.03]",
+    accent: "yellow",
   },
 ];
 
@@ -135,7 +124,14 @@ export function KeysSettings({ open, onClose }: Props) {
   const [saved, setSaved]     = useState(false);
 
   useEffect(() => {
-    if (open) setKeys(loadUserKeys());
+    if (open) {
+      setKeys(loadUserKeys());
+      // prevent background scroll
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
   const set = (id: string, val: string) => setKeys((k) => ({ ...k, [id]: val }));
@@ -151,75 +147,61 @@ export function KeysSettings({ open, onClose }: Props) {
   };
 
   const configured = Object.values(keys).filter((v) => v.trim().length > 5).length;
-  const freeProviders = PROVIDERS.filter((p) => p.free);
-  const paidProviders = PROVIDERS.filter((p) => !p.free);
+  const freeProviders  = PROVIDERS.filter((p) => p.free);
+  const paidProviders  = PROVIDERS.filter((p) => !p.free);
 
   return (
     <AnimatePresence>
       {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-          />
-
-          {/* Right-side drawer — VSCode / Linear style */}
-          <motion.div
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-[#0a0a18] border-l border-white/10 shadow-2xl shadow-black/60"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-          >
-            {/* ── Header (fixed) ─────────────────────────────── */}
-            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/15 ring-1 ring-violet-500/30">
-                  <KeyRound size={15} className="text-violet-400" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-white">API Key 设置</h2>
-                  <p className="text-[11px] text-white/40">
-                    {configured > 0 ? `已配置 ${configured} 个` : "填入后保存在此设备，不会上传"}
-                  </p>
-                </div>
+        <motion.div
+          className="fixed inset-0 z-50 flex flex-col bg-[#08080f]"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 16 }}
+          transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          {/* ── Top bar ─────────────────────────────────── */}
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/15 ring-1 ring-violet-500/25">
+                <KeyRound size={16} className="text-violet-400" />
               </div>
-              <button
-                onClick={onClose}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 hover:bg-white/8 hover:text-white transition-all"
-              >
-                <X size={15} />
-              </button>
+              <div>
+                <h2 className="text-base font-bold text-white">API Key 设置</h2>
+                <p className="text-[11px] text-white/40">
+                  {configured > 0
+                    ? `已配置 ${configured} 个 · 至少 1 个即可使用`
+                    : "填入后保存在此设备，不会发送给任何第三方"}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/8 hover:text-white transition-all"
+            >
+              <X size={17} />
+            </button>
+          </div>
 
-            {/* ── Scrollable content ──────────────────────────── */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* ── Scrollable body ─────────────────────────── */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-4xl px-6 py-6 space-y-8">
 
-              {/* Tip banner */}
-              <div className="flex items-start gap-3 rounded-xl bg-violet-500/8 border border-violet-500/15 px-3.5 py-3">
-                <Sparkles size={13} className="text-violet-400 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-white/50 leading-relaxed">
-                  至少填一个即可使用。标注{" "}
-                  <span className="text-green-400 font-medium">免费</span>{" "}
-                  的平台注册即可获取，无需付费。Key 仅保存在你的浏览器本地。
+              {/* Tip */}
+              <div className="flex items-center gap-3 rounded-2xl bg-violet-500/8 border border-violet-500/15 px-5 py-3.5">
+                <Sparkles size={14} className="text-violet-400 shrink-0" />
+                <p className="text-[12px] text-white/55 leading-relaxed">
+                  标注 <span className="text-green-400 font-semibold">免费</span> 的平台注册即可免费获取，推荐先试这两个。
+                  Key 仅保存在你的浏览器本地，不会上传到任何服务器。
                 </p>
               </div>
 
-              {/* ── Free providers first ── */}
-              <div>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <div className="h-px flex-1 bg-green-500/15" />
-                  <span className="text-[10px] font-semibold text-green-500/60 tracking-wider uppercase">免费平台</span>
-                  <div className="h-px flex-1 bg-green-500/15" />
-                </div>
-                <div className="space-y-2">
+              {/* ── Free providers ── 2 col grid */}
+              <section>
+                <SectionDivider label="免费平台（推荐先填）" accent="green" />
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {freeProviders.map((p) => (
-                    <ProviderRow
+                    <ProviderCard
                       key={p.id}
                       provider={p}
                       value={keys[p.id] || ""}
@@ -229,18 +211,14 @@ export function KeysSettings({ open, onClose }: Props) {
                     />
                   ))}
                 </div>
-              </div>
+              </section>
 
-              {/* ── Paid providers ── */}
-              <div>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <div className="h-px flex-1 bg-white/8" />
-                  <span className="text-[10px] font-semibold text-white/25 tracking-wider uppercase">付费平台</span>
-                  <div className="h-px flex-1 bg-white/8" />
-                </div>
-                <div className="space-y-2">
+              {/* ── Paid providers ── 2 col grid */}
+              <section>
+                <SectionDivider label="付费平台" accent="white" />
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {paidProviders.map((p) => (
-                    <ProviderRow
+                    <ProviderCard
                       key={p.id}
                       provider={p}
                       value={keys[p.id] || ""}
@@ -250,35 +228,56 @@ export function KeysSettings({ open, onClose }: Props) {
                     />
                   ))}
                 </div>
-              </div>
-            </div>
+              </section>
 
-            {/* ── Footer (fixed) ─────────────────────────────── */}
-            <div className="border-t border-white/8 px-5 py-4 shrink-0">
+              {/* Bottom spacing */}
+              <div className="h-4" />
+            </div>
+          </div>
+
+          {/* ── Fixed bottom bar ────────────────────────── */}
+          <div className="border-t border-white/[0.07] bg-[#08080f] px-6 py-4 shrink-0">
+            <div className="mx-auto max-w-4xl flex items-center gap-4">
               <motion.button
                 onClick={handleSave}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full rounded-xl py-3 text-sm font-semibold transition-all duration-300
+                className={`flex-1 rounded-2xl py-3.5 text-sm font-bold transition-all duration-300
                   ${saved
                     ? "bg-green-600 text-white"
-                    : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:opacity-90"
+                    : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-violet-500/25"
                   }`}
               >
                 {saved ? "✓  已保存" : "保存并关闭"}
               </motion.button>
-              <p className="mt-2 text-center text-[11px] text-white/25">
+              <p className="text-[11px] text-white/25 whitespace-nowrap">
                 保存后重新选择模型即可生效
               </p>
             </div>
-          </motion.div>
-        </>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-// ── Provider row sub-component ────────────────────────────────
-interface ProviderRowProps {
+// ── Section divider ───────────────────────────────────────────
+function SectionDivider({ label, accent }: { label: string; accent: "green" | "white" }) {
+  const color = accent === "green"
+    ? "text-green-500/70 border-green-500/15"
+    : "text-white/30 border-white/[0.07]";
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`h-px flex-1 border-t ${color.split(" ")[1]}`} />
+      <span className={`text-[10px] font-bold tracking-widest uppercase ${color.split(" ")[0]}`}>
+        {label}
+      </span>
+      <div className={`h-px flex-1 border-t ${color.split(" ")[1]}`} />
+    </div>
+  );
+}
+
+// ── Provider card ─────────────────────────────────────────────
+interface ProviderCardProps {
   provider: typeof PROVIDERS[number];
   value: string;
   show: boolean;
@@ -286,16 +285,25 @@ interface ProviderRowProps {
   onToggleVisible: () => void;
 }
 
-function ProviderRow({ provider: p, value, show, onChange, onToggleVisible }: ProviderRowProps) {
+function ProviderCard({ provider: p, value, show, onChange, onToggleVisible }: ProviderCardProps) {
   const isSet = value.trim().length > 5;
 
   return (
-    <div className={`rounded-xl border ${p.border} ${p.bg} p-3 transition-all ${isSet ? "ring-1 ring-green-500/20" : ""}`}>
-      <div className="flex items-center justify-between mb-2">
+    <div
+      className={`rounded-2xl border p-4 transition-all duration-200
+        ${isSet
+          ? "border-green-500/25 bg-green-500/[0.04] shadow-sm shadow-green-500/10"
+          : p.free
+            ? "border-white/10 bg-white/[0.03] hover:border-white/15"
+            : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"
+        }`}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className={`text-[12px] font-semibold ${p.color}`}>{p.name}</span>
+          <span className={`text-[13px] font-semibold ${p.color}`}>{p.name}</span>
           {p.free && (
-            <span className="rounded-full bg-green-500/12 px-1.5 py-0.5 text-[9px] font-bold text-green-400 tracking-wider uppercase border border-green-500/20">
+            <span className="rounded-md bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 text-[9px] font-bold text-green-400 tracking-wider uppercase">
               FREE
             </span>
           )}
@@ -307,7 +315,7 @@ function ProviderRow({ provider: p, value, show, onChange, onToggleVisible }: Pr
                 exit={{ scale: 0, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
-                <CheckCircle size={12} className="text-green-400" />
+                <CheckCircle size={13} className="text-green-400" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -316,24 +324,28 @@ function ProviderRow({ provider: p, value, show, onChange, onToggleVisible }: Pr
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[10px] text-white/25 hover:text-violet-400 transition-colors"
+          className="flex items-center gap-1 text-[11px] text-white/25 hover:text-violet-400 transition-colors"
         >
-          获取 Key <ExternalLink size={9} />
+          获取 Key <ArrowRight size={10} />
         </a>
       </div>
+
+      {/* Input */}
       <div className="relative">
         <input
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={p.placeholder}
-          className="w-full rounded-lg border border-white/8 bg-black/20 px-3 py-2 pr-9 text-[12px] text-white placeholder:text-white/15 outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-all"
+          autoComplete="off"
+          className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 pr-10 text-[13px] text-white placeholder:text-white/15 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
         />
         <button
+          type="button"
           onClick={onToggleVisible}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
         >
-          {show ? <EyeOff size={12} /> : <Eye size={12} />}
+          {show ? <EyeOff size={13} /> : <Eye size={13} />}
         </button>
       </div>
     </div>
