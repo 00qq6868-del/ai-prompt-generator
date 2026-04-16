@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Languages } from "lucide-react";
-import { OptimizationMode as OptMode } from "@/lib/models-registry";
-import { OptimizationMode } from "./OptimizationMode";
 import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
@@ -44,7 +42,6 @@ const PROVIDER_PRIORITY = [
 
 export function PromptGenerator() {
   const [idea, setIdea]           = useState("");
-  const [mode, setMode]           = useState<OptMode>("accurate");
   const [language, setLanguage]   = useState<"zh" | "en">("zh");
   const [targetModelId, setTargetModelId]       = useState(DEFAULT_TARGET);
   const [generatorModelId, setGeneratorModelId] = useState<string>("");
@@ -109,7 +106,6 @@ export function PromptGenerator() {
           userIdea: idea,
           targetModelId,
           generatorModelId,
-          mode,
           language,
           maxTokens: 1200,
         }),
@@ -162,12 +158,8 @@ export function PromptGenerator() {
         </div>
       </div>
 
-      {/* Optimization mode */}
-      <OptimizationMode selected={mode} onChange={setMode} />
-
       {/* Model selector */}
       <ModelSelector
-        mode={mode}
         selectedTargetId={targetModelId}
         selectedGeneratorId={generatorModelId}
         onTargetChange={setTargetModelId}

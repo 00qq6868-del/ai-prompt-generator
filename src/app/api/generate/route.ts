@@ -3,15 +3,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { callProvider } from "@/lib/providers";
-import { OptimizationMode } from "@/lib/models-registry";
 import { buildSystemPrompt, buildUserPrompt, comparePrompts } from "@/lib/prompt-optimizer";
-import { getModels } from "@/lib/model-cache"; // [C3 FIX] shared singleton cache
+import { getModels } from "@/lib/model-cache";
 
 export interface GenerateRequest {
   userIdea: string;
   targetModelId: string;
   generatorModelId: string;
-  mode: OptimizationMode;
   language?: "zh" | "en";
   maxTokens?: number;
 }
@@ -23,7 +21,6 @@ export async function POST(req: NextRequest) {
       userIdea,
       targetModelId,
       generatorModelId,
-      mode,
       language = "zh",
       maxTokens = 1024,
     } = body;
@@ -51,7 +48,6 @@ export async function POST(req: NextRequest) {
       userIdea,
       targetModel:    targetModel.name,
       targetProvider: targetModel.provider,
-      mode,
       language,
     });
 
@@ -59,7 +55,6 @@ export async function POST(req: NextRequest) {
       userIdea,
       targetModel:    targetModel.name,
       targetProvider: targetModel.provider,
-      mode,
       language,
     });
 
@@ -69,7 +64,7 @@ export async function POST(req: NextRequest) {
       systemPrompt,
       userPrompt,
       maxTokens,
-      temperature: mode === "accurate" ? 0.3 : mode === "aligned" ? 0.85 : 0.6,
+      temperature: 0.5,
       userKeys,
     });
 
@@ -95,7 +90,6 @@ export async function POST(req: NextRequest) {
       meta: {
         generatorModel: generatorModel.name,
         targetModel:    targetModel.name,
-        mode,
       },
     });
   } catch (err: any) {

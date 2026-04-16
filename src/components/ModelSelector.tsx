@@ -1,13 +1,12 @@
 "use client";
 
-import { ModelInfo, OptimizationMode } from "@/lib/models-registry";
+import { ModelInfo } from "@/lib/models-registry";
 import { useModels } from "@/hooks/useModels";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Star, RefreshCw, Cpu } from "lucide-react";
 import { useState } from "react";
 
 interface Props {
-  mode: OptimizationMode;
   selectedTargetId: string;
   selectedGeneratorId: string;
   onTargetChange: (id: string) => void;
@@ -40,14 +39,12 @@ const ACC_LABEL: Record<string, string> = {
 };
 
 export function ModelSelector({
-  mode,
   selectedTargetId,
   selectedGeneratorId,
   onTargetChange,
   onGeneratorChange,
 }: Props) {
-  const { models, recommended, grouped, loading, source, updatedAt, refresh } = useModels(mode);
-  const [showAll, setShowAll] = useState(false);
+  const { models, recommended, loading, source, updatedAt, refresh } = useModels("accurate");
   const [tab, setTab] = useState<"recommended" | "all">("recommended");
 
   const displayList = tab === "recommended" ? recommended : models;

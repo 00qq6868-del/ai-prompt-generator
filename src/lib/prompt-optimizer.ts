@@ -1,77 +1,46 @@
 // ============================================================
 //  Prompt Optimizer — meta-prompt builder
-//  Generates optimized prompts for each optimization mode
+//  Single unified mode: accurate + token-efficient + fast + model-aligned
 // ============================================================
-
-import { OptimizationMode } from "./models-registry";
 
 interface PromptBuilderOptions {
   userIdea: string;
   targetModel: string;
   targetProvider: string;
-  mode: OptimizationMode;
   language: "zh" | "en";
 }
 
-const MODE_SYSTEM_PROMPTS: Record<OptimizationMode, string> = {
-  token: `You are an expert prompt engineer specializing in token efficiency.
-Your goal: rewrite the user's idea into the most concise, token-efficient prompt for the specified AI model.
-Rules:
-- Remove every redundant word while preserving full meaning
-- Use bullets or structured formats only when they genuinely save tokens
-- Avoid verbose preambles like "Please" / "I would like you to"
-- Output ONLY the optimized prompt, no explanation`,
+const UNIFIED_SYSTEM_PROMPT = `You are an expert prompt engineer. Your task is to rewrite the user's raw idea into a single, ready-to-use prompt that simultaneously achieves ALL of the following goals:
 
-  fast: `You are an expert prompt engineer specializing in low-latency responses.
-Your goal: rewrite the user's idea so the target model can answer in the fewest processing steps.
-Rules:
-- Ask for a single, direct output with no chain-of-thought unless truly needed
-- Prefer closed-form questions over open-ended ones when possible
-- Add "Be concise." or "One sentence." where appropriate
-- Output ONLY the optimized prompt, no explanation`,
+1. Maximum accuracy — Add necessary context, constraints, and output format so the model produces the most precise, thorough answer.
+2. Token efficiency — Remove every redundant word; no verbose preambles like "Please" or "I would like you to".
+3. Low latency — Structure the request so the model can respond with minimal processing overhead.
+4. Natural alignment — Use clear, natural language that matches the expected tone; avoid sounding robotic.
 
-  accurate: `You are an expert prompt engineer maximizing factual accuracy and reasoning depth.
-Your goal: rewrite the user's idea so the target model gives the most accurate, thorough answer.
 Rules:
-- Add context, constraints, and output format specifications
-- Include "Think step by step" or "Show your reasoning" when beneficial
-- Specify expected length, structure, and quality bar
-- For the target model's known strengths, lean into them
-- Output ONLY the optimized prompt, no explanation`,
-
-  aligned: `You are an expert prompt engineer maximizing human-AI alignment.
-Your goal: rewrite the user's idea so the output reads as natural and human as possible.
-Rules:
-- Match tone: friendly, empathetic, conversational where appropriate
-- Use natural language examples and analogies
-- Specify the exact persona or voice the model should adopt
-- Ask for output that would not sound "AI-generated"
-- Output ONLY the optimized prompt, no explanation`,
-};
-
-const MODE_LABELS: Record<OptimizationMode, string> = {
-  token:    "最省Token",
-  fast:     "最快速",
-  accurate: "最准确",
-  aligned:  "最符合人类语言",
-};
+- Output ONLY the final optimized prompt. No explanation, no markdown wrapper, no preamble.
+- The prompt must be immediately usable as-is.
+- Balance all four goals — do not sacrifice accuracy for brevity, or naturalness for speed.`;
 
 export function buildSystemPrompt(opts: PromptBuilderOptions): string {
-  const base = MODE_SYSTEM_PROMPTS[opts.mode];
-  const modelCtx =
+  const langNote =
+    opts.language === "zh"
+      ? "\nOutput language: Chinese (中文). The final prompt should be in Chinese unless the task inherently requires English."
+      : "\nOutput language: English.";
+
+  return (
+    UNIFIED_SYSTEM_PROMPT +
     `\nTarget model: ${opts.targetModel} (${opts.targetProvider})` +
-    `\nOptimization goal: ${MODE_LABELS[opts.mode]}` +
-    (opts.language === "zh"
-      ? "\nOutput language: Chinese (中文). The final prompt should be in Chinese unless the task requires English."
-      : "\nOutput language: English.");
-  return base + modelCtx;
+    langNote
+  );
 }
 
 export function buildUserPrompt(opts: PromptBuilderOptions): string {
   return (
     `User's raw idea:\n"""\n${opts.userIdea}\n"""\n\n` +
-    `Generate an optimized prompt for ${opts.targetModel} optimized for: ${MODE_LABELS[opts.mode]}.` +
-    `\n\nOutput ONLY the ready-to-use prompt text. No markdown, no preamble, no explanation.`
+    `Rewrite the above into an optimized prompt for ${opts.targetModel}. ` +
+    `It must be accurate, concise, fast to process, and naturally written.\n\n` +
+    `Output ONLY the ready-to-use prompt text. No markdown, no preamble, no explanation.`
   );
 }
 
@@ -81,9 +50,9 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * [S2 FIX] Signed comparison — does NOT clamp to ≥ 0.
- * - delta positive  → prompt got shorter (token/fast: 🎉 saved tokens)
- * - delta negative  → prompt got longer  (accurate/aligned: expected & fine)
+ * Signed comparison — does NOT clamp to ≥ 0.
+ * - delta positive  → prompt got shorter (saved tokens)
+ * - delta negative  → prompt got longer  (more detail added)
  * - ratio           → signed percentage of the original length
  */
 export function comparePrompts(
@@ -92,7 +61,7 @@ export function comparePrompts(
 ): { delta: number; ratio: number } {
   const orig  = estimateTokens(original);
   const opt   = estimateTokens(optimized);
-  const delta = orig - opt;                                 // positive = shorter
-  const ratio = orig > 0 ? Math.round((delta / orig) * 100) : 0; // signed %
+  const delta = orig - opt;
+  const ratio = orig > 0 ? Math.round((delta / orig) * 100) : 0;
   return { delta, ratio };
 }
