@@ -17,26 +17,43 @@ body {
   min-height: 100dvh;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* ── Scrollbar — thin, fades unless hovered ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
-/* Smooth transitions */
-* { transition-property: color, background-color, border-color, opacity;
-    transition-duration: 150ms; }
+/* ── Smooth transitions for color/opacity only ── */
+* {
+  transition-property: color, background-color, border-color, opacity, box-shadow;
+  transition-duration: 150ms;
+}
 
-/* Shimmer keyframe */
+/* ── Shimmer keyframe (generate button) ── */
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
 }
 .animate-shimmer { animation: shimmer 2s linear infinite; }
 
-/* Glass card */
+/* ── Ping animation for live badge dot ── */
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping { animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* ── Glass card utility ── */
 .glass {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(20px);
+}
+
+/* ── Drawer overlay prevents body scroll ── */
+body:has(.drawer-open) {
+  overflow: hidden;
 }
