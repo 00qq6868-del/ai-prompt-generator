@@ -1,7 +1,6 @@
 // .github/scripts/fetch-models.mjs
 // 自动从各厂商 API 拉取最新模型列表，合并到 public/models.json
-// 运行环境：Node.js 20+，GitHub Actions
-// 参考项目：openai/openai-node, anthropics/anthropic-sdk-python
+// 运行环境：Node.js 22+，GitHub Actions
 
 import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -10,154 +9,158 @@ import { dirname, join } from "path";
 const __dir = dirname(fileURLToPath(import.meta.url));
 const MODELS_PATH = join(__dir, "../../public/models.json");
 
-// ── 当前已知模型的元数据（自动获取 API 没有的价格/速度信息）──────────────
-// 格式：modelId → 补充字段
-const META_MAP = {
-  // OpenAI
-  "gpt-4o":             { inputCostPer1M: 2.5,  outputCostPer1M: 10,   speed: "fast",      accuracy: "supreme", tags: ["vision","code"] },
-  "gpt-4o-mini":        { inputCostPer1M: 0.15, outputCostPer1M: 0.6,  speed: "ultrafast", accuracy: "high",    tags: ["cheap","fast"] },
-  "o3":                 { inputCostPer1M: 10,   outputCostPer1M: 40,   speed: "slow",      accuracy: "supreme", tags: ["reasoning","math","code"] },
-  "o4-mini":            { inputCostPer1M: 1.1,  outputCostPer1M: 4.4,  speed: "fast",      accuracy: "supreme", tags: ["reasoning","cheap","code"] },
-  "gpt-4.5-preview":    { inputCostPer1M: 75,   outputCostPer1M: 150,  speed: "medium",    accuracy: "supreme", tags: ["vision","reasoning"] },
-  // Anthropic
-  "claude-opus-4-5":             { inputCostPer1M: 15,  outputCostPer1M: 75,  speed: "slow",      accuracy: "supreme", tags: ["reasoning","vision","code"] },
-  "claude-sonnet-4-5":           { inputCostPer1M: 3,   outputCostPer1M: 15,  speed: "fast",      accuracy: "supreme", tags: ["vision","code","balanced"] },
-  "claude-3-5-haiku-20241022":   { inputCostPer1M: 0.8, outputCostPer1M: 4,   speed: "ultrafast", accuracy: "high",    tags: ["fast","cheap"] },
-  // Google
-  "gemini-2.5-pro-preview-03-25":{ inputCostPer1M: 1.25,outputCostPer1M: 10,  speed: "medium",    accuracy: "supreme", tags: ["reasoning","vision","long-context"] },
-  "gemini-2.0-flash":            { inputCostPer1M: 0.1, outputCostPer1M: 0.4, speed: "ultrafast", accuracy: "high",    tags: ["fast","cheap","vision"] },
-  "gemini-2.0-flash-lite":       { inputCostPer1M: 0.075,outputCostPer1M:0.3, speed: "ultrafast", accuracy: "medium",  tags: ["ultra-cheap","fast"] },
+// ── 价格/速度 元数据（API 不提供这些）──────────────────────────────────────
+const META = {
+  "gpt-4o":           { i: 2.5,  o: 10,  s: "fast",      a: "supreme", t: ["vision","code"] },
+  "gpt-4o-mini":      { i: 0.15, o: 0.6, s: "ultrafast", a: "high",    t: ["cheap","fast"] },
+  "o3":               { i: 10,   o: 40,  s: "slow",      a: "supreme", t: ["reasoning","math"] },
+  "o4-mini":          { i: 1.1,  o: 4.4, s: "fast",      a: "supreme", t: ["reasoning","cheap"] },
+  "claude-opus-4-5":  { i: 15,   o: 75,  s: "slow",      a: "supreme", t: ["reasoning","vision"] },
+  "claude-sonnet-4-5":{ i: 3,    o: 15,  s: "fast",      a: "supreme", t: ["vision","code"] },
+  "claude-3-5-haiku-20241022": { i: 0.8, o: 4, s: "ultrafast", a: "high", t: ["fast","cheap"] },
+  "gemini-2.0-flash": { i: 0.1,  o: 0.4, s: "ultrafast", a: "high",    t: ["fast","cheap","vision"] },
 };
 
-// ── 获取 OpenAI 模型列表 ────────────────────────────────────────────────────
-async function fetchOpenAI() {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) { console.log("⚠ OPENAI_API_KEY not set, skipping"); return []; }
-
-  const res = await fetch("https://api.openai.com/v1/models", {
-    headers: { Authorization: `Bearer ${key}` },
-  });
-  const { data } = await res.json();
-
-  // 只保留主流 chat 模型
-  const WHITELIST = /^(gpt-4|gpt-3\.5-turbo|o1|o3|o4|chatgpt-4o)/;
-  return data
-    .filter((m) => WHITELIST.test(m.id) && !m.id.includes("instruct") && !m.id.includes("realtime"))
-    .map((m) => ({
-      id:            m.id,
-      name:          toDisplayName(m.id, "OpenAI"),
-      provider:      "OpenAI",
-      apiProvider:   "openai",
-      contextWindow: 128000,
-      maxOutput:     16384,
-      inputCostPer1M:  META_MAP[m.id]?.inputCostPer1M  ?? 0,
-      outputCostPer1M: META_MAP[m.id]?.outputCostPer1M ?? 0,
-      speed:         META_MAP[m.id]?.speed    ?? "medium",
-      accuracy:      META_MAP[m.id]?.accuracy ?? "high",
-      supportsStreaming: true,
-      isLatest:      false,
-      tags:          META_MAP[m.id]?.tags ?? [],
-      releaseDate:   new Date(m.created * 1000).toISOString().slice(0, 10),
-    }));
-}
-
-// ── 获取 Anthropic 模型列表 ────────────────────────────────────────────────
-async function fetchAnthropic() {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) { console.log("⚠ ANTHROPIC_API_KEY not set, skipping"); return []; }
-
-  const res = await fetch("https://api.anthropic.com/v1/models", {
-    headers: {
-      "x-api-key":         key,
-      "anthropic-version": "2023-06-01",
-    },
-  });
-  const { data } = await res.json();
-  return (data ?? []).map((m) => ({
-    id:            m.id,
-    name:          m.display_name ?? toDisplayName(m.id, "Anthropic"),
-    provider:      "Anthropic",
-    apiProvider:   "anthropic",
-    contextWindow: 200000,
-    maxOutput:     m.id.includes("haiku") ? 8096 : 16000,
-    inputCostPer1M:  META_MAP[m.id]?.inputCostPer1M  ?? 0,
-    outputCostPer1M: META_MAP[m.id]?.outputCostPer1M ?? 0,
-    speed:         META_MAP[m.id]?.speed    ?? "medium",
-    accuracy:      META_MAP[m.id]?.accuracy ?? "high",
-    supportsStreaming: true,
-    isLatest:      false,
-    tags:          META_MAP[m.id]?.tags ?? [],
-    releaseDate:   m.created_at?.slice(0, 10) ?? "",
-  }));
-}
-
-// ── 获取 Google Gemini 模型列表 ────────────────────────────────────────────
+// ── Google Gemini（你有这个 Key）──────────────────────────────────────────
 async function fetchGoogle() {
   const key = process.env.GOOGLE_API_KEY;
   if (!key) { console.log("⚠ GOOGLE_API_KEY not set, skipping"); return []; }
 
+  console.log("📡 Fetching Google models...");
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
   );
-  const { models } = await res.json();
-  return (models ?? [])
-    .filter((m) => m.name.includes("gemini") && m.supportedGenerationMethods?.includes("generateContent"))
+
+  if (!res.ok) {
+    console.log(`❌ Google API error: ${res.status} ${res.statusText}`);
+    const text = await res.text();
+    console.log(text.slice(0, 300));
+    return [];
+  }
+
+  const json = await res.json();
+  const models = json.models ?? [];
+  console.log(`✅ Google: found ${models.length} models`);
+
+  return models
+    .filter((m) => m.name?.includes("gemini") && m.supportedGenerationMethods?.includes("generateContent"))
     .map((m) => {
       const id = m.name.replace("models/", "");
+      const meta = META[id];
       return {
         id,
-        name:          m.displayName ?? toDisplayName(id, "Google"),
+        name:          m.displayName ?? id,
         provider:      "Google",
         apiProvider:   "google",
         contextWindow: m.inputTokenLimit ?? 1048576,
         maxOutput:     m.outputTokenLimit ?? 8192,
-        inputCostPer1M:  META_MAP[id]?.inputCostPer1M  ?? 0,
-        outputCostPer1M: META_MAP[id]?.outputCostPer1M ?? 0,
-        speed:         META_MAP[id]?.speed    ?? "fast",
-        accuracy:      META_MAP[id]?.accuracy ?? "high",
+        inputCostPer1M:  meta?.i ?? 0,
+        outputCostPer1M: meta?.o ?? 0,
+        speed:         meta?.s ?? "fast",
+        accuracy:      meta?.a ?? "high",
         supportsStreaming: true,
         isLatest:      false,
-        tags:          META_MAP[id]?.tags ?? ["vision"],
+        tags:          meta?.t ?? [],
         releaseDate:   "",
       };
     });
 }
 
-// ── 工具函数：把 model id 转成可读名称 ────────────────────────────────────
-function toDisplayName(id, provider) {
-  return id
-    .replace(/-\d{8}$/, "")          // 去掉日期后缀
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+// ── OpenAI（可选）──────────────────────────────────────────────────────────
+async function fetchOpenAI() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) { console.log("⚠ OPENAI_API_KEY not set, skipping"); return []; }
+
+  console.log("📡 Fetching OpenAI models...");
+  const res = await fetch("https://api.openai.com/v1/models", {
+    headers: { Authorization: `Bearer ${key}` },
+  });
+
+  if (!res.ok) {
+    console.log(`❌ OpenAI API error: ${res.status}`);
+    return [];
+  }
+
+  const json = await res.json();
+  const data = json.data ?? [];
+  const KEEP = /^(gpt-4|o1|o3|o4)/;
+
+  return data
+    .filter((m) => KEEP.test(m.id) && !m.id.includes("instruct") && !m.id.includes("realtime") && !m.id.includes("audio"))
+    .map((m) => {
+      const meta = META[m.id];
+      return {
+        id:            m.id,
+        name:          m.id,
+        provider:      "OpenAI",
+        apiProvider:   "openai",
+        contextWindow: 128000,
+        maxOutput:     16384,
+        inputCostPer1M:  meta?.i ?? 0,
+        outputCostPer1M: meta?.o ?? 0,
+        speed:         meta?.s ?? "medium",
+        accuracy:      meta?.a ?? "high",
+        supportsStreaming: true,
+        isLatest:      false,
+        tags:          meta?.t ?? [],
+        releaseDate:   new Date(m.created * 1000).toISOString().slice(0, 10),
+      };
+    });
 }
 
-// ── 标记最新模型（每个 provider 的最新发布） ──────────────────────────────
-function markLatest(models) {
-  const byProvider = {};
-  for (const m of models) {
-    if (!byProvider[m.provider]) byProvider[m.provider] = [];
-    byProvider[m.provider].push(m);
+// ── Anthropic（可选）─────────────────────────────────────────────────────
+async function fetchAnthropic() {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) { console.log("⚠ ANTHROPIC_API_KEY not set, skipping"); return []; }
+
+  console.log("📡 Fetching Anthropic models...");
+  const res = await fetch("https://api.anthropic.com/v1/models", {
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+  });
+
+  if (!res.ok) {
+    console.log(`❌ Anthropic API error: ${res.status}`);
+    return [];
   }
-  for (const list of Object.values(byProvider)) {
-    const sorted = list
-      .filter((m) => m.releaseDate)
-      .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
-    if (sorted[0]) sorted[0].isLatest = true;
-  }
-  return models;
+
+  const json = await res.json();
+  const data = json.data ?? [];
+  return data.map((m) => {
+    const meta = META[m.id];
+    return {
+      id:            m.id,
+      name:          m.display_name ?? m.id,
+      provider:      "Anthropic",
+      apiProvider:   "anthropic",
+      contextWindow: 200000,
+      maxOutput:     16000,
+      inputCostPer1M:  meta?.i ?? 0,
+      outputCostPer1M: meta?.o ?? 0,
+      speed:         meta?.s ?? "medium",
+      accuracy:      meta?.a ?? "high",
+      supportsStreaming: true,
+      isLatest:      false,
+      tags:          meta?.t ?? [],
+      releaseDate:   m.created_at?.slice(0, 10) ?? "",
+    };
+  });
 }
 
-// ── 保留现有 models.json 中 API 无法获取的模型（Groq/xAI/Mistral 等）────
+// ── 合并：API 获取的 + 现有手动维护的 ─────────────────────────────────────
 function mergeWithExisting(fetched) {
   let existing = [];
   try {
     existing = JSON.parse(readFileSync(MODELS_PATH, "utf8"));
-  } catch { /* file might not exist */ }
+    console.log(`📄 Existing models.json: ${existing.length} models`);
+  } catch (e) {
+    console.log("⚠ Could not read existing models.json:", e.message);
+  }
 
-  const NON_API_PROVIDERS = ["groq", "xai", "mistral", "deepseek", "zhipu", "moonshot", "qwen", "baidu", "ollama"];
-  const manual = existing.filter((m) => NON_API_PROVIDERS.includes(m.apiProvider));
+  // 不通过 API 获取的平台，保留手动维护的数据
+  const MANUAL = new Set(["groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"]);
+  const manual = existing.filter((m) => MANUAL.has(m.apiProvider));
 
-  // 合并：API 获取的 + 手动维护的，去重
+  // 去重合并
   const combined = [...fetched, ...manual];
   const seen = new Set();
   return combined.filter((m) => {
@@ -167,38 +170,59 @@ function mergeWithExisting(fetched) {
   });
 }
 
-// ── 主流程 ────────────────────────────────────────────────────────────────
-async function main() {
-  console.log("🔍 Fetching latest models from APIs...");
+// ── 标记每个 provider 最新发布的模型 ────────────────────────────────────
+function markLatest(models) {
+  const byProvider = {};
+  for (const m of models) {
+    m.isLatest = false; // reset
+    if (!byProvider[m.provider]) byProvider[m.provider] = [];
+    byProvider[m.provider].push(m);
+  }
+  for (const list of Object.values(byProvider)) {
+    const sorted = list.filter((m) => m.releaseDate).sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
+    if (sorted[0]) sorted[0].isLatest = true;
+  }
+  return models;
+}
 
-  const [openai, anthropic, google] = await Promise.allSettled([
+// ── 主流程 ──────────────────────────────────────────────────────────────
+async function main() {
+  console.log("🚀 Model auto-updater starting...\n");
+
+  const results = await Promise.allSettled([
+    fetchGoogle(),
     fetchOpenAI(),
     fetchAnthropic(),
-    fetchGoogle(),
   ]);
 
-  const fetched = [
-    ...(openai.status === "fulfilled"    ? openai.value    : []),
-    ...(anthropic.status === "fulfilled" ? anthropic.value : []),
-    ...(google.status === "fulfilled"    ? google.value    : []),
-  ];
+  const fetched = [];
+  for (const r of results) {
+    if (r.status === "fulfilled" && Array.isArray(r.value)) {
+      fetched.push(...r.value);
+    } else if (r.status === "rejected") {
+      console.log("❌ Fetch failed:", r.reason?.message ?? r.reason);
+    }
+  }
 
-  console.log(`✅ Fetched: OpenAI=${openai.value?.length ?? 0}, Anthropic=${anthropic.value?.length ?? 0}, Google=${google.value?.length ?? 0}`);
+  console.log(`\n📊 Total fetched from APIs: ${fetched.length}`);
 
   const merged = mergeWithExisting(fetched);
   const final  = markLatest(merged);
 
-  // 按 provider 分组排序
+  // 按 provider 排序
   const ORDER = ["openai","anthropic","google","groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"];
   final.sort((a, b) => {
     const ai = ORDER.indexOf(a.apiProvider);
     const bi = ORDER.indexOf(b.apiProvider);
-    if (ai !== bi) return ai - bi;
+    if (ai !== bi) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     return (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "");
   });
 
-  writeFileSync(MODELS_PATH, JSON.stringify(final, null, 2));
-  console.log(`✅ Written ${final.length} models to public/models.json`);
+  writeFileSync(MODELS_PATH, JSON.stringify(final, null, 2) + "\n");
+  console.log(`\n✅ Done! Written ${final.length} models to public/models.json`);
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error("💥 Fatal error:", e);
+  process.exit(1);
+});
