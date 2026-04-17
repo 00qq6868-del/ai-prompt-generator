@@ -1,39 +1,727 @@
 [
-  { "id": "gpt-4.5", "name": "GPT-4.5", "provider": "OpenAI", "apiProvider": "openai", "contextWindow": 128000, "maxOutput": 16384, "inputCostPer1M": 75, "outputCostPer1M": 150, "speed": "medium", "accuracy": "supreme", "supportsStreaming": true, "isLatest": false, "tags": ["vision", "reasoning"], "releaseDate": "2025-02-27" },
-  { "id": "gpt-4o", "name": "GPT-4o", "provider": "OpenAI", "apiProvider": "openai", "contextWindow": 128000, "maxOutput": 16384, "inputCostPer1M": 2.5, "outputCostPer1M": 10, "speed": "fast", "accuracy": "supreme", "supportsStreaming": true, "isLatest": false, "tags": ["vision", "code"], "releaseDate": "2024-05-13" },
-  { "id": "gpt-4o-mini", "name": "GPT-4o Mini", "provider": "OpenAI", "apiProvider": "openai", "contextWindow": 128000, "maxOutput": 16384, "inputCostPer1M": 0.15, "outputCostPer1M": 0.6, "speed": "ultrafast", "accuracy": "high", "supportsStreaming": true, "isLatest": false, "tags": ["cheap", "fast"], "releaseDate": "2024-07-18" },
-  { "id": "o3", "name": "o3", "provider": "OpenAI", "apiProvider": "openai", "contextWindow": 200000, "maxOutput": 100000, "inputCostPer1M": 10, "outputCostPer1M": 40, "speed": "slow", "accuracy": "supreme", "supportsStreaming": true, "isLatest": false, "tags": ["reasoning", "math", "code"], "releaseDate": "2025-04-16" },
-  { "id": "o4-mini", "name": "o4-mini", "provider": "OpenAI", "apiProvider": "openai", "contextWindow": 200000, "maxOutput": 100000, "inputCostPer1M": 1.1, "outputCostPer1M": 4.4, "speed": "fast", "accuracy": "supreme", "supportsStreaming": true, "isLatest": true, "tags": ["reasoning", "cheap", "code"], "releaseDate": "2025-04-16" },
-
-  { "id": "claude-opus-4-5", "name": "Claude Opus 4.5", "provider": "Anthropic", "apiProvider": "anthropic", "contextWindow": 200000, "maxOutput": 32000, "inputCostPer1M": 15, "outputCostPer1M": 75, "speed": "slow", "accuracy": "supreme", "supportsStreaming": true, "isLatest": false, "tags": ["reasoning", "vision", "code"], "releaseDate": "2025-04-01" },
-  { "id": "claude-sonnet-4-5", "name": "Claude Sonnet 4.5", "provider": "Anthropic", "apiProvider": "anthropic", "contextWindow": 200000, "maxOutput": 16000, "inputCostPer1M": 3, "outputCostPer1M": 15, "speed": "fast", "accuracy": "supreme", "supportsStreaming": true, "isLatest": true, "tags": ["vision", "code", "balanced"], "releaseDate": "2025-04-01" },
-  { "id": "claude-3-5-haiku-20241022", "name": "Claude Haiku 3.5", "provider": "Anthropic", "apiProvider": "anthropic", "contextWindow": 200000, "maxOutput": 8096, "inputCostPer1M": 0.8, "outputCostPer1M": 4, "speed": "ultrafast", "accuracy": "high", "supportsStreaming": true, "isLatest": false, "tags": ["fast", "cheap"], "releaseDate": "2024-11-04" },
-
-  { "id": "gemini-2.5-pro-preview-03-25", "name": "Gemini 2.5 Pro", "provider": "Google", "apiProvider": "google", "contextWindow": 1048576, "maxOutput": 65536, "inputCostPer1M": 1.25, "outputCostPer1M": 10, "speed": "medium", "accuracy": "supreme", "supportsStreaming": true, "isLatest": true, "tags": ["reasoning", "vision", "long-context"], "releaseDate": "2025-03-25" },
-  { "id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "provider": "Google", "apiProvider": "google", "contextWindow": 1048576, "maxOutput": 8192, "inputCostPer1M": 0.1, "outputCostPer1M": 0.4, "speed": "ultrafast", "accuracy": "high", "supportsStreaming": true, "isLatest": false, "tags": ["fast", "cheap", "vision"], "releaseDate": "2025-02-05" },
-  { "id": "gemini-2.0-flash-lite", "name": "Gemini 2.0 Flash Lite", "provider": "Google", "apiProvider": "google", "contextWindow": 1048576, "maxOutput": 8192, "inputCostPer1M": 0.075, "outputCostPer1M": 0.3, "speed": "ultrafast", "accuracy": "medium", "supportsStreaming": true, "isLatest": false, "tags": ["ultra-cheap", "fast"], "releaseDate": "2025-02-05" },
-
-  { "id": "llama-3.3-70b-versatile", "name": "Llama 3.3 70B", "provider": "Groq", "apiProvider": "groq", "contextWindow": 128000, "maxOutput": 32768, "inputCostPer1M": 0.59, "outputCostPer1M": 0.79, "speed": "ultrafast", "accuracy": "high", "supportsStreaming": true, "isLatest": true, "tags": ["open-source", "fast"], "releaseDate": "2024-12-06" },
-  { "id": "llama-3.1-8b-instant", "name": "Llama 3.1 8B", "provider": "Groq", "apiProvider": "groq", "contextWindow": 128000, "maxOutput": 8192, "inputCostPer1M": 0.05, "outputCostPer1M": 0.08, "speed": "ultrafast", "accuracy": "medium", "supportsStreaming": true, "isLatest": false, "tags": ["open-source", "ultra-cheap"], "releaseDate": "2024-07-23" },
-
-  { "id": "grok-3", "name": "Grok-3", "provider": "xAI", "apiProvider": "xai", "contextWindow": 131072, "maxOutput": 32768, "inputCostPer1M": 3, "outputCostPer1M": 15, "speed": "fast", "accuracy": "supreme", "supportsStreaming": true, "isLatest": true, "tags": ["reasoning", "real-time-web"], "releaseDate": "2025-02-17" },
-  { "id": "grok-3-mini", "name": "Grok-3 Mini", "provider": "xAI", "apiProvider": "xai", "contextWindow": 131072, "maxOutput": 32768, "inputCostPer1M": 0.3, "outputCostPer1M": 0.5, "speed": "ultrafast", "accuracy": "high", "supportsStreaming": true, "isLatest": false, "tags": ["cheap", "fast"], "releaseDate": "2025-02-17" },
-
-  { "id": "mistral-large-latest", "name": "Mistral Large", "provider": "Mistral AI", "apiProvider": "mistral", "contextWindow": 128000, "maxOutput": 16384, "inputCostPer1M": 2, "outputCostPer1M": 6, "speed": "fast", "accuracy": "high", "supportsStreaming": true, "isLatest": true, "tags": ["multilingual", "code"], "releaseDate": "2024-11-01" },
-  { "id": "mistral-small-latest", "name": "Mistral Small", "provider": "Mistral AI", "apiProvider": "mistral", "contextWindow": 32000, "maxOutput": 8192, "inputCostPer1M": 0.1, "outputCostPer1M": 0.3, "speed": "ultrafast", "accuracy": "medium", "supportsStreaming": true, "isLatest": false, "tags": ["cheap", "fast"], "releaseDate": "2024-09-17" },
-
-  { "id": "deepseek-chat", "name": "DeepSeek V3", "provider": "深度求索", "apiProvider": "deepseek", "contextWindow": 64000, "maxOutput": 8192, "inputCostPer1M": 0.27, "outputCostPer1M": 1.1, "speed": "fast", "accuracy": "high", "supportsStreaming": true, "isLatest": false, "tags": ["code", "math", "cheap"], "releaseDate": "2024-12-26" },
-  { "id": "deepseek-reasoner", "name": "DeepSeek R1", "provider": "深度求索", "apiProvider": "deepseek", "contextWindow": 64000, "maxOutput": 32768, "inputCostPer1M": 0.55, "outputCostPer1M": 2.19, "speed": "slow", "accuracy": "supreme", "supportsStreaming": true, "isLatest": true, "tags": ["reasoning", "math", "code"], "releaseDate": "2025-01-20" },
-
-  { "id": "glm-4-plus", "name": "GLM-4 Plus", "provider": "智谱AI", "apiProvider": "zhipu", "contextWindow": 128000, "maxOutput": 4096, "inputCostPer1M": 0.07, "outputCostPer1M": 0.07, "speed": "fast", "accuracy": "high", "supportsStreaming": true, "isLatest": true, "tags": ["chinese", "cheap"], "releaseDate": "2024-09-01" },
-
-  { "id": "moonshot-v1-128k", "name": "Kimi moonshot-v1-128k", "provider": "月之暗面", "apiProvider": "moonshot", "contextWindow": 128000, "maxOutput": 4096, "inputCostPer1M": 0.08, "outputCostPer1M": 0.08, "speed": "medium", "accuracy": "high", "supportsStreaming": true, "isLatest": true, "tags": ["chinese", "long-context"], "releaseDate": "2024-04-01" },
-
-  { "id": "qwen-max", "name": "Qwen Max", "provider": "阿里巴巴", "apiProvider": "qwen", "contextWindow": 32768, "maxOutput": 8192, "inputCostPer1M": 0.04, "outputCostPer1M": 0.12, "speed": "medium", "accuracy": "high", "supportsStreaming": true, "isLatest": true, "tags": ["chinese", "cheap"], "releaseDate": "2024-09-01" },
-  { "id": "qwen-turbo", "name": "Qwen Turbo", "provider": "阿里巴巴", "apiProvider": "qwen", "contextWindow": 1000000, "maxOutput": 8192, "inputCostPer1M": 0.005, "outputCostPer1M": 0.01, "speed": "ultrafast", "accuracy": "medium", "supportsStreaming": true, "isLatest": false, "tags": ["chinese", "ultra-cheap", "long-context"], "releaseDate": "2024-09-01" },
-
-  { "id": "ernie-4.0-8k", "name": "ERNIE 4.0", "provider": "百度", "apiProvider": "baidu", "contextWindow": 8192, "maxOutput": 2048, "inputCostPer1M": 0.12, "outputCostPer1M": 0.12, "speed": "medium", "accuracy": "high", "supportsStreaming": true, "isLatest": true, "tags": ["chinese", "search"], "releaseDate": "2024-04-16" },
-
-  { "id": "llama3.2", "name": "Llama 3.2 3B (本地)", "provider": "Ollama", "apiProvider": "ollama", "contextWindow": 128000, "maxOutput": 8192, "inputCostPer1M": 0, "outputCostPer1M": 0, "speed": "fast", "accuracy": "medium", "supportsStreaming": false, "isLatest": false, "tags": ["local", "free", "privacy"], "releaseDate": "2024-09-25" },
-  { "id": "qwen2.5:7b", "name": "Qwen 2.5 7B (本地)", "provider": "Ollama", "apiProvider": "ollama", "contextWindow": 32768, "maxOutput": 8192, "inputCostPer1M": 0, "outputCostPer1M": 0, "speed": "medium", "accuracy": "medium", "supportsStreaming": false, "isLatest": false, "tags": ["local", "free", "chinese"], "releaseDate": "2024-09-19" }
+  {
+    "id": "gemini-2.5-flash",
+    "name": "Gemini 2.5 Flash",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.5-pro",
+    "name": "Gemini 2.5 Pro",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.0-flash",
+    "name": "Gemini 2.0 Flash",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.4,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.0-flash-001",
+    "name": "Gemini 2.0 Flash 001",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.0-flash-lite-001",
+    "name": "Gemini 2.0 Flash-Lite 001",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.0-flash-lite",
+    "name": "Gemini 2.0 Flash-Lite",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.075,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
+    "accuracy": "medium",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "ultra-cheap",
+      "fast"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.5-flash-preview-tts",
+    "name": "Gemini 2.5 Flash Preview TTS",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.5-pro-preview-tts",
+    "name": "Gemini 2.5 Pro Preview TTS",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-flash-latest",
+    "name": "Gemini Flash Latest",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-flash-lite-latest",
+    "name": "Gemini Flash-Lite Latest",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-pro-latest",
+    "name": "Gemini Pro Latest",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.5-flash-lite",
+    "name": "Gemini 2.5 Flash-Lite",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.5-flash-image",
+    "name": "Nano Banana",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 32768,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3-pro-preview",
+    "name": "Gemini 3 Pro Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3-flash-preview",
+    "name": "Gemini 3 Flash Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3.1-pro-preview",
+    "name": "Gemini 3.1 Pro Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3.1-pro-preview-customtools",
+    "name": "Gemini 3.1 Pro Preview Custom Tools",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3.1-flash-lite-preview",
+    "name": "Gemini 3.1 Flash Lite Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3-pro-image-preview",
+    "name": "Nano Banana Pro",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3.1-flash-image-preview",
+    "name": "Nano Banana 2",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 65536,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-3.1-flash-tts-preview",
+    "name": "Gemini 3.1 Flash TTS Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-robotics-er-1.5-preview",
+    "name": "Gemini Robotics-ER 1.5 Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-robotics-er-1.6-preview",
+    "name": "Gemini Robotics-ER 1.6 Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "gemini-2.5-computer-use-preview-10-2025",
+    "name": "Gemini 2.5 Computer Use Preview 10-2025",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision"
+    ],
+    "releaseDate": ""
+  },
+  {
+    "id": "llama-3.3-70b-versatile",
+    "name": "Llama 3.3 70B",
+    "provider": "Groq",
+    "apiProvider": "groq",
+    "contextWindow": 128000,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.59,
+    "outputCostPer1M": 0.79,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "open-source",
+      "fast"
+    ],
+    "releaseDate": "2024-12-06"
+  },
+  {
+    "id": "llama-3.1-8b-instant",
+    "name": "Llama 3.1 8B",
+    "provider": "Groq",
+    "apiProvider": "groq",
+    "contextWindow": 128000,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.05,
+    "outputCostPer1M": 0.08,
+    "speed": "ultrafast",
+    "accuracy": "medium",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "open-source",
+      "ultra-cheap"
+    ],
+    "releaseDate": "2024-07-23"
+  },
+  {
+    "id": "grok-3",
+    "name": "Grok-3",
+    "provider": "xAI",
+    "apiProvider": "xai",
+    "contextWindow": 131072,
+    "maxOutput": 32768,
+    "inputCostPer1M": 3,
+    "outputCostPer1M": 15,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "real-time-web"
+    ],
+    "releaseDate": "2025-02-17"
+  },
+  {
+    "id": "grok-3-mini",
+    "name": "Grok-3 Mini",
+    "provider": "xAI",
+    "apiProvider": "xai",
+    "contextWindow": 131072,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.5,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "cheap",
+      "fast"
+    ],
+    "releaseDate": "2025-02-17"
+  },
+  {
+    "id": "mistral-large-latest",
+    "name": "Mistral Large",
+    "provider": "Mistral AI",
+    "apiProvider": "mistral",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "multilingual",
+      "code"
+    ],
+    "releaseDate": "2024-11-01"
+  },
+  {
+    "id": "mistral-small-latest",
+    "name": "Mistral Small",
+    "provider": "Mistral AI",
+    "apiProvider": "mistral",
+    "contextWindow": 32000,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
+    "accuracy": "medium",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "cheap",
+      "fast"
+    ],
+    "releaseDate": "2024-09-17"
+  },
+  {
+    "id": "deepseek-reasoner",
+    "name": "DeepSeek R1",
+    "provider": "深度求索",
+    "apiProvider": "deepseek",
+    "contextWindow": 64000,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.55,
+    "outputCostPer1M": 2.19,
+    "speed": "slow",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "math",
+      "code"
+    ],
+    "releaseDate": "2025-01-20"
+  },
+  {
+    "id": "deepseek-chat",
+    "name": "DeepSeek V3",
+    "provider": "深度求索",
+    "apiProvider": "deepseek",
+    "contextWindow": 64000,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code",
+      "math",
+      "cheap"
+    ],
+    "releaseDate": "2024-12-26"
+  },
+  {
+    "id": "glm-4-plus",
+    "name": "GLM-4 Plus",
+    "provider": "智谱AI",
+    "apiProvider": "zhipu",
+    "contextWindow": 128000,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.07,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2024-09-01"
+  },
+  {
+    "id": "moonshot-v1-128k",
+    "name": "Kimi moonshot-v1-128k",
+    "provider": "月之暗面",
+    "apiProvider": "moonshot",
+    "contextWindow": 128000,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0.08,
+    "outputCostPer1M": 0.08,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
+      "long-context"
+    ],
+    "releaseDate": "2024-04-01"
+  },
+  {
+    "id": "qwen-max",
+    "name": "Qwen Max",
+    "provider": "阿里巴巴",
+    "apiProvider": "qwen",
+    "contextWindow": 32768,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.04,
+    "outputCostPer1M": 0.12,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2024-09-01"
+  },
+  {
+    "id": "qwen-turbo",
+    "name": "Qwen Turbo",
+    "provider": "阿里巴巴",
+    "apiProvider": "qwen",
+    "contextWindow": 1000000,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.005,
+    "outputCostPer1M": 0.01,
+    "speed": "ultrafast",
+    "accuracy": "medium",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "ultra-cheap",
+      "long-context"
+    ],
+    "releaseDate": "2024-09-01"
+  },
+  {
+    "id": "ernie-4.0-8k",
+    "name": "ERNIE 4.0",
+    "provider": "百度",
+    "apiProvider": "baidu",
+    "contextWindow": 8192,
+    "maxOutput": 2048,
+    "inputCostPer1M": 0.12,
+    "outputCostPer1M": 0.12,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
+      "search"
+    ],
+    "releaseDate": "2024-04-16"
+  },
+  {
+    "id": "llama3.2",
+    "name": "Llama 3.2 3B (本地)",
+    "provider": "Ollama",
+    "apiProvider": "ollama",
+    "contextWindow": 128000,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "medium",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "local",
+      "free",
+      "privacy"
+    ],
+    "releaseDate": "2024-09-25"
+  },
+  {
+    "id": "qwen2.5:7b",
+    "name": "Qwen 2.5 7B (本地)",
+    "provider": "Ollama",
+    "apiProvider": "ollama",
+    "contextWindow": 32768,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "medium",
+    "supportsStreaming": false,
+    "isLatest": false,
+    "tags": [
+      "local",
+      "free",
+      "chinese"
+    ],
+    "releaseDate": "2024-09-19"
+  }
 ]
