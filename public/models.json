@@ -12,9 +12,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -30,9 +28,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -68,9 +64,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -86,9 +80,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -98,16 +90,13 @@
     "apiProvider": "google",
     "contextWindow": 1048576,
     "maxOutput": 8192,
-    "inputCostPer1M": 0.075,
-    "outputCostPer1M": 0.3,
-    "speed": "ultrafast",
-    "accuracy": "medium",
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "ultra-cheap",
-      "fast"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -123,9 +112,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -141,9 +128,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -159,9 +144,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -177,9 +160,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -195,9 +176,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -213,9 +192,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -231,9 +208,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -249,9 +224,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -267,9 +240,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -285,9 +256,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -303,9 +272,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -321,9 +288,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -339,9 +304,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -357,9 +320,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -375,9 +336,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -393,9 +352,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -411,9 +368,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
@@ -429,9 +384,7 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [
-      "vision"
-    ],
+    "tags": [],
     "releaseDate": ""
   },
   {
