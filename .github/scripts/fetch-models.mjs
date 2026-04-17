@@ -21,6 +21,73 @@ const META = {
   "gemini-2.0-flash": { i: 0.1,  o: 0.4, s: "ultrafast", a: "high",    t: ["fast","cheap","vision"] },
 };
 
+// ── AihubMix（聚合平台，一个Key拉取所有模型）─────────────────────────────
+async function fetchAihubmix() {
+  const key = process.env.AIHUBMIX_API_KEY;
+  if (!key) { console.log("⚠ AIHUBMIX_API_KEY not set, skipping"); return []; }
+
+  console.log("📡 Fetching AihubMix models (all providers)...");
+  const res = await fetch("https://aihubmix.com/v1/models", {
+    headers: { Authorization: `Bearer ${key}` },
+  });
+
+  if (!res.ok) {
+    console.log(`❌ AihubMix API error: ${res.status}`);
+    return [];
+  }
+
+  const json = await res.json();
+  const data = json.data ?? [];
+  console.log(`✅ AihubMix: found ${data.length} models`);
+
+  // Map known provider prefixes
+  const PROVIDER_MAP = {
+    "gpt-":     { provider: "OpenAI",     apiProvider: "aihubmix" },
+    "o1":       { provider: "OpenAI",     apiProvider: "aihubmix" },
+    "o3":       { provider: "OpenAI",     apiProvider: "aihubmix" },
+    "o4":       { provider: "OpenAI",     apiProvider: "aihubmix" },
+    "claude-":  { provider: "Anthropic",  apiProvider: "aihubmix" },
+    "gemini-":  { provider: "Google",     apiProvider: "aihubmix" },
+    "llama":    { provider: "Meta",       apiProvider: "aihubmix" },
+    "grok-":    { provider: "xAI",        apiProvider: "aihubmix" },
+    "mistral":  { provider: "Mistral AI", apiProvider: "aihubmix" },
+    "deepseek": { provider: "DeepSeek",   apiProvider: "aihubmix" },
+    "glm-":     { provider: "智谱AI",     apiProvider: "aihubmix" },
+    "qwen":     { provider: "阿里巴巴",   apiProvider: "aihubmix" },
+  };
+
+  // Only keep chat models, skip embeddings/whisper/tts/image
+  const SKIP = /embed|whisper|tts|dall-e|moderation|text-davinci|babbage|ada|curie|search|edit|insert|similarity|code-davinci|audio|realtime/i;
+
+  return data
+    .filter((m) => !SKIP.test(m.id))
+    .map((m) => {
+      // Detect provider from model ID prefix
+      let provInfo = { provider: "Other", apiProvider: "aihubmix" };
+      for (const [prefix, info] of Object.entries(PROVIDER_MAP)) {
+        if (m.id.startsWith(prefix)) { provInfo = info; break; }
+      }
+
+      const meta = META[m.id];
+      return {
+        id:            m.id,
+        name:          m.id,
+        provider:      provInfo.provider,
+        apiProvider:   provInfo.apiProvider,
+        contextWindow: 128000,
+        maxOutput:     16384,
+        inputCostPer1M:  meta?.i ?? 0,
+        outputCostPer1M: meta?.o ?? 0,
+        speed:         meta?.s ?? "medium",
+        accuracy:      meta?.a ?? "high",
+        supportsStreaming: true,
+        isLatest:      false,
+        tags:          meta?.t ?? [],
+        releaseDate:   m.created ? new Date(m.created * 1000).toISOString().slice(0, 10) : "",
+      };
+    });
+}
+
 // ── Google Gemini（你有这个 Key）──────────────────────────────────────────
 async function fetchGoogle() {
   const key = process.env.GOOGLE_API_KEY;
@@ -190,6 +257,7 @@ async function main() {
   console.log("🚀 Model auto-updater starting...\n");
 
   const results = await Promise.allSettled([
+    fetchAihubmix(),
     fetchGoogle(),
     fetchOpenAI(),
     fetchAnthropic(),
@@ -210,7 +278,7 @@ async function main() {
   const final  = markLatest(merged);
 
   // 按 provider 排序
-  const ORDER = ["openai","anthropic","google","groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"];
+  const ORDER = ["aihubmix","openai","anthropic","google","groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"];
   final.sort((a, b) => {
     const ai = ORDER.indexOf(a.apiProvider);
     const bi = ORDER.indexOf(b.apiProvider);

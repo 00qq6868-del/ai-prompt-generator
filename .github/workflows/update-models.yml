@@ -27,6 +27,7 @@ jobs:
       - name: Run model scraper
         run: node .github/scripts/fetch-models.mjs
         env:
+          AIHUBMIX_API_KEY:  ${{ secrets.AIHUBMIX_API_KEY }}
           OPENAI_API_KEY:    ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_API_KEY:    ${{ secrets.GOOGLE_API_KEY }}

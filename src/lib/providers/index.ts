@@ -27,6 +27,7 @@ export interface GenerateResult {
 
 // ── [S3 FIX] Key validation map ───────────────────────────────
 const KEY_MAP: Record<string, string> = {
+  aihubmix: "AIHUBMIX_API_KEY",
   openai:    "OPENAI_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
   google:    "GOOGLE_API_KEY",
@@ -372,9 +373,35 @@ async function callOllama(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
+// ─── AihubMix（聚合平台，一个Key访问所有模型）────────────────
+async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
+  assertKey("aihubmix", opts.userKeys);
+  const client = new OpenAI({
+    apiKey: resolveKey("aihubmix", opts.userKeys),
+    baseURL: "https://aihubmix.com/v1",
+  });
+  const t0 = Date.now();
+  const res = await client.chat.completions.create({
+    model: opts.model,
+    max_tokens: opts.maxTokens ?? 2048,
+    temperature: opts.temperature ?? 0.7,
+    messages: [
+      { role: "system", content: opts.systemPrompt },
+      { role: "user",   content: opts.userPrompt },
+    ],
+  });
+  return {
+    text: res.choices[0].message.content ?? "",
+    inputTokens:  res.usage?.prompt_tokens ?? 0,
+    outputTokens: res.usage?.completion_tokens ?? 0,
+    latencyMs: Date.now() - t0,
+  };
+}
+
 // ─── Dispatcher ───────────────────────────────────────────────
 export async function callProvider(opts: GenerateOptions): Promise<GenerateResult> {
   switch (opts.apiProvider) {
+    case "aihubmix": return callAihubmix(opts);
     case "openai":    return callOpenAI(opts);
     case "anthropic": return callAnthropic(opts);
     case "google":    return callGoogle(opts);

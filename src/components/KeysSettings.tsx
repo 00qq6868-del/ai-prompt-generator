@@ -6,6 +6,15 @@ import { X, KeyRound, CheckCircle, ExternalLink, Eye, EyeOff, Sparkles, ArrowRig
 
 const PROVIDERS = [
   {
+    id: "AIHUBMIX_API_KEY",
+    name: "AihubMix (全部模型)",
+    placeholder: "sk-...",
+    url: "https://console.aihubmix.com/token",
+    free: false,
+    color: "text-violet-400",
+    accent: "violet",
+  },
+  {
     id: "GOOGLE_API_KEY",
     name: "Gemini (Google)",
     placeholder: "AIza...",
