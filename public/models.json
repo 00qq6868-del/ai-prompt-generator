@@ -13,7 +13,8 @@
     "supportsStreaming": true,
     "isLatest": true,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4-20-reasoning",
@@ -29,7 +30,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4-20-non-reasoning",
@@ -45,7 +47,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.4",
@@ -61,7 +64,8 @@
     "supportsStreaming": true,
     "isLatest": true,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.4-nano",
@@ -77,7 +81,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.4-mini",
@@ -93,7 +98,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3.1-pro-preview-customtools",
@@ -109,7 +115,8 @@
     "supportsStreaming": true,
     "isLatest": true,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3.1-pro-preview",
@@ -125,7 +132,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3.1-flash-lite-preview",
@@ -141,7 +149,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3.1-flash-image-preview",
@@ -157,7 +166,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-sonnet-4-6",
@@ -173,7 +183,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.3-codex",
@@ -189,7 +200,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.3-chat-latest",
@@ -205,7 +217,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-sonnet-4-6-think",
@@ -221,7 +234,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.4-pro",
@@ -237,7 +251,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.4-low",
@@ -253,7 +268,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.4-high",
@@ -269,7 +285,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-5.1",
@@ -285,7 +302,8 @@
     "supportsStreaming": true,
     "isLatest": true,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.7-free",
@@ -301,7 +319,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-5.1-free",
@@ -317,7 +336,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-opus-4-6",
@@ -333,7 +353,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3-flash-preview",
@@ -349,7 +370,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.5-free",
@@ -365,7 +387,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-5-turbo-free",
@@ -381,7 +404,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-5-free",
@@ -397,7 +421,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-opus-4-6-think",
@@ -413,7 +438,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-opus-4-5-think",
@@ -429,7 +455,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-glm-5.1",
@@ -445,7 +472,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cohere-command-a",
@@ -461,7 +489,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-5-turbo",
@@ -477,7 +506,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-5",
@@ -493,7 +523,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "glm-4.7-flash-free",
@@ -509,7 +540,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-4.7-free",
@@ -525,7 +557,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3-pro-image-preview",
@@ -541,7 +574,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.2-codex",
@@ -557,7 +591,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "deepinfra-gemma-4-26b-a4b-it",
@@ -573,7 +608,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.2",
@@ -589,7 +625,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-3.1-flash-lite-preview-nothink",
@@ -605,7 +642,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.2-low",
@@ -621,7 +659,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.2-high",
@@ -637,7 +676,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.2-chat-latest",
@@ -653,7 +693,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.2-pro",
@@ -669,7 +710,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.1-codex-max",
@@ -685,7 +727,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.1",
@@ -701,7 +744,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.1-codex-mini",
@@ -717,7 +761,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.1-codex",
@@ -733,7 +778,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5.1-chat-latest",
@@ -749,7 +795,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "mistral-large-3",
@@ -765,7 +812,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4.20-multi-agent-0309",
@@ -781,7 +829,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-sonnet-4-5-think",
@@ -797,7 +846,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "zai-glm-5-turbo",
@@ -813,7 +863,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "step-3.5-flash-free",
@@ -829,7 +880,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "k2.6-code-preview-free",
@@ -845,7 +897,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-code-fast-1",
@@ -861,7 +914,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4-1-fast-reasoning",
@@ -877,7 +931,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4-1-fast-non-reasoning",
@@ -893,7 +948,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-image",
@@ -909,7 +965,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-glm-5-turbo",
@@ -925,7 +982,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-glm-5",
@@ -941,7 +999,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5",
@@ -957,7 +1016,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "deepseek-v3.2-speciale",
@@ -973,7 +1033,8 @@
     "supportsStreaming": true,
     "isLatest": true,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5-codex",
@@ -989,7 +1050,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "DeepSeek-V3.1-Terminus",
@@ -1005,7 +1067,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5-pro",
@@ -1021,7 +1084,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "DeepSeek-V3.1-Think",
@@ -1037,7 +1101,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5-mini",
@@ -1053,7 +1118,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5-nano",
@@ -1069,7 +1135,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-5-chat-latest",
@@ -1085,7 +1152,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-opus-4-1",
@@ -1101,7 +1169,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-plus",
@@ -1117,7 +1186,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-flash-2026-01-22",
@@ -1133,7 +1203,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-flash",
@@ -1149,7 +1220,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "mm-minimax-m2.7-highspeed",
@@ -1165,7 +1237,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-minimax-m2.7-highspeed",
@@ -1181,7 +1254,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-minimax-m2.7",
@@ -1197,7 +1271,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.7-highspeed",
@@ -1213,7 +1288,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.7",
@@ -1229,7 +1305,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.5-highspeed",
@@ -1245,7 +1322,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.5",
@@ -1261,7 +1339,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-minimax-m2.5-highspeed",
@@ -1277,7 +1356,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-minimax-m2.5",
@@ -1293,7 +1373,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "o3",
@@ -1312,7 +1393,8 @@
       "reasoning",
       "math"
     ],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.1-free",
@@ -1328,7 +1410,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2.1",
@@ -1344,7 +1427,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-4.7",
@@ -1360,7 +1444,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-minimax-m2.1",
@@ -1376,7 +1461,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "step-3.5-flash",
@@ -1392,7 +1478,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "o3-pro",
@@ -1408,7 +1495,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "kimi-for-coding-free",
@@ -1424,7 +1512,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro",
@@ -1440,7 +1529,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2-free",
@@ -1456,7 +1546,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-minimax-m2",
@@ -1472,7 +1563,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-4.6-free",
@@ -1488,7 +1580,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "coding-glm-4.6",
@@ -1504,7 +1597,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "Kimi-K2-0905",
@@ -1520,7 +1614,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "DeepSeek-V3.1-Fast",
@@ -1536,7 +1631,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-opus-4-0",
@@ -1552,7 +1648,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-sonnet-4-0",
@@ -1568,7 +1665,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "glm-4.5v",
@@ -1584,7 +1682,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-preview-09-2025",
@@ -1600,7 +1699,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash",
@@ -1616,7 +1716,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-lite-preview-09-2025-nothink",
@@ -1632,7 +1733,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-lite-preview-09-2025",
@@ -1648,7 +1750,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-lite-nothink",
@@ -1664,7 +1767,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-lite",
@@ -1680,7 +1784,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-nothink",
@@ -1696,7 +1801,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "DeepSeek-V3-Fast",
@@ -1712,7 +1818,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "o4-mini",
@@ -1731,7 +1838,8 @@
       "reasoning",
       "cheap"
     ],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-30b-a3b-thinking",
@@ -1747,7 +1855,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-30b-a3b-instruct",
@@ -1763,7 +1872,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-235b-a22b-thinking",
@@ -1779,7 +1889,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-vl-235b-a22b-instruct",
@@ -1795,7 +1906,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "kimi-k2-instruct",
@@ -1811,7 +1923,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4-fast-reasoning",
@@ -1827,7 +1940,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4-fast-non-reasoning",
@@ -1843,7 +1957,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4",
@@ -1859,7 +1974,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4.1",
@@ -1875,7 +1991,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ernie-5.0-thinking-exp",
@@ -1891,7 +2008,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4.1-mini",
@@ -1907,7 +2025,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "aihubmix-router",
@@ -1923,7 +2042,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4.1-nano",
@@ -1939,7 +2059,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro-preview-05-06",
@@ -1955,7 +2076,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro-preview-03-25",
@@ -1971,7 +2093,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-max-preview",
@@ -1987,7 +2110,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-next-80b-a3b-thinking",
@@ -2003,7 +2127,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-next-80b-a3b-instruct",
@@ -2019,7 +2144,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-max",
@@ -2035,7 +2161,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-235b-a22b-thinking-2507",
@@ -2051,7 +2178,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-235b-a22b-instruct-2507",
@@ -2067,7 +2195,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-coder-30b-a3b-instruct",
@@ -2083,7 +2212,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-coder-480b-a35b-instruct",
@@ -2099,7 +2229,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-coder-plus-2025-07-22",
@@ -2115,7 +2246,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-coder-plus",
@@ -2131,7 +2263,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-coder-flash",
@@ -2147,7 +2280,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "inclusionAI/Ring-1T",
@@ -2163,7 +2297,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "inclusionAI/Ling-1T",
@@ -2179,7 +2314,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ernie-5.0-thinking-preview",
@@ -2195,7 +2331,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-mt-turbo",
@@ -2211,7 +2348,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-mt-plus",
@@ -2227,7 +2365,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "inclusionAI/Ring-flash-2.0",
@@ -2243,7 +2382,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "inclusionAI/Ling-mini-2.0",
@@ -2259,7 +2399,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "inclusionAI/Ling-flash-2.0",
@@ -2275,7 +2416,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ernie-4.5-turbo-latest",
@@ -2291,7 +2433,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "codex-mini-latest",
@@ -2307,7 +2450,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "DeepSeek-R1",
@@ -2323,7 +2467,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.0-flash",
@@ -2343,7 +2488,8 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ernie-4.5-turbo-vl",
@@ -2359,7 +2505,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "o3-mini",
@@ -2375,7 +2522,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-oss-120b",
@@ -2391,7 +2539,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro-preview-06-05",
@@ -2407,7 +2556,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "Qwen/Qwen2.5-VL-72B-Instruct",
@@ -2423,7 +2573,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "o1",
@@ -2439,7 +2590,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ByteDance-Seed/Seed-OSS-36B-Instruct",
@@ -2455,7 +2607,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-minimax-m2",
@@ -2471,7 +2624,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "deepseek-r1-distill-llama-70b",
@@ -2487,7 +2641,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.0-flash-exp",
@@ -2503,7 +2658,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4o-2024-11-20",
@@ -2519,7 +2675,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.0-flash-thinking-exp-01-21",
@@ -2535,7 +2692,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4o",
@@ -2554,7 +2712,8 @@
       "vision",
       "code"
     ],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4o-mini",
@@ -2573,7 +2732,8 @@
       "cheap",
       "fast"
     ],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.0-pro-exp-02-05",
@@ -2589,7 +2749,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "minimax-m2",
@@ -2605,7 +2766,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "Qwen/QwQ-32B",
@@ -2621,7 +2783,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ernie-4.5-turbo-128k-preview",
@@ -2637,7 +2800,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "ernie-4.5-0.3b",
@@ -2653,7 +2817,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "baidu/ERNIE-4.5-300B-A47B",
@@ -2669,7 +2834,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "Qwen/Qwen2.5-VL-32B-Instruct",
@@ -2685,7 +2851,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-plus-latest",
@@ -2701,7 +2868,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "AiHubmix-Phi-4-reasoning",
@@ -2717,7 +2885,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-turbo-latest",
@@ -2733,7 +2902,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "AiHubmix-Phi-4-mini-reasoning",
@@ -2749,7 +2919,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "aihub-Phi-4-multimodal-instruct",
@@ -2765,7 +2936,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-32b",
@@ -2781,7 +2953,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-14b",
@@ -2797,7 +2970,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "aihub-Phi-4",
@@ -2813,7 +2987,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-8b",
@@ -2829,7 +3004,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-4b",
@@ -2845,7 +3021,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-1.7b",
@@ -2861,7 +3038,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen3-0.6b",
@@ -2877,7 +3055,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-turbo-2025-04-28",
@@ -2893,7 +3072,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "command-a-03-2025",
@@ -2909,7 +3089,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-plus-2025-04-28",
@@ -2925,7 +3106,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4.20-multi-agent-beta-0309",
@@ -2941,7 +3123,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4.20-beta-0309-reasoning",
@@ -2957,7 +3140,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "grok-4.20-beta-0309-non-reasoning",
@@ -2973,7 +3157,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-kimi-k2-instruct-0905",
@@ -2989,7 +3174,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-kimi-k2-instruct",
@@ -3005,7 +3191,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-ernie-4.5-300b-a47b",
@@ -3021,7 +3208,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-deepseek-v3.1",
@@ -3037,7 +3225,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "cc-MiniMax-M2",
@@ -3053,7 +3242,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "bai-qwen3-vl-235b-a22b-instruct",
@@ -3069,7 +3259,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-turbo-2024-11-01",
@@ -3085,7 +3276,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "qwen-turbo",
@@ -3101,7 +3293,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-oss-20b",
@@ -3117,7 +3310,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gpt-4o-mini-2024-07-18",
@@ -3133,7 +3327,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro-exp-03-25",
@@ -3149,7 +3344,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.0-flash-lite",
@@ -3165,7 +3361,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "command-r-plus",
@@ -3181,7 +3378,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "command-r",
@@ -3197,7 +3395,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "command",
@@ -3213,7 +3412,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-3-sonnet-20240229",
@@ -3229,7 +3429,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-3-haiku-20240307",
@@ -3245,7 +3446,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "claude-3-5-sonnet-20240620",
@@ -3261,7 +3463,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "anthropic-opus-4-6",
@@ -3277,7 +3480,8 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
-    "releaseDate": "2021-07-20"
+    "releaseDate": "2021-07-20",
+    "category": "text"
   },
   {
     "id": "gemini-2.0-flash-001",
