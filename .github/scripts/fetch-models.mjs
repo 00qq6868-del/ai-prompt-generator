@@ -59,6 +59,18 @@ async function fetchAihubmix() {
   // Only keep chat models, skip embeddings/whisper/tts/image
   const SKIP = /embed|whisper|tts|dall-e|moderation|text-davinci|babbage|ada|curie|search|edit|insert|similarity|code-davinci|audio|realtime/i;
 
+  // Classify model by category
+  function classifyModel(id) {
+    const lower = id.toLowerCase();
+    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|seedance|cogview|wanx/i.test(lower)) return "image";
+    if (/sora|wan2|video|luma|runway|minimax-video|vidu|kling/i.test(lower)) return "video";
+    if (/tts|audio-gen|speech|voice-gen|fish-audio/i.test(lower)) return "tts";
+    if (/whisper|stt|audio-transcri|speech-to/i.test(lower)) return "stt";
+    if (/embed|bge-|text-embedding/i.test(lower)) return "embedding";
+    if (/ocr|document-ai|vision-extract/i.test(lower)) return "ocr";
+    return "text";
+  }
+
   return data
     .filter((m) => !SKIP.test(m.id))
     .map((m) => {
@@ -84,6 +96,7 @@ async function fetchAihubmix() {
         isLatest:      false,
         tags:          meta?.t ?? [],
         releaseDate:   m.created ? new Date(m.created * 1000).toISOString().slice(0, 10) : "",
+        category:      classifyModel(m.id),
       };
     });
 }

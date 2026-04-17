@@ -6,6 +6,7 @@
 export type SpeedRating = "ultrafast" | "fast" | "medium" | "slow";
 export type AccuracyRating = "supreme" | "high" | "medium" | "low";
 export type OptimizationMode = "token" | "accurate" | "fast" | "aligned";
+export type ModelCategory = "text" | "image" | "video" | "tts" | "stt" | "embedding" | "ocr" | "other";
 
 export interface ModelInfo {
   id: string;           // API model id
@@ -22,6 +23,7 @@ export interface ModelInfo {
   isLatest: boolean;    // Marked true for the newest model in series
   tags: string[];       // e.g. ["reasoning","vision","code"]
   releaseDate: string;  // ISO date
+  category?: ModelCategory; // Model type classification
 }
 
 // ── Default (bundled) registry ──────────────────────────────
