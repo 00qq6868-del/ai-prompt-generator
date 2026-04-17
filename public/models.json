@@ -493,6 +493,23 @@
     "category": "text"
   },
   {
+    "id": "gemini-3-flash-preview-free",
+    "name": "gemini-3-flash-preview-free",
+    "provider": "Google",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "2021-07-20",
+    "category": "text"
+  },
+  {
     "id": "coding-glm-5-turbo",
     "name": "coding-glm-5-turbo",
     "provider": "Other",
