@@ -201,10 +201,48 @@ export function KeysSettings({ open, onClose }: Props) {
               <div className="flex items-center gap-3 rounded-2xl bg-violet-500/8 border border-violet-500/15 px-5 py-3.5">
                 <Sparkles size={14} className="text-violet-400 shrink-0" />
                 <p className="text-[12px] text-white/55 leading-relaxed">
-                  标注 <span className="text-green-400 font-semibold">免费</span> 的平台注册即可免费获取，推荐先试这两个。
-                  Key 仅保存在你的浏览器本地，不会上传到任何服务器。
+                  标注 <span className="text-green-400 font-semibold">免费</span> 的平台注册即可免费获取。
+                  也可以用<span className="text-violet-400 font-semibold">中转站</span>（如 AihubMix），一个 Key 访问所有模型。
                 </p>
               </div>
+
+              {/* ── Custom relay 中转站 ── */}
+              <section>
+                <SectionDivider label="自定义中转站（一个Key用所有模型）" accent="violet" />
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[13px] font-semibold text-violet-400">Base URL</span>
+                      <span className="text-[10px] text-white/30">OpenAI 兼容格式</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={keys["CUSTOM_BASE_URL"] || ""}
+                      onChange={(e) => set("CUSTOM_BASE_URL", e.target.value)}
+                      placeholder="https://aihubmix.com/v1"
+                      className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 text-[13px] text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
+                    />
+                    <p className="mt-2 text-[10px] text-white/30">
+                      常见中转站：AihubMix (aihubmix.com/v1)、OpenRouter (openrouter.ai/api/v1)
+                    </p>
+                  </div>
+                  <ProviderCard
+                    provider={{
+                      id: "CUSTOM_API_KEY",
+                      name: "中转站 API Key",
+                      placeholder: "sk-...",
+                      url: "https://console.aihubmix.com/token",
+                      free: false,
+                      color: "text-violet-400",
+                      accent: "violet",
+                    }}
+                    value={keys["CUSTOM_API_KEY"] || ""}
+                    show={!!visible["CUSTOM_API_KEY"]}
+                    onChange={(v) => set("CUSTOM_API_KEY", v)}
+                    onToggleVisible={() => toggleVisible("CUSTOM_API_KEY")}
+                  />
+                </div>
+              </section>
 
               {/* ── Free providers ── 2 col grid */}
               <section>
@@ -271,10 +309,13 @@ export function KeysSettings({ open, onClose }: Props) {
 }
 
 // ── Section divider ───────────────────────────────────────────
-function SectionDivider({ label, accent }: { label: string; accent: "green" | "white" }) {
-  const color = accent === "green"
-    ? "text-green-500/70 border-green-500/15"
-    : "text-white/30 border-white/[0.07]";
+function SectionDivider({ label, accent }: { label: string; accent: "green" | "white" | "violet" }) {
+  const colorMap = {
+    green:  "text-green-500/70 border-green-500/15",
+    white:  "text-white/30 border-white/[0.07]",
+    violet: "text-violet-400/70 border-violet-500/15",
+  };
+  const color = colorMap[accent];
   return (
     <div className="flex items-center gap-3">
       <div className={`h-px flex-1 border-t ${color.split(" ")[1]}`} />

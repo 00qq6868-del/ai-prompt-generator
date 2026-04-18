@@ -12,6 +12,7 @@ const DEFAULT_TARGET = "gpt-4o";
 
 // Map provider name → the env-key name stored in localStorage
 const PROVIDER_KEY_MAP: Record<string, string> = {
+  custom:   "CUSTOM_API_KEY",
   aihubmix: "AIHUBMIX_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
   openai:    "OPENAI_API_KEY",
@@ -28,6 +29,7 @@ const PROVIDER_KEY_MAP: Record<string, string> = {
 
 // Priority list — first provider whose key is configured wins
 const PROVIDER_PRIORITY = [
+  { provider: "custom",   modelId: "gpt-4o-mini" },
   { provider: "aihubmix", modelId: "gpt-4o-mini" },
   { provider: "anthropic", modelId: "claude-3-5-haiku-20241022" },
   { provider: "openai",    modelId: "gpt-4o-mini" },

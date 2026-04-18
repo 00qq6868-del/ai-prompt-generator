@@ -27,6 +27,7 @@ export interface GenerateResult {
 
 // ── [S3 FIX] Key validation map ───────────────────────────────
 const KEY_MAP: Record<string, string> = {
+  custom:    "CUSTOM_API_KEY",
   aihubmix: "AIHUBMIX_API_KEY",
   openai:    "OPENAI_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
@@ -56,7 +57,7 @@ function assertKey(provider: string, userKeys?: Record<string, string>): void {
   const envVar = KEY_MAP[provider];
   if (envVar && !resolveKey(provider, userKeys)) {
     throw new Error(
-      `缺少 ${provider} 的 API Key，请点击右上角钥匙图标填入你的 ${envVar}`
+      `Missing ${provider} API Key. 缺少 ${provider} 的 API Key，请点击右上角🔑图标填入你的 ${envVar}`
     );
   }
 }
@@ -373,6 +374,35 @@ async function callOllama(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
+// ─── Custom relay/中转站 (user-defined base URL) ─────────────
+async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
+  assertKey("custom", opts.userKeys);
+  const baseURL = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  if (!baseURL) {
+    throw new Error("请在设置中填入中转站 Base URL（如 https://aihubmix.com/v1）");
+  }
+  const client = new OpenAI({
+    apiKey: resolveKey("custom", opts.userKeys),
+    baseURL,
+  });
+  const t0 = Date.now();
+  const res = await client.chat.completions.create({
+    model: opts.model,
+    max_tokens: opts.maxTokens ?? 2048,
+    temperature: opts.temperature ?? 0.7,
+    messages: [
+      { role: "system", content: opts.systemPrompt },
+      { role: "user",   content: opts.userPrompt },
+    ],
+  });
+  return {
+    text: res.choices[0].message.content ?? "",
+    inputTokens:  res.usage?.prompt_tokens ?? 0,
+    outputTokens: res.usage?.completion_tokens ?? 0,
+    latencyMs: Date.now() - t0,
+  };
+}
+
 // ─── AihubMix（聚合平台，一个Key访问所有模型）────────────────
 async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
   assertKey("aihubmix", opts.userKeys);
@@ -401,6 +431,7 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
 // ─── Dispatcher ───────────────────────────────────────────────
 export async function callProvider(opts: GenerateOptions): Promise<GenerateResult> {
   switch (opts.apiProvider) {
+    case "custom":   return callCustom(opts);
     case "aihubmix": return callAihubmix(opts);
     case "openai":    return callOpenAI(opts);
     case "anthropic": return callAnthropic(opts);
