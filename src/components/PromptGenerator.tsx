@@ -61,6 +61,11 @@ export function PromptGenerator() {
   // Auto-select cheapest available generator based on user's stored API keys
   useEffect(() => {
     const userKeys = loadUserKeys();
+    // If user has custom relay configured, use it (with aihubmix provider)
+    if (userKeys["CUSTOM_API_KEY"]?.trim().length > 5 && userKeys["CUSTOM_BASE_URL"]?.trim()) {
+      setGeneratorModelId("gpt-4o-mini");
+      return;
+    }
     for (const { provider, modelId } of PROVIDER_PRIORITY) {
       const keyName = PROVIDER_KEY_MAP[provider];
       if (keyName && userKeys[keyName]?.trim().length > 5) {

@@ -403,13 +403,23 @@ async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── AihubMix（聚合平台，一个Key访问所有模型）────────────────
+// ─── AihubMix / 任何中转站（一个Key访问所有模型）────────────────
 async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("aihubmix", opts.userKeys);
-  const client = new OpenAI({
-    apiKey: resolveKey("aihubmix", opts.userKeys),
-    baseURL: "https://aihubmix.com/v1",
-  });
+  // 优先用用户自定义中转站，没有就用 AihubMix 默认地址
+  const customUrl = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  const customKey = opts.userKeys?.["CUSTOM_API_KEY"]?.trim() || "";
+  const aihubKey  = resolveKey("aihubmix", opts.userKeys);
+
+  const baseURL = customUrl || "https://aihubmix.com/v1";
+  const apiKey  = customKey || aihubKey;
+
+  if (!apiKey) {
+    throw new Error(
+      "Missing API Key. 请点击🔑设置，填入中转站的 Base URL 和 API Key"
+    );
+  }
+
+  const client = new OpenAI({ apiKey, baseURL });
   const t0 = Date.now();
   const res = await client.chat.completions.create({
     model: opts.model,
