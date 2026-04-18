@@ -167,7 +167,7 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "2021-07-20",
-    "category": "text"
+    "category": "image"
   },
   {
     "id": "claude-sonnet-4-6",
@@ -291,24 +291,7 @@
   {
     "id": "coding-glm-5.1",
     "name": "coding-glm-5.1",
-    "provider": "Other",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [],
-    "releaseDate": "2021-07-20",
-    "category": "text"
-  },
-  {
-    "id": "coding-minimax-m2.7-free",
-    "name": "coding-minimax-m2.7-free",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -323,9 +306,26 @@
     "category": "text"
   },
   {
+    "id": "coding-minimax-m2.7-free",
+    "name": "coding-minimax-m2.7-free",
+    "provider": "MiniMax",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [],
+    "releaseDate": "2021-07-20",
+    "category": "text"
+  },
+  {
     "id": "coding-glm-5.1-free",
     "name": "coding-glm-5.1-free",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -376,7 +376,7 @@
   {
     "id": "coding-minimax-m2.5-free",
     "name": "coding-minimax-m2.5-free",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -393,7 +393,7 @@
   {
     "id": "coding-glm-5-turbo-free",
     "name": "coding-glm-5-turbo-free",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -410,7 +410,7 @@
   {
     "id": "coding-glm-5-free",
     "name": "coding-glm-5-free",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -461,7 +461,7 @@
   {
     "id": "cc-glm-5.1",
     "name": "cc-glm-5.1",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -478,7 +478,7 @@
   {
     "id": "cohere-command-a",
     "name": "cohere-command-a",
-    "provider": "Other",
+    "provider": "Cohere",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -487,7 +487,7 @@
     "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
-    "isLatest": false,
+    "isLatest": true,
     "tags": [],
     "releaseDate": "2021-07-20",
     "category": "text"
@@ -512,7 +512,7 @@
   {
     "id": "coding-glm-5-turbo",
     "name": "coding-glm-5-turbo",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -529,7 +529,7 @@
   {
     "id": "coding-glm-5",
     "name": "coding-glm-5",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -563,7 +563,7 @@
   {
     "id": "coding-glm-4.7-free",
     "name": "coding-glm-4.7-free",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -592,7 +592,7 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "2021-07-20",
-    "category": "text"
+    "category": "image"
   },
   {
     "id": "gpt-5.2-codex",
@@ -623,7 +623,7 @@
     "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
-    "isLatest": false,
+    "isLatest": true,
     "tags": [],
     "releaseDate": "2021-07-20",
     "category": "text"
@@ -869,7 +869,7 @@
   {
     "id": "zai-glm-5-turbo",
     "name": "zai-glm-5-turbo",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -886,7 +886,7 @@
   {
     "id": "step-3.5-flash-free",
     "name": "step-3.5-flash-free",
-    "provider": "Other",
+    "provider": "阶跃星辰",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -895,7 +895,7 @@
     "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
-    "isLatest": false,
+    "isLatest": true,
     "tags": [],
     "releaseDate": "2021-07-20",
     "category": "text"
@@ -966,12 +966,12 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "2021-07-20",
-    "category": "text"
+    "category": "image"
   },
   {
     "id": "cc-glm-5-turbo",
     "name": "cc-glm-5-turbo",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -988,7 +988,7 @@
   {
     "id": "cc-glm-5",
     "name": "cc-glm-5",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1056,7 +1056,7 @@
   {
     "id": "DeepSeek-V3.1-Terminus",
     "name": "DeepSeek-V3.1-Terminus",
-    "provider": "Other",
+    "provider": "DeepSeek",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1090,7 +1090,7 @@
   {
     "id": "DeepSeek-V3.1-Think",
     "name": "DeepSeek-V3.1-Think",
-    "provider": "Other",
+    "provider": "DeepSeek",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1226,7 +1226,7 @@
   {
     "id": "mm-minimax-m2.7-highspeed",
     "name": "mm-minimax-m2.7-highspeed",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1243,7 +1243,7 @@
   {
     "id": "cc-minimax-m2.7-highspeed",
     "name": "cc-minimax-m2.7-highspeed",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1260,7 +1260,7 @@
   {
     "id": "cc-minimax-m2.7",
     "name": "cc-minimax-m2.7",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1277,7 +1277,7 @@
   {
     "id": "coding-minimax-m2.7-highspeed",
     "name": "coding-minimax-m2.7-highspeed",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1294,7 +1294,7 @@
   {
     "id": "coding-minimax-m2.7",
     "name": "coding-minimax-m2.7",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1311,7 +1311,7 @@
   {
     "id": "coding-minimax-m2.5-highspeed",
     "name": "coding-minimax-m2.5-highspeed",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1328,7 +1328,7 @@
   {
     "id": "coding-minimax-m2.5",
     "name": "coding-minimax-m2.5",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1345,7 +1345,7 @@
   {
     "id": "cc-minimax-m2.5-highspeed",
     "name": "cc-minimax-m2.5-highspeed",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1362,7 +1362,7 @@
   {
     "id": "cc-minimax-m2.5",
     "name": "cc-minimax-m2.5",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1397,9 +1397,43 @@
     "category": "text"
   },
   {
+    "id": "gpt-4o-mini-audio-preview",
+    "name": "gpt-4o-mini-audio-preview",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "2021-07-20",
+    "category": "text"
+  },
+  {
+    "id": "gpt-4o-audio-preview",
+    "name": "gpt-4o-audio-preview",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "2021-07-20",
+    "category": "text"
+  },
+  {
     "id": "coding-minimax-m2.1-free",
     "name": "coding-minimax-m2.1-free",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1416,7 +1450,7 @@
   {
     "id": "coding-minimax-m2.1",
     "name": "coding-minimax-m2.1",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1433,7 +1467,7 @@
   {
     "id": "coding-glm-4.7",
     "name": "coding-glm-4.7",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1450,7 +1484,7 @@
   {
     "id": "cc-minimax-m2.1",
     "name": "cc-minimax-m2.1",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1467,7 +1501,7 @@
   {
     "id": "step-3.5-flash",
     "name": "step-3.5-flash",
-    "provider": "Other",
+    "provider": "阶跃星辰",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1518,7 +1552,7 @@
   {
     "id": "coding-minimax-m2-free",
     "name": "coding-minimax-m2-free",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1535,7 +1569,7 @@
   {
     "id": "coding-minimax-m2",
     "name": "coding-minimax-m2",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1552,7 +1586,7 @@
   {
     "id": "coding-glm-4.6-free",
     "name": "coding-glm-4.6-free",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1569,7 +1603,7 @@
   {
     "id": "coding-glm-4.6",
     "name": "coding-glm-4.6",
-    "provider": "Other",
+    "provider": "智谱AI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1603,7 +1637,7 @@
   {
     "id": "DeepSeek-V3.1-Fast",
     "name": "DeepSeek-V3.1-Fast",
-    "provider": "Other",
+    "provider": "DeepSeek",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1790,7 +1824,7 @@
   {
     "id": "DeepSeek-V3-Fast",
     "name": "DeepSeek-V3-Fast",
-    "provider": "Other",
+    "provider": "DeepSeek",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -1980,7 +2014,7 @@
   {
     "id": "ernie-5.0-thinking-exp",
     "name": "ernie-5.0-thinking-exp",
-    "provider": "Other",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2303,7 +2337,7 @@
   {
     "id": "ernie-5.0-thinking-preview",
     "name": "ernie-5.0-thinking-preview",
-    "provider": "Other",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2405,7 +2439,7 @@
   {
     "id": "ernie-4.5-turbo-latest",
     "name": "ernie-4.5-turbo-latest",
-    "provider": "Other",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2439,7 +2473,7 @@
   {
     "id": "DeepSeek-R1",
     "name": "DeepSeek-R1",
-    "provider": "Other",
+    "provider": "DeepSeek",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2477,7 +2511,7 @@
   {
     "id": "ernie-4.5-turbo-vl",
     "name": "ernie-4.5-turbo-vl",
-    "provider": "Other",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2596,7 +2630,7 @@
   {
     "id": "cc-minimax-m2",
     "name": "cc-minimax-m2",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2738,7 +2772,7 @@
   {
     "id": "minimax-m2",
     "name": "minimax-m2",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2772,7 +2806,7 @@
   {
     "id": "ernie-4.5-turbo-128k-preview",
     "name": "ernie-4.5-turbo-128k-preview",
-    "provider": "Other",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -2789,7 +2823,7 @@
   {
     "id": "ernie-4.5-0.3b",
     "name": "ernie-4.5-0.3b",
-    "provider": "Other",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -3061,7 +3095,7 @@
   {
     "id": "command-a-03-2025",
     "name": "command-a-03-2025",
-    "provider": "Other",
+    "provider": "Cohere",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -3214,7 +3248,7 @@
   {
     "id": "cc-MiniMax-M2",
     "name": "cc-MiniMax-M2",
-    "provider": "Other",
+    "provider": "MiniMax",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -3350,7 +3384,7 @@
   {
     "id": "command-r-plus",
     "name": "command-r-plus",
-    "provider": "Other",
+    "provider": "Cohere",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -3367,7 +3401,7 @@
   {
     "id": "command-r",
     "name": "command-r",
-    "provider": "Other",
+    "provider": "Cohere",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
@@ -3384,7 +3418,7 @@
   {
     "id": "command",
     "name": "command",
-    "provider": "Other",
+    "provider": "Cohere",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
