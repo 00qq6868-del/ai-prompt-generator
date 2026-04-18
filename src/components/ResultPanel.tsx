@@ -8,29 +8,21 @@ interface Stats {
   inputTokens: number;
   outputTokens: number;
   latencyMs: number;
-  tokensDelta: number;    // [S2 FIX] signed: positive=saved, negative=grew
-  changePercent: number;  // signed %
+  tokensDelta: number;
+  changePercent: number;
 }
 
 interface Meta {
   generatorModel: string;
   targetModel: string;
-  mode: string;
 }
 
 interface Props {
   prompt: string;
   stats: Stats;
   meta: Meta;
-  generatorModelCost: { input: number; output: number }; // [S1 FIX] real per-token rates
+  generatorModelCost: { input: number; output: number };
 }
-
-const MODE_LABEL: Record<string, string> = {
-  token:    "最省Token",
-  fast:     "最快速",
-  accurate: "最准确",
-  aligned:  "最符合人类语言",
-};
 
 export function ResultPanel({ prompt, stats, meta, generatorModelCost }: Props) {
   const [copied, setCopied] = useState(false);
@@ -41,25 +33,20 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost }: Props) 
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // [S1 FIX] Use real per-model cost rates from API response
   const cost = (
     stats.inputTokens  * generatorModelCost.input +
     stats.outputTokens * generatorModelCost.output
   ).toFixed(5);
 
-  // [S2 FIX] Context-aware display — prompt growing is EXPECTED for accurate/aligned
   const pct       = stats.changePercent;
-  const isShorter = pct > 5;   // meaningfully shorter (token/fast goal met)
-  const isLonger  = pct < -5;  // meaningfully longer  (accurate/aligned: normal)
+  const isShorter = pct > 5;
+  const isLonger  = pct < -5;
   const isSimilar = !isShorter && !isLonger;
 
-  const isTokenMode  = meta.mode === "token" || meta.mode === "fast";
-  const changeLabel  = isTokenMode ? "节省Token" : "长度变化";
   const changeDisplay = isSimilar
     ? "≈0%"
     : `${pct > 0 ? "+" : ""}${pct}%`;
 
-  // Green = shorter (good for token), Blue = longer (expected for accurate/aligned), Amber = neutral
   const changeColor = isShorter
     ? "text-emerald-400"
     : isLonger
@@ -78,23 +65,23 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost }: Props) 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <StatCard
           icon={<Zap size={14} className="text-blue-400" />}
-          label="响应时间"
+          label="响应时间 Response"
           value={`${(stats.latencyMs / 1000).toFixed(2)}s`}
         />
         <StatCard
           icon={<Coins size={14} className="text-amber-400" />}
-          label="Token消耗"
+          label="Token消耗 Usage"
           value={`${stats.inputTokens + stats.outputTokens}`}
         />
         <StatCard
           icon={<ChangeIcon size={14} className={changeColor} />}
-          label={changeLabel}
+          label="长度变化 Change"
           value={changeDisplay}
           valueClass={changeColor}
         />
         <StatCard
           icon={<Clock size={14} className="text-violet-400" />}
-          label="估算费用"
+          label="估算费用 Cost"
           value={`$${cost}`}
         />
       </div>
@@ -106,10 +93,7 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost }: Props) 
             <span className="text-indigo-400 font-medium">{meta.generatorModel}</span>
             <span>→ 为</span>
             <span className="text-violet-400 font-medium">{meta.targetModel}</span>
-            <span>生成</span>
-            <span className="bg-white/10 px-2 py-0.5 rounded-full text-white/60">
-              {MODE_LABEL[meta.mode] ?? meta.mode}
-            </span>
+            <span>优化生成</span>
           </div>
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -121,7 +105,7 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost }: Props) 
               }`}
           >
             {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? "已复制！" : "复制提示词"}
+            {copied ? "已复制 Copied!" : "复制提示词 Copy"}
           </motion.button>
         </div>
 
@@ -134,15 +118,9 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost }: Props) 
 }
 
 function StatCard({
-  icon,
-  label,
-  value,
-  valueClass = "text-white",
+  icon, label, value, valueClass = "text-white",
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  valueClass?: string;
+  icon: React.ReactNode; label: string; value: string; valueClass?: string;
 }) {
   return (
     <div className="flex items-center gap-2.5 rounded-xl bg-white/5 border border-white/[0.08] px-3 py-2.5">

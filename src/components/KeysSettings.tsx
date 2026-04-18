@@ -210,8 +210,18 @@ export function KeysSettings({ open, onClose }: Props) {
               <section>
                 <SectionDivider label="自定义中转站（一个Key用所有模型）" accent="violet" />
                 <div className="mt-4 space-y-3">
+                  {/* Tutorial */}
+                  <div className="rounded-xl bg-white/[0.03] border border-white/8 px-4 py-3 text-[11px] text-white/40 leading-relaxed space-y-1.5">
+                    <p className="text-white/60 font-medium">📖 使用说明（小白也能看懂）：</p>
+                    <p>1. 去中转站网站注册账号（如 <span className="text-violet-400">aihubmix.com</span>）</p>
+                    <p>2. 在中转站后台找到「API Key」，复制下来</p>
+                    <p>3. 把中转站的网址填到下面「Base URL」（通常是 xxx.com/v1）</p>
+                    <p>4. 把 Key 填到「API Key」框里，保存即可</p>
+                    <p className="text-white/30">填完后，上面 230+ 个模型都能通过这个中转站调用</p>
+                  </div>
+
                   <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] p-4">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-[13px] font-semibold text-violet-400">Base URL</span>
                       <span className="text-[10px] text-white/30">OpenAI 兼容格式</span>
                     </div>
@@ -223,7 +233,7 @@ export function KeysSettings({ open, onClose }: Props) {
                       className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 text-[13px] text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
                     />
                     <p className="mt-2 text-[10px] text-white/30">
-                      常见中转站：AihubMix (aihubmix.com/v1)、OpenRouter (openrouter.ai/api/v1)
+                      直接填网址即可，系统会自动补 /v1。常见：aihubmix.com/v1、openrouter.ai/api/v1、naapi.cc/v1
                     </p>
                   </div>
                   <ProviderCard
@@ -247,6 +257,12 @@ export function KeysSettings({ open, onClose }: Props) {
               {/* ── Free providers ── 2 col grid */}
               <section>
                 <SectionDivider label="免费平台（推荐先填）" accent="green" />
+                <div className="mt-3 rounded-xl bg-white/[0.03] border border-white/8 px-4 py-3 text-[11px] text-white/40 leading-relaxed space-y-1">
+                  <p className="text-white/60 font-medium">📖 这些平台注册就送免费额度：</p>
+                  <p>• <span className="text-blue-400">Google Gemini</span> — 去 aistudio.google.com 注册，点「Create API key」复制，粘贴到下面</p>
+                  <p>• <span className="text-purple-400">Groq</span> — 去 console.groq.com 注册，点「Create API Key」复制，粘贴到下面</p>
+                  <p className="text-white/30">这两个直接填 Key 就行，不需要填 Base URL</p>
+                </div>
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {freeProviders.map((p) => (
                     <ProviderCard

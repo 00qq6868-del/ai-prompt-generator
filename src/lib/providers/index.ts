@@ -406,11 +406,15 @@ async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
 // ─── AihubMix / 任何中转站（一个Key访问所有模型）────────────────
 async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
   // 优先用用户自定义中转站，没有就用 AihubMix 默认地址
-  const customUrl = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  const rawUrl    = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
   const customKey = opts.userKeys?.["CUSTOM_API_KEY"]?.trim() || "";
   const aihubKey  = resolveKey("aihubmix", opts.userKeys);
 
-  const baseURL = customUrl || "https://aihubmix.com/v1";
+  // Auto-append /v1 if the URL doesn't end with it
+  let baseURL = rawUrl || "https://aihubmix.com/v1";
+  if (baseURL && !baseURL.endsWith("/v1") && !baseURL.endsWith("/v1/")) {
+    baseURL = baseURL.replace(/\/+$/, "") + "/v1";
+  }
   const apiKey  = customKey || aihubKey;
 
   if (!apiKey) {
