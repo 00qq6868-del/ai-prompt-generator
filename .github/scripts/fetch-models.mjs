@@ -56,20 +56,44 @@ async function fetchAihubmix() {
     "qwen":     { provider: "阿里巴巴",   apiProvider: "aihubmix" },
   };
 
-  // Only keep chat models, skip embeddings/whisper/tts/image
-  const SKIP = /embed|whisper|tts|dall-e|moderation|text-davinci|babbage|ada|curie|search|edit|insert|similarity|code-davinci|audio|realtime/i;
+  // Skip only truly useless models (old deprecated ones, internal tools)
+  const SKIP = /moderation|text-davinci|babbage-002|ada-002|curie|search|edit|insert|similarity|code-davinci|chatgpt-4o-latest|auto/i;
 
-  // Classify model by category
+  // Classify model by category based on ID
   function classifyModel(id) {
     const lower = id.toLowerCase();
-    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|seedance|cogview|wanx/i.test(lower)) return "image";
-    if (/sora|wan2|video|luma|runway|minimax-video|vidu|kling/i.test(lower)) return "video";
-    if (/tts|audio-gen|speech|voice-gen|fish-audio/i.test(lower)) return "tts";
-    if (/whisper|stt|audio-transcri|speech-to/i.test(lower)) return "stt";
-    if (/embed|bge-|text-embedding/i.test(lower)) return "embedding";
-    if (/ocr|document-ai|vision-extract/i.test(lower)) return "ocr";
+    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|seedance|cogview|wanx|-image-|-image$/.test(lower)) return "image";
+    if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v/.test(lower)) return "video";
+    if (/tts|audio-gen|speech-gen|voice-gen|fish-audio/.test(lower)) return "tts";
+    if (/whisper|stt|audio-transcri|speech-to/.test(lower)) return "stt";
+    if (/embed|bge-|text-embedding/.test(lower)) return "embedding";
+    if (/ocr|document-ai|vision-extract/.test(lower)) return "ocr";
     return "text";
   }
+
+  // Expand provider map to cover more prefixes
+  const EXTRA_PROVIDERS = {
+    "step-":     "阶跃星辰",
+    "minimax":   "MiniMax",
+    "doubao":    "字节豆包",
+    "ernie":     "百度",
+    "moonshot":  "月之暗面",
+    "yi-":       "零一万物",
+    "abab":      "MiniMax",
+    "cohere":    "Cohere",
+    "gemma":     "Google",
+    "phi-":      "Microsoft",
+    "command":   "Cohere",
+    "coding-glm":"智谱AI",
+    "cc-glm":    "智谱AI",
+    "zai-glm":   "智谱AI",
+    "glm-":      "智谱AI",
+    "cc-minimax":"MiniMax",
+    "mm-minimax":"MiniMax",
+    "coding-minimax":"MiniMax",
+    "DeepSeek":  "DeepSeek",
+    "deepseek":  "DeepSeek",
+  };
 
   return data
     .filter((m) => !SKIP.test(m.id))
@@ -78,6 +102,15 @@ async function fetchAihubmix() {
       let provInfo = { provider: "Other", apiProvider: "aihubmix" };
       for (const [prefix, info] of Object.entries(PROVIDER_MAP)) {
         if (m.id.startsWith(prefix)) { provInfo = info; break; }
+      }
+      // Extra provider detection for non-standard prefixes
+      if (provInfo.provider === "Other") {
+        for (const [prefix, name] of Object.entries(EXTRA_PROVIDERS)) {
+          if (m.id.toLowerCase().startsWith(prefix.toLowerCase()) || m.id.startsWith(prefix)) {
+            provInfo = { provider: name, apiProvider: "aihubmix" };
+            break;
+          }
+        }
       }
 
       const meta = META[m.id];

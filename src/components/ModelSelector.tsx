@@ -28,7 +28,8 @@ const CATEGORIES: { id: ModelCategory | "all"; label: string; icon: React.ReactN
 // ── Provider tabs ────────────────────────────────────────────
 const PROVIDER_TABS = [
   "全部", "OpenAI", "Anthropic", "Google", "DeepSeek",
-  "Meta", "xAI", "Mistral AI", "智谱AI", "阿里巴巴", "Other",
+  "Meta", "xAI", "Mistral AI", "智谱AI", "阿里巴巴",
+  "MiniMax", "Cohere", "阶跃星辰", "月之暗面", "百度", "Other",
 ];
 
 const SPEED_COLOR: Record<string, string> = {
