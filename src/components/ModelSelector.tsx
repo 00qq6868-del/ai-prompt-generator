@@ -209,14 +209,28 @@ export function ModelSelector({
   );
 }
 
-// ── Dropdown (for generator model) ────────────────────────────
+// ── Dropdown (for generator model) with provider grouping ─────
 function ModelDropdown({
   models, selectedId, onChange, label,
 }: {
   models: ModelInfo[]; selectedId: string; onChange: (id: string) => void; label: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState("");
   const selected = models.find((m) => m.id === selectedId);
+
+  // Group by provider, sorted
+  const grouped = useMemo(() => {
+    const groups: Record<string, ModelInfo[]> = {};
+    const filtered = filter
+      ? models.filter((m) => m.id.toLowerCase().includes(filter.toLowerCase()) || m.provider.toLowerCase().includes(filter.toLowerCase()))
+      : models;
+    for (const m of filtered) {
+      if (!groups[m.provider]) groups[m.provider] = [];
+      groups[m.provider].push(m);
+    }
+    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [models, filter]);
 
   return (
     <div className="relative">
@@ -228,9 +242,6 @@ function ModelDropdown({
           <span className="flex items-center gap-2">
             <span className="text-white/70">{selected.provider}</span>
             <span className="font-medium">{selected.name}</span>
-            {selected.isLatest && (
-              <span className="text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded-full">最新</span>
-            )}
           </span>
         ) : (
           <span className="text-white/40">{label}</span>
@@ -250,19 +261,43 @@ function ModelDropdown({
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              className="absolute z-50 w-full mt-1 rounded-xl bg-gray-900 border border-white/10 shadow-2xl max-h-60 overflow-y-auto"
+              className="absolute z-50 w-full mt-1 rounded-xl bg-gray-900 border border-white/10 shadow-2xl max-h-72 overflow-hidden flex flex-col"
             >
-              {models.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => { onChange(m.id); setOpen(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-white/5 transition-colors
-                    ${m.id === selectedId ? "bg-indigo-500/10 text-indigo-300" : "text-white/70"}`}
-                >
-                  <span>{m.provider} — {m.name}</span>
-                  {m.isLatest && <span className="text-[10px] text-indigo-400">最新</span>}
-                </button>
-              ))}
+              {/* Search */}
+              <div className="px-3 py-2 border-b border-white/8">
+                <input
+                  type="text"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="搜索模型..."
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-violet-500/40"
+                  autoFocus
+                />
+              </div>
+              {/* Grouped list */}
+              <div className="overflow-y-auto flex-1 min-h-0">
+                {grouped.map(([provider, list]) => (
+                  <div key={provider}>
+                    <div className="px-3 py-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider bg-white/[0.03] sticky top-0">
+                      {provider} ({list.length})
+                    </div>
+                    {list.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => { onChange(m.id); setOpen(false); setFilter(""); }}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-xs hover:bg-white/5 transition-colors
+                          ${m.id === selectedId ? "bg-indigo-500/10 text-indigo-300" : "text-white/70"}`}
+                      >
+                        <span className="truncate">{m.name}</span>
+                        {m.isLatest && <span className="text-[9px] text-indigo-400 shrink-0 ml-2">最新</span>}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+                {grouped.length === 0 && (
+                  <div className="text-center text-white/30 text-xs py-4">无匹配结果</div>
+                )}
+              </div>
             </motion.div>
           </>
         )}

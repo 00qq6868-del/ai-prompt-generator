@@ -99,10 +99,6 @@ export function PromptGenerator() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Send user keys so server can use them (never stored server-side)
-          ...(Object.keys(userKeys).length > 0
-            ? { "X-User-Keys": JSON.stringify(userKeys) }
-            : {}),
         },
         body: JSON.stringify({
           userIdea: idea,
@@ -110,6 +106,7 @@ export function PromptGenerator() {
           generatorModelId,
           language,
           maxTokens: 1200,
+          userKeys,
         }),
       });
       const data = await res.json();

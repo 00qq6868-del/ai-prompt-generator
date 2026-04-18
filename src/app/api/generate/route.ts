@@ -12,6 +12,7 @@ export interface GenerateRequest {
   generatorModelId: string;
   language?: "zh" | "en";
   maxTokens?: number;
+  userKeys?: Record<string, string>;
 }
 
 export async function POST(req: NextRequest) {
@@ -25,11 +26,10 @@ export async function POST(req: NextRequest) {
       maxTokens = 1024,
     } = body;
 
-    // Parse user-supplied API keys from the request header
+    // Parse user-supplied API keys from the request body
     let userKeys: Record<string, string> = {};
-    const keysHeader = req.headers.get("X-User-Keys");
-    if (keysHeader) {
-      try { userKeys = JSON.parse(keysHeader); } catch { /* ignore bad JSON */ }
+    if (body.userKeys && typeof body.userKeys === "object") {
+      userKeys = body.userKeys;
     }
 
     if (!userIdea?.trim()) {
