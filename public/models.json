@@ -1,5 +1,22 @@
 [
   {
+    "id": "claude-opus-4-7-think",
+    "name": "claude-opus-4-7-think",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [],
+    "releaseDate": "2021-07-20",
+    "category": "text"
+  },
+  {
     "id": "claude-opus-4-7",
     "name": "claude-opus-4-7",
     "provider": "Anthropic",
@@ -11,7 +28,7 @@
     "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
-    "isLatest": true,
+    "isLatest": false,
     "tags": [],
     "releaseDate": "2021-07-20",
     "category": "text"
