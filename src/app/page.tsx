@@ -23,7 +23,7 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-400" />
             </span>
-            <span>11+ 大模型 · CO-STAR 框架 · 自动追踪最新模型</span>
+            <span>230+ 大模型 · CO-STAR 框架 · 自动追踪最新模型</span>
           </div>
 
           {/* Title */}

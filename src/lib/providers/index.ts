@@ -328,9 +328,19 @@ async function getBaiduToken(userKeys?: Record<string, string>): Promise<string>
 
 async function callBaidu(opts: GenerateOptions): Promise<GenerateResult> {
   const token = await getBaiduToken(opts.userKeys);
+  const ENDPOINT_MAP: Record<string, string> = {
+    "ernie-4.0-8k":       "completions_pro",
+    "ernie-4.0-turbo-8k": "ernie-4.0-turbo-8k",
+    "ernie-3.5-8k":       "completions",
+    "ernie-3.5-128k":     "ernie-3.5-128k",
+    "ernie-speed-8k":     "ernie_speed",
+    "ernie-speed-128k":   "ernie-speed-128k",
+    "ernie-lite-8k":      "ernie-lite-8k",
+  };
+  const endpoint = ENDPOINT_MAP[opts.model] ?? "completions_pro";
   const t0 = Date.now();
   const res = await axios.post(
-    `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=${token}`,
+    `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/${endpoint}?access_token=${token}`,
     {
       messages: [
         { role: "user", content: `${opts.systemPrompt}\n\n${opts.userPrompt}` },
@@ -386,21 +396,31 @@ async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
     baseURL,
   });
   const t0 = Date.now();
-  const res = await client.chat.completions.create({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 2048,
-    temperature: opts.temperature ?? 0.7,
-    messages: [
-      { role: "system", content: opts.systemPrompt },
-      { role: "user",   content: opts.userPrompt },
-    ],
-  });
-  return {
-    text: res.choices[0].message.content ?? "",
-    inputTokens:  res.usage?.prompt_tokens ?? 0,
-    outputTokens: res.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
+  try {
+    const res = await client.chat.completions.create({
+      model: opts.model,
+      max_tokens: opts.maxTokens ?? 2048,
+      temperature: opts.temperature ?? 0.7,
+      messages: [
+        { role: "system", content: opts.systemPrompt },
+        { role: "user",   content: opts.userPrompt },
+      ],
+    });
+    return {
+      text: res.choices[0].message.content ?? "",
+      inputTokens:  res.usage?.prompt_tokens ?? 0,
+      outputTokens: res.usage?.completion_tokens ?? 0,
+      latencyMs: Date.now() - t0,
+    };
+  } catch (err: any) {
+    const msg = err?.message ?? err?.error?.message ?? "";
+    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
+      throw new Error(
+        `当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`
+      );
+    }
+    throw err;
+  }
 }
 
 // ─── AihubMix / 任何中转站（一个Key访问所有模型）────────────────
@@ -425,21 +445,31 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
 
   const client = new OpenAI({ apiKey, baseURL });
   const t0 = Date.now();
-  const res = await client.chat.completions.create({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 2048,
-    temperature: opts.temperature ?? 0.7,
-    messages: [
-      { role: "system", content: opts.systemPrompt },
-      { role: "user",   content: opts.userPrompt },
-    ],
-  });
-  return {
-    text: res.choices[0].message.content ?? "",
-    inputTokens:  res.usage?.prompt_tokens ?? 0,
-    outputTokens: res.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
+  try {
+    const res = await client.chat.completions.create({
+      model: opts.model,
+      max_tokens: opts.maxTokens ?? 2048,
+      temperature: opts.temperature ?? 0.7,
+      messages: [
+        { role: "system", content: opts.systemPrompt },
+        { role: "user",   content: opts.userPrompt },
+      ],
+    });
+    return {
+      text: res.choices[0].message.content ?? "",
+      inputTokens:  res.usage?.prompt_tokens ?? 0,
+      outputTokens: res.usage?.completion_tokens ?? 0,
+      latencyMs: Date.now() - t0,
+    };
+  } catch (err: any) {
+    const msg = err?.message ?? err?.error?.message ?? "";
+    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
+      throw new Error(
+        `当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`
+      );
+    }
+    throw err;
+  }
 }
 
 // ─── Dispatcher ───────────────────────────────────────────────

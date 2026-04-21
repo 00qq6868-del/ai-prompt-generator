@@ -18,7 +18,7 @@ export function Header() {
         </div>
         <div>
           <h1 className="text-base font-bold text-white leading-tight">AI 提示词生成器</h1>
-          <p className="text-[10px] text-white/30 leading-tight">11+ 大模型 · 4 种优化模式 · 自动更新</p>
+          <p className="text-[10px] text-white/30 leading-tight">230+ 大模型 · 4 种优化模式 · 自动更新</p>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export function Header() {
         </div>
 
         <a
-          href="https://github.com"
+          href="https://github.com/00qq6868-del/ai-prompt-generator"
           target="_blank"
           rel="noopener noreferrer"
           className="text-white/30 hover:text-white transition-colors"

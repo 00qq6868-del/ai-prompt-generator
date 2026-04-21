@@ -5,7 +5,7 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "AI 提示词生成器",
   description:
-    "支持 GPT-5、Claude、Gemini、Grok、Llama、DeepSeek、Kimi、Qwen 等11+ 大模型的智能提示词优化生成器",
+    "支持 GPT-5、Claude、Gemini、Grok、Llama、DeepSeek、Kimi、Qwen 等 230+ 大模型的智能提示词优化生成器",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

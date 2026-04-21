@@ -52,8 +52,14 @@ export function PromptGenerator() {
   const [loading, setLoading]     = useState(false);
   const [result, setResult]       = useState<null | {
     optimizedPrompt: string;
-    stats: any;
-    meta: any;
+    stats: {
+      inputTokens: number;
+      outputTokens: number;
+      latencyMs: number;
+      tokensDelta: number;
+      changePercent: number;
+    };
+    meta: { generatorModel: string; targetModel: string };
     generatorModelCost: { input: number; output: number };
   }>(null);
   const resultRef = useRef<HTMLDivElement>(null);

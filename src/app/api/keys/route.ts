@@ -5,6 +5,8 @@
 import { NextResponse } from "next/server";
 
 const PROVIDER_KEYS: Record<string, string[]> = {
+  custom:    ["CUSTOM_API_KEY"],
+  aihubmix:  ["AIHUBMIX_API_KEY"],
   openai:    ["OPENAI_API_KEY"],
   anthropic: ["ANTHROPIC_API_KEY"],
   google:    ["GOOGLE_API_KEY"],
