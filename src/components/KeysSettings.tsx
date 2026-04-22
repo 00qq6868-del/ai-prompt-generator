@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, KeyRound, CheckCircle, ExternalLink, Eye, EyeOff, Sparkles, ArrowRight } from "lucide-react";
+import { X, KeyRound, CheckCircle, ExternalLink, Eye, EyeOff, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const PROVIDERS = [
   {
@@ -146,11 +147,43 @@ export function KeysSettings({ open, onClose }: Props) {
   const set = (id: string, val: string) => setKeys((k) => ({ ...k, [id]: val }));
   const toggleVisible = (id: string) => setVisible((v) => ({ ...v, [id]: !v[id] }));
 
-  const handleSave = () => {
+  const [probing, setProbing] = useState(false);
+
+  const handleSave = async () => {
     const cleaned = Object.fromEntries(
       Object.entries(keys).filter(([, v]) => v.trim().length > 0)
     );
     saveUserKeys(cleaned);
+
+    const hasRelay = cleaned["CUSTOM_API_KEY"]?.trim().length > 5 && cleaned["CUSTOM_BASE_URL"]?.trim();
+    if (hasRelay) {
+      setProbing(true);
+      try {
+        const res = await fetch("/api/probe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            baseUrl: cleaned["CUSTOM_BASE_URL"],
+            apiKey: cleaned["CUSTOM_API_KEY"],
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.models?.length > 0) {
+          localStorage.setItem("ai_prompt_probe_result", JSON.stringify({
+            models: data.models,
+            timestamp: Date.now(),
+          }));
+          toast.success(`已发现 ${data.total} 个可用模型`);
+        } else {
+          toast.error(data.error ?? "探测失败，请检查 Base URL 和 Key");
+        }
+      } catch {
+        toast.error("探测中转站失败，请检查网络");
+      } finally {
+        setProbing(false);
+      }
+    }
+
     setSaved(true);
     setTimeout(() => { setSaved(false); onClose(); }, 900);
   };
@@ -304,14 +337,22 @@ export function KeysSettings({ open, onClose }: Props) {
             <div className="mx-auto max-w-4xl flex items-center gap-4">
               <motion.button
                 onClick={handleSave}
+                disabled={probing}
                 whileTap={{ scale: 0.98 }}
                 className={`flex-1 rounded-2xl py-3.5 text-sm font-bold transition-all duration-300
                   ${saved
                     ? "bg-green-600 text-white"
-                    : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-violet-500/25"
+                    : probing
+                      ? "bg-violet-600/50 text-white/60 cursor-wait"
+                      : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-violet-500/25"
                   }`}
               >
-                {saved ? "✓  已保存" : "保存并关闭"}
+                {saved ? "✓  已保存" : probing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 size={14} className="animate-spin" />
+                    正在探测中转站模型...
+                  </span>
+                ) : "保存并关闭"}
               </motion.button>
               <p className="text-[11px] text-white/25 whitespace-nowrap">
                 保存后重新选择模型即可生效

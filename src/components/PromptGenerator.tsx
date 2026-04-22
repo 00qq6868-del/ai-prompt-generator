@@ -7,13 +7,15 @@ import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
 import toast from "react-hot-toast";
+import { scoreModel, ModelInfo } from "@/lib/models-registry";
 
 const DEFAULT_TARGET = "gpt-4o";
+const PROBE_CACHE_KEY = "ai_prompt_probe_result";
 
 // Map provider name → the env-key name stored in localStorage
 const PROVIDER_KEY_MAP: Record<string, string> = {
-  custom:   "CUSTOM_API_KEY",
-  aihubmix: "AIHUBMIX_API_KEY",
+  custom:    "CUSTOM_API_KEY",
+  aihubmix:  "AIHUBMIX_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
   openai:    "OPENAI_API_KEY",
   google:    "GOOGLE_API_KEY",
@@ -27,10 +29,10 @@ const PROVIDER_KEY_MAP: Record<string, string> = {
   baidu:     "BAIDU_API_KEY",
 };
 
-// Priority list — first provider whose key is configured wins
+// Fallback priority when no probe result is available
 const PROVIDER_PRIORITY = [
-  { provider: "custom",   modelId: "gpt-4o-mini" },
-  { provider: "aihubmix", modelId: "gpt-4o-mini" },
+  { provider: "custom",    modelId: "gpt-4o-mini" },
+  { provider: "aihubmix",  modelId: "gpt-4o-mini" },
   { provider: "anthropic", modelId: "claude-3-5-haiku-20241022" },
   { provider: "openai",    modelId: "gpt-4o-mini" },
   { provider: "google",    modelId: "gemini-2.0-flash" },
@@ -44,12 +46,26 @@ const PROVIDER_PRIORITY = [
   { provider: "baidu",     modelId: "ernie-4.0-8k" },
 ];
 
+function loadProbeCache(): string[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PROBE_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (Date.now() - (data.timestamp ?? 0) > 3_600_000) return null;
+    return data.models ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function PromptGenerator() {
   const [idea, setIdea]           = useState("");
   const [language, setLanguage]   = useState<"zh" | "en">("zh");
   const [targetModelId, setTargetModelId]       = useState(DEFAULT_TARGET);
   const [generatorModelId, setGeneratorModelId] = useState<string>("");
   const [loading, setLoading]     = useState(false);
+  const [availableModelIds, setAvailableModelIds] = useState<string[] | undefined>(undefined);
   const [result, setResult]       = useState<null | {
     optimizedPrompt: string;
     stats: {
@@ -64,14 +80,44 @@ export function PromptGenerator() {
   }>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  // Auto-select cheapest available generator based on user's stored API keys
+  // Auto-select best generator model
   useEffect(() => {
     const userKeys = loadUserKeys();
-    // If user has custom relay configured, use it (with aihubmix provider)
-    if (userKeys["CUSTOM_API_KEY"]?.trim().length > 5 && userKeys["CUSTOM_BASE_URL"]?.trim()) {
-      setGeneratorModelId("gpt-4o-mini");
+    const hasCustomRelay = userKeys["CUSTOM_API_KEY"]?.trim().length > 5 && userKeys["CUSTOM_BASE_URL"]?.trim();
+
+    if (hasCustomRelay) {
+      const cachedProbe = loadProbeCache();
+      if (cachedProbe) {
+        setAvailableModelIds(cachedProbe);
+        selectBestFromProbe(cachedProbe);
+        return;
+      }
+
+      fetch("/api/probe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          baseUrl: userKeys["CUSTOM_BASE_URL"],
+          apiKey: userKeys["CUSTOM_API_KEY"],
+        }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.models?.length > 0) {
+            setAvailableModelIds(data.models);
+            localStorage.setItem(PROBE_CACHE_KEY, JSON.stringify({
+              models: data.models,
+              timestamp: Date.now(),
+            }));
+            selectBestFromProbe(data.models);
+          } else {
+            setGeneratorModelId("gpt-4o-mini");
+          }
+        })
+        .catch(() => setGeneratorModelId("gpt-4o-mini"));
       return;
     }
+
     for (const { provider, modelId } of PROVIDER_PRIORITY) {
       const keyName = PROVIDER_KEY_MAP[provider];
       if (keyName && userKeys[keyName]?.trim().length > 5) {
@@ -79,7 +125,7 @@ export function PromptGenerator() {
         return;
       }
     }
-    // No keys found locally — fall back to server-side keys check
+
     fetch("/api/keys")
       .then((r) => r.json())
       .then((data: { configured: string[] }) => {
@@ -93,6 +139,26 @@ export function PromptGenerator() {
       })
       .catch(() => setGeneratorModelId(PROVIDER_PRIORITY[0].modelId));
   }, []);
+
+  const selectBestFromProbe = (probeModelIds: string[]) => {
+    fetch("/api/models?mode=accurate")
+      .then(r => r.json())
+      .then(data => {
+        const allModels: ModelInfo[] = data.models ?? [];
+        const available = allModels.filter(
+          m => probeModelIds.includes(m.id) && (m.category ?? "text") === "text"
+        );
+        if (available.length === 0) {
+          setGeneratorModelId("gpt-4o-mini");
+          return;
+        }
+        const best = available.reduce((a, b) =>
+          scoreModel(b, "token") > scoreModel(a, "token") ? b : a
+        );
+        setGeneratorModelId(best.id);
+      })
+      .catch(() => setGeneratorModelId("gpt-4o-mini"));
+  };
 
   const generate = async () => {
     if (!idea.trim()) {
@@ -176,6 +242,7 @@ export function PromptGenerator() {
         selectedGeneratorId={generatorModelId}
         onTargetChange={setTargetModelId}
         onGeneratorChange={setGeneratorModelId}
+        availableModelIds={availableModelIds}
       />
 
       {/* Generate button */}
@@ -213,7 +280,7 @@ export function PromptGenerator() {
         )}
       </motion.button>
 
-      {/* [S7 FIX] AnimatePresence requires motion.* direct child with a key */}
+      {/* Result */}
       <AnimatePresence>
         {result && (
           <motion.div

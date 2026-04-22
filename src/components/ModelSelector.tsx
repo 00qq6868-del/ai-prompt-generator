@@ -3,14 +3,16 @@
 import { ModelInfo, ModelCategory } from "@/lib/models-registry";
 import { useModels } from "@/hooks/useModels";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, RefreshCw, Cpu, Type, Image, Film, Mic, Headphones, Database, ScanSearch } from "lucide-react";
+import { ChevronDown, RefreshCw, Cpu, Type, Image, Film, Mic, Headphones, Database, ScanSearch, ChevronRight } from "lucide-react";
 import { useState, useMemo } from "react";
+import { ModelPicker } from "./ModelPicker";
 
 interface Props {
   selectedTargetId: string;
   selectedGeneratorId: string;
   onTargetChange: (id: string) => void;
   onGeneratorChange: (id: string) => void;
+  availableModelIds?: string[];
 }
 
 // ── Category config ──────────────────────────────────────────
@@ -52,10 +54,17 @@ export function ModelSelector({
   selectedGeneratorId,
   onTargetChange,
   onGeneratorChange,
+  availableModelIds,
 }: Props) {
   const { models, loading, source, updatedAt, refresh } = useModels("accurate");
   const [category, setCategory] = useState<ModelCategory | "all">("text");
   const [provider, setProvider] = useState("全部");
+  const [generatorPickerOpen, setGeneratorPickerOpen] = useState(false);
+
+  const selectedGenerator = useMemo(
+    () => models.find(m => m.id === selectedGeneratorId),
+    [models, selectedGeneratorId]
+  );
 
   // Filter + sort: latest first
   const filtered = useMemo(() => {
@@ -66,7 +75,6 @@ export function ModelSelector({
     if (provider !== "全部") {
       list = list.filter((m) => m.provider === provider);
     }
-    // Sort: latest release date first, then by name
     return list.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
   }, [models, category, provider]);
 
@@ -95,7 +103,7 @@ export function ModelSelector({
 
   return (
     <div className="space-y-5">
-      {/* Generator model picker */}
+      {/* Generator model picker — trigger button */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-white/60 flex items-center gap-1.5">
@@ -104,11 +112,43 @@ export function ModelSelector({
             <span className="text-xs text-white/30">（用来写提示词的 AI）</span>
           </h3>
         </div>
-        <ModelDropdown
-          models={models.filter((m) => (m.category ?? "text") === "text")}
+        <button
+          onClick={() => setGeneratorPickerOpen(true)}
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/30 hover:bg-white/[0.06] text-sm text-white transition-all group"
+        >
+          {selectedGenerator ? (
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/15 shrink-0">
+                <Cpu size={14} className="text-indigo-400" />
+              </div>
+              <div className="text-left min-w-0">
+                <div className="font-medium text-white truncate">{selectedGenerator.name}</div>
+                <div className="text-[11px] text-white/40 flex items-center gap-2">
+                  <span>{selectedGenerator.provider}</span>
+                  <span className={`${SPEED_COLOR[selectedGenerator.speed] ?? ""}`}>
+                    ⚡ {SPEED_LABEL[selectedGenerator.speed] ?? selectedGenerator.speed}
+                  </span>
+                  <span className={`px-1 rounded ${ACC_BADGE[selectedGenerator.accuracy] ?? ""}`}>
+                    {ACC_LABEL[selectedGenerator.accuracy] ?? selectedGenerator.accuracy}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <span className="text-white/40">点击选择生成器模型</span>
+          )}
+          <ChevronRight size={16} className="text-white/30 group-hover:text-indigo-400 transition-colors shrink-0" />
+        </button>
+
+        <ModelPicker
+          models={models}
           selectedId={selectedGeneratorId}
           onChange={onGeneratorChange}
-          label="选择生成器"
+          title="选择生成器模型"
+          subtitle="用来写提示词的 AI — 推荐选便宜快速的模型"
+          open={generatorPickerOpen}
+          onClose={() => setGeneratorPickerOpen(false)}
+          availableModelIds={availableModelIds}
         />
       </div>
 
@@ -205,103 +245,6 @@ export function ModelSelector({
           </p>
         )}
       </div>
-    </div>
-  );
-}
-
-// ── Dropdown (for generator model) with provider grouping ─────
-function ModelDropdown({
-  models, selectedId, onChange, label,
-}: {
-  models: ModelInfo[]; selectedId: string; onChange: (id: string) => void; label: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState("");
-  const selected = models.find((m) => m.id === selectedId);
-
-  // Group by provider, sorted
-  const grouped = useMemo(() => {
-    const groups: Record<string, ModelInfo[]> = {};
-    const filtered = filter
-      ? models.filter((m) => m.id.toLowerCase().includes(filter.toLowerCase()) || m.provider.toLowerCase().includes(filter.toLowerCase()))
-      : models;
-    for (const m of filtered) {
-      if (!groups[m.provider]) groups[m.provider] = [];
-      groups[m.provider].push(m);
-    }
-    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [models, filter]);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 text-sm text-white transition-all"
-      >
-        {selected ? (
-          <span className="flex items-center gap-2">
-            <span className="text-white/70">{selected.provider}</span>
-            <span className="font-medium">{selected.name}</span>
-          </span>
-        ) : (
-          <span className="text-white/40">{label}</span>
-        )}
-        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              className="fixed inset-0 z-40"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              className="absolute z-50 w-full mt-1 rounded-xl bg-gray-900 border border-white/10 shadow-2xl max-h-72 overflow-hidden flex flex-col"
-            >
-              {/* Search */}
-              <div className="px-3 py-2 border-b border-white/8">
-                <input
-                  type="text"
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  placeholder="搜索模型..."
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-violet-500/40"
-                  autoFocus
-                />
-              </div>
-              {/* Grouped list */}
-              <div className="overflow-y-auto flex-1 min-h-0">
-                {grouped.map(([provider, list]) => (
-                  <div key={provider}>
-                    <div className="px-3 py-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider bg-white/[0.03] sticky top-0">
-                      {provider} ({list.length})
-                    </div>
-                    {list.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => { onChange(m.id); setOpen(false); setFilter(""); }}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-xs hover:bg-white/5 transition-colors
-                          ${m.id === selectedId ? "bg-indigo-500/10 text-indigo-300" : "text-white/70"}`}
-                      >
-                        <span className="truncate">{m.name}</span>
-                        {m.isLatest && <span className="text-[9px] text-indigo-400 shrink-0 ml-2">最新</span>}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-                {grouped.length === 0 && (
-                  <div className="text-center text-white/30 text-xs py-4">无匹配结果</div>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
