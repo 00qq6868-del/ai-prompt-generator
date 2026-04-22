@@ -7,7 +7,7 @@ import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
 import toast from "react-hot-toast";
-import { scoreModel, ModelInfo } from "@/lib/models-registry";
+import { scoreModel, ModelInfo, OptimizationMode } from "@/lib/models-registry";
 
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
@@ -117,7 +117,10 @@ export function PromptGenerator() {
             setGeneratorModelId("gpt-4o-mini");
           }
         })
-        .catch(() => setGeneratorModelId("gpt-4o-mini"));
+        .catch(() => {
+          toast.error("探测中转站失败，使用默认模型 / Probe failed, using default model");
+          setGeneratorModelId("gpt-4o-mini");
+        });
       return;
     }
 
@@ -146,7 +149,9 @@ export function PromptGenerator() {
       .catch(() => setGeneratorModelId(PROVIDER_PRIORITY[0].modelId));
   }, []);
 
-  const selectBestFromProbe = (probeModelIds: string[]) => {
+  const selectBestFromProbe = (probeModelIds: string[], targetCategory?: string) => {
+    const generatorMode: OptimizationMode =
+      (targetCategory === "image" || targetCategory === "video") ? "accurate" : "token";
     fetch("/api/models?mode=accurate")
       .then(r => {
         if (!r.ok) throw new Error(`获取模型列表失败 Failed to load models (${r.status})`);
@@ -162,12 +167,25 @@ export function PromptGenerator() {
           return;
         }
         const best = available.reduce((a, b) =>
-          scoreModel(b, "token") > scoreModel(a, "token") ? b : a
+          scoreModel(b, generatorMode) > scoreModel(a, generatorMode) ? b : a
         );
         setGeneratorModelId(best.id);
       })
       .catch(() => setGeneratorModelId("gpt-4o-mini"));
   };
+
+  // Re-select generator when target model changes (adapt scoring mode)
+  useEffect(() => {
+    if (!availableModelIds?.length) return;
+    fetch("/api/models")
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(data => {
+        const target = (data.models ?? []).find((m: ModelInfo) => m.id === targetModelId);
+        const category = target?.category ?? "text";
+        selectBestFromProbe(availableModelIds, category);
+      })
+      .catch(() => {});
+  }, [targetModelId]);
 
   const generate = async () => {
     if (!idea.trim()) {

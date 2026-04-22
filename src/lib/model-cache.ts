@@ -13,23 +13,26 @@ let _fetchedAt = 0;
 
 /** Fetch models from remote registry with TTL, falling back to bundled list */
 export async function getModels(): Promise<ModelInfo[]> {
-  const url = process.env.MODELS_REGISTRY_URL;
+  const urlEnv = process.env.MODELS_REGISTRY_URL ?? "";
+  const urls = urlEnv
+    .split(",")
+    .map((u) => u.trim())
+    .filter(
+      (u) => u.startsWith("https://") && !u.includes("yourusername")
+    );
 
-  // [C4 FIX] Guard against the placeholder URL — only attempt if real URL is set
-  const isValidUrl =
-    url &&
-    !url.includes("yourusername") &&
-    url.startsWith("https://");
-
-  if (isValidUrl && Date.now() - _fetchedAt > CACHE_TTL) {
-    try {
-      const res = await axios.get<ModelInfo[]>(url, { timeout: 5000 });
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        _models    = res.data;
-        _fetchedAt = Date.now();
+  if (urls.length > 0 && Date.now() - _fetchedAt > CACHE_TTL) {
+    for (const url of urls) {
+      try {
+        const res = await axios.get<ModelInfo[]>(url, { timeout: 5000 });
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          _models    = res.data;
+          _fetchedAt = Date.now();
+          break;
+        }
+      } catch {
+        // Try next URL
       }
-    } catch {
-      // Fall back to bundled list silently
     }
   }
 

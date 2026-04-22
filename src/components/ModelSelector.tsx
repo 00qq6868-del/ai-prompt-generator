@@ -66,6 +66,17 @@ export function ModelSelector({
     [models, selectedGeneratorId]
   );
 
+  const targetModel = useMemo(
+    () => models.find(m => m.id === selectedTargetId),
+    [models, selectedTargetId]
+  );
+  const targetCategory = targetModel?.category ?? "text";
+  const generatorSubtitle = targetCategory === "image"
+    ? "目标是图像模型 — 推荐选质量高的生成器 / Target is image model"
+    : targetCategory === "video"
+    ? "目标是视频模型 — 推荐选质量高的生成器 / Target is video model"
+    : "用来写提示词的 AI — 推荐选便宜快速的模型";
+
   // Filter + sort: latest first
   const filtered = useMemo(() => {
     let list = models;
@@ -145,7 +156,7 @@ export function ModelSelector({
           selectedId={selectedGeneratorId}
           onChange={onGeneratorChange}
           title="选择生成器模型"
-          subtitle="用来写提示词的 AI — 推荐选便宜快速的模型"
+          subtitle={generatorSubtitle}
           open={generatorPickerOpen}
           onClose={() => setGeneratorPickerOpen(false)}
           availableModelIds={availableModelIds}

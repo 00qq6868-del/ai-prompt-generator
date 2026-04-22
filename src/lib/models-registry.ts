@@ -37,14 +37,15 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     apiProvider: "openai",
     contextWindow: 128000,
     maxOutput: 16384,
-    inputCostPer1M: 5,
-    outputCostPer1M: 15,
+    inputCostPer1M: 2.5,
+    outputCostPer1M: 10,
     speed: "fast",
     accuracy: "supreme",
     supportsStreaming: true,
     isLatest: false,
     tags: ["vision", "code", "reasoning"],
     releaseDate: "2024-05-13",
+    category: "text",
   },
   {
     id: "gpt-4o-mini",
@@ -61,6 +62,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["fast", "cheap", "code"],
     releaseDate: "2024-07-18",
+    category: "text",
   },
   {
     id: "o3",
@@ -77,6 +79,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["reasoning", "math", "science"],
     releaseDate: "2025-01-31",
+    category: "text",
   },
   {
     id: "o4-mini",
@@ -93,6 +96,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["reasoning", "code", "cheap"],
     releaseDate: "2025-04-16",
+    category: "text",
   },
   // ─── Anthropic Claude ──────────────────────────────────────
   {
@@ -110,6 +114,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["reasoning", "writing", "code"],
     releaseDate: "2025-04-01",
+    category: "text",
   },
   {
     id: "claude-sonnet-4-5",
@@ -126,6 +131,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["balanced", "code", "writing"],
     releaseDate: "2025-03-01",
+    category: "text",
   },
   {
     id: "claude-3-5-haiku-20241022",
@@ -142,6 +148,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["fast", "cheap"],
     releaseDate: "2024-11-04",
+    category: "text",
   },
   // ─── Google Gemini ─────────────────────────────────────────
   {
@@ -159,6 +166,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["vision", "reasoning", "long-context"],
     releaseDate: "2025-03-25",
+    category: "text",
   },
   {
     id: "gemini-2.0-flash",
@@ -175,6 +183,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["fast", "cheap", "multimodal"],
     releaseDate: "2025-02-05",
+    category: "text",
   },
   // ─── Meta Llama (via Groq) ─────────────────────────────────
   {
@@ -192,6 +201,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["open-source", "fast"],
     releaseDate: "2024-12-06",
+    category: "text",
   },
   {
     id: "llama-3.1-8b-instant",
@@ -208,6 +218,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["open-source", "ultra-cheap"],
     releaseDate: "2024-07-23",
+    category: "text",
   },
   // ─── xAI Grok ──────────────────────────────────────────────
   {
@@ -225,6 +236,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["reasoning", "real-time-web"],
     releaseDate: "2025-02-17",
+    category: "text",
   },
   {
     id: "grok-3-mini",
@@ -241,6 +253,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["cheap", "fast"],
     releaseDate: "2025-02-17",
+    category: "text",
   },
   // ─── Mistral AI ────────────────────────────────────────────
   {
@@ -258,6 +271,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["multilingual", "code"],
     releaseDate: "2024-11-01",
+    category: "text",
   },
   {
     id: "mistral-small-latest",
@@ -274,6 +288,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["cheap", "fast"],
     releaseDate: "2024-09-17",
+    category: "text",
   },
   // ─── DeepSeek ──────────────────────────────────────────────
   {
@@ -291,6 +306,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["code", "math", "cheap"],
     releaseDate: "2024-12-26",
+    category: "text",
   },
   {
     id: "deepseek-reasoner",
@@ -307,6 +323,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["reasoning", "math", "code"],
     releaseDate: "2025-01-20",
+    category: "text",
   },
   // ─── Zhipu GLM ─────────────────────────────────────────────
   {
@@ -324,6 +341,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["chinese", "code", "vision"],
     releaseDate: "2024-09-01",
+    category: "text",
   },
   // ─── Moonshot Kimi ─────────────────────────────────────────
   {
@@ -341,6 +359,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["chinese", "long-context"],
     releaseDate: "2024-04-01",
+    category: "text",
   },
   {
     id: "moonshot-v1-8k",
@@ -357,6 +376,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["chinese", "cheap"],
     releaseDate: "2024-04-01",
+    category: "text",
   },
   // ─── Alibaba Qwen ──────────────────────────────────────────
   {
@@ -374,6 +394,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["chinese", "code", "multilingual"],
     releaseDate: "2024-09-01",
+    category: "text",
   },
   {
     id: "qwen-turbo",
@@ -390,6 +411,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["chinese", "cheap", "fast"],
     releaseDate: "2024-01-01",
+    category: "text",
   },
   // ─── Baidu ERNIE ───────────────────────────────────────────
   {
@@ -407,6 +429,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["chinese", "search"],
     releaseDate: "2024-04-16",
+    category: "text",
   },
   // ─── Ollama (local, no API key required) ───────────────────
   {
@@ -424,6 +447,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: true,
     tags: ["local", "free", "privacy", "open-source"],
     releaseDate: "2024-09-25",
+    category: "text",
   },
   {
     id: "qwen2.5:7b",
@@ -440,6 +464,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["local", "free", "chinese", "open-source"],
     releaseDate: "2024-09-19",
+    category: "text",
   },
   {
     id: "mistral",
@@ -456,6 +481,7 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     isLatest: false,
     tags: ["local", "free", "open-source"],
     releaseDate: "2023-09-27",
+    category: "text",
   },
 ];
 

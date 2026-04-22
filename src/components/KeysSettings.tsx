@@ -154,6 +154,7 @@ export function KeysSettings({ open, onClose }: Props) {
       Object.entries(keys).filter(([, v]) => v.trim().length > 0)
     );
     saveUserKeys(cleaned);
+    localStorage.removeItem("ai_prompt_probe_result");
 
     const hasRelay = cleaned["CUSTOM_API_KEY"]?.trim().length > 5 && cleaned["CUSTOM_BASE_URL"]?.trim();
     if (hasRelay) {

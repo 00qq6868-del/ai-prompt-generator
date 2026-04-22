@@ -6,7 +6,7 @@ name: Auto Update Models
 
 on:
   schedule:
-    - cron: "17 */6 * * *"  # 每6小时检查一次（UTC 0:17, 6:17, 12:17, 18:17）
+    - cron: "17 */2 * * *"  # 每2小时检查一次
   workflow_dispatch:          # 支持手动触发
 
 jobs:
@@ -41,11 +41,31 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Generate system state
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          node -e "
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('public/models.json','utf8'));
+          const cats = {};
+          m.forEach(x => { const c = x.category||'text'; cats[c]=(cats[c]||0)+1; });
+          const zc = m.filter(x => x.inputCostPer1M===0 && x.outputCostPer1M===0).length;
+          const state = {
+            updatedAt: new Date().toISOString(),
+            totalModels: m.length,
+            byCategory: cats,
+            zeroCostModels: zc,
+            metaCoverage: m.length - zc
+          };
+          fs.mkdirSync('context', {recursive:true});
+          fs.writeFileSync('context/SYSTEM_STATE.json', JSON.stringify(state, null, 2));
+          "
+
       - name: Commit & push if changed
         if: steps.diff.outputs.changed == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/models.json
+          git add public/models.json context/SYSTEM_STATE.json
           git commit -m "chore: auto-update models $(date +'%Y-%m-%d')"
           git push
