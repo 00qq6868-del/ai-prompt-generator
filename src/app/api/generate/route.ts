@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userIdea?.trim()) {
-      return NextResponse.json({ error: "userIdea is required" }, { status: 400 });
+      return NextResponse.json({ error: "请输入内容 / userIdea is required" }, { status: 400 });
     }
 
     const models         = await getModels();
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const generatorModel = models.find((m) => m.id === generatorModelId);
 
     if (!targetModel || !generatorModel) {
-      return NextResponse.json({ error: "Unknown model id" }, { status: 400 });
+      return NextResponse.json({ error: "未知的模型 ID / Unknown model id" }, { status: 400 });
     }
 
     const systemPrompt = buildSystemPrompt({
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("[generate]", err);
     return NextResponse.json(
-      { error: err?.message ?? "Internal error" },
+      { error: err?.message ?? "服务器内部错误 / Internal error" },
       { status: 500 }
     );
   }

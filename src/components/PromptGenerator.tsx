@@ -101,7 +101,10 @@ export function PromptGenerator() {
           apiKey: userKeys["CUSTOM_API_KEY"],
         }),
       })
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error(`探测失败 Probe failed (${r.status})`);
+          return r.json();
+        })
         .then(data => {
           if (data.models?.length > 0) {
             setAvailableModelIds(data.models);
@@ -127,7 +130,10 @@ export function PromptGenerator() {
     }
 
     fetch("/api/keys")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`获取密钥状态失败 Failed to fetch key status (${r.status})`);
+        return r.json();
+      })
       .then((data: { configured: string[] }) => {
         for (const { provider, modelId } of PROVIDER_PRIORITY) {
           if (data.configured.includes(provider)) {
@@ -142,7 +148,10 @@ export function PromptGenerator() {
 
   const selectBestFromProbe = (probeModelIds: string[]) => {
     fetch("/api/models?mode=accurate")
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`获取模型列表失败 Failed to load models (${r.status})`);
+        return r.json();
+      })
       .then(data => {
         const allModels: ModelInfo[] = data.models ?? [];
         const available = allModels.filter(
@@ -188,15 +197,16 @@ export function PromptGenerator() {
           userKeys,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "生成失败");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "生成失败，请重试 Generation failed, please retry");
+      if (!data.optimizedPrompt) throw new Error("返回数据异常 Invalid response data");
       setResult(data);
       toast.dismiss(tid);
       toast.success("提示词生成成功！");
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (err: any) {
       toast.dismiss(tid);
-      toast.error(err.message ?? "生成失败，请检查 API Key");
+      toast.error(err.message ?? "生成失败，请检查 API Key / Generation failed, check your API Key");
     } finally {
       setLoading(false);
     }

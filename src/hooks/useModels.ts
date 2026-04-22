@@ -29,6 +29,7 @@ export function useModels(mode: OptimizationMode): UseModelsResult {
       try {
         const url = `/api/models?mode=${mode}${forceRefresh ? "&refresh=1" : ""}`;
         const res  = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`模型列表加载失败 Failed to load models (${res.status})`);
         const data = await res.json();
         setModels(data.models ?? []);
         setRec(data.recommended ?? []);

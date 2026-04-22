@@ -167,18 +167,18 @@ export function KeysSettings({ open, onClose }: Props) {
             apiKey: cleaned["CUSTOM_API_KEY"],
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok && data.models?.length > 0) {
           localStorage.setItem("ai_prompt_probe_result", JSON.stringify({
             models: data.models,
             timestamp: Date.now(),
           }));
-          toast.success(`已发现 ${data.total} 个可用模型`);
+          toast.success(`已发现 ${data.total} 个可用模型 / Found ${data.total} available models`);
         } else {
-          toast.error(data.error ?? "探测失败，请检查 Base URL 和 Key");
+          toast.error(data.error ?? "探测失败，请检查 Base URL 和 Key / Probe failed, check Base URL and Key");
         }
       } catch {
-        toast.error("探测中转站失败，请检查网络");
+        toast.error("探测中转站失败，请检查网络 / Probe failed, check your network");
       } finally {
         setProbing(false);
       }

@@ -28,6 +28,7 @@ export function useNetwork(pollingMs = 30_000) {
     setStatus((s) => ({ ...s, checking: true }));
     try {
       const res = await fetch("/api/network", { cache: "no-store" });
+      if (!res.ok) throw new Error(`网络检测失败 Network check failed (${res.status})`);
       const data = await res.json();
 
       // Also read Network Information API if available

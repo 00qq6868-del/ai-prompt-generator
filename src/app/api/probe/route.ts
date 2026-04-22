@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
 
     if (!baseUrl?.trim() || !apiKey?.trim()) {
       return NextResponse.json(
-        { error: "需要提供 Base URL 和 API Key" },
+        { error: "需要提供 Base URL 和 API Key / Base URL and API Key are required" },
         { status: 400 }
       );
     }
@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
       const text = await res.text().catch(() => "");
       if (res.status === 401 || res.status === 403) {
         return NextResponse.json(
-          { error: "API Key 无效或已过期，请检查后重试" },
+          { error: "API Key 无效或已过期，请检查后重试 / Invalid or expired API Key" },
           { status: 401 }
         );
       }
       return NextResponse.json(
-        { error: `中转站返回错误 (${res.status}): ${text.slice(0, 200)}` },
+        { error: `中转站返回错误 / Relay error (${res.status}): ${text.slice(0, 200)}` },
         { status: 502 }
       );
     }
@@ -60,12 +60,12 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     if (err?.name === "TimeoutError" || err?.name === "AbortError") {
       return NextResponse.json(
-        { error: "探测超时（8秒），请检查 Base URL 是否正确" },
+        { error: "探测超时（8秒），请检查 Base URL 是否正确 / Probe timed out (8s), check Base URL" },
         { status: 504 }
       );
     }
     return NextResponse.json(
-      { error: err?.message ?? "探测失败" },
+      { error: err?.message ?? "探测失败 / Probe failed" },
       { status: 500 }
     );
   }
