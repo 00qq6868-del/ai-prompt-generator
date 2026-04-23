@@ -1491,6 +1491,23 @@
     "category": "text"
   },
   {
+    "id": "gemini-3-flash-preview-free",
+    "name": "gemini-3-flash-preview-free",
+    "provider": "Google",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "coding-glm-5-turbo",
     "name": "coding-glm-5-turbo",
     "provider": "智谱AI",
@@ -1595,6 +1612,23 @@
   {
     "id": "deepinfra-gemma-4-26b-a4b-it",
     "name": "deepinfra-gemma-4-26b-a4b-it",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "sophnet-kimi-k2.6",
+    "name": "sophnet-kimi-k2.6",
     "provider": "Other",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
