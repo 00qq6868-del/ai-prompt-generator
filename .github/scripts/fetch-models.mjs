@@ -24,6 +24,11 @@ const META = {
   "o3":                         { i: 10,   o: 40,   s: "slow",      a: "supreme", t: ["reasoning","math"],            d: "2025-04-16" },
   "o3-mini":                    { i: 1.1,  o: 4.4,  s: "fast",      a: "supreme", t: ["reasoning","cheap"],           d: "2025-01-31" },
   "o4-mini":                    { i: 1.1,  o: 4.4,  s: "fast",      a: "supreme", t: ["reasoning","cheap"],           d: "2025-04-16" },
+  "gpt-5":                      { i: 10,   o: 40,   s: "fast",      a: "supreme", t: ["reasoning","code","vision"],   d: "2025-06-01" },
+  "gpt-5.1":                    { i: 10,   o: 40,   s: "fast",      a: "supreme", t: ["reasoning","code"],            d: "2025-07-01" },
+  "gpt-5.2":                    { i: 10,   o: 40,   s: "fast",      a: "supreme", t: ["reasoning","code"],            d: "2025-08-01" },
+  "gpt-5.3":                    { i: 10,   o: 40,   s: "fast",      a: "supreme", t: ["reasoning","code"],            d: "2025-09-01" },
+  "gpt-5.4":                    { i: 10,   o: 40,   s: "fast",      a: "supreme", t: ["reasoning","code","vision"],   d: "2025-10-01" },
   // ── Anthropic ───────────────────────────────────────────────
   "claude-opus-4-5":            { i: 15,   o: 75,   s: "slow",      a: "supreme", t: ["reasoning","vision"],          d: "2025-02-24" },
   "claude-opus-4-7":            { i: 15,   o: 75,   s: "slow",      a: "supreme", t: ["reasoning","vision"],          d: "2025-05-01" },
@@ -42,9 +47,12 @@ const META = {
   "gemini-2.0-flash-lite":      { i: 0.075,o: 0.3,  s: "ultrafast", a: "medium",  t: ["ultra-cheap","fast"],          d: "2025-02-05" },
   "gemini-1.5-pro":             { i: 1.25, o: 5,    s: "medium",    a: "high",    t: ["long-context","vision"],       d: "2024-05-14" },
   "gemini-1.5-flash":           { i: 0.075,o: 0.3,  s: "ultrafast", a: "medium",  t: ["cheap","fast"],                d: "2024-05-14" },
+  "gemini-3":                   { i: 1.25, o: 10,   s: "medium",    a: "supreme", t: ["vision","reasoning"],          d: "2025-06-01" },
+  "gemini-3.1":                 { i: 1.25, o: 10,   s: "medium",    a: "supreme", t: ["vision","reasoning"],          d: "2025-08-01" },
   // ── xAI ─────────────────────────────────────────────────────
   "grok-3":                     { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["reasoning","real-time-web"],   d: "2025-02-17" },
   "grok-3-mini":                { i: 0.3,  o: 0.5,  s: "ultrafast", a: "high",    t: ["cheap","fast"],                d: "2025-02-17" },
+  "grok-4":                     { i: 5,    o: 20,   s: "fast",      a: "supreme", t: ["reasoning","real-time-web"],   d: "2025-06-01" },
   // ── Meta Llama ──────────────────────────────────────────────
   "llama-3.3-70b":              { i: 0.59, o: 0.79, s: "ultrafast", a: "high",    t: ["open-source","fast"],          d: "2024-12-06" },
   "llama-3.1-8b-instant":       { i: 0.05, o: 0.08, s: "ultrafast", a: "medium",  t: ["open-source","ultra-cheap"],   d: "2024-07-23" },
@@ -123,9 +131,9 @@ async function fetchAihubmix() {
   // Classify model by category based on ID
   function classifyModel(id) {
     const lower = id.toLowerCase();
-    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|seedance|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image/.test(lower)) return "image";
+    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|seedance|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview/.test(lower)) return "image";
     if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video/.test(lower)) return "video";
-    if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts/.test(lower)) return "tts";
+    if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview/.test(lower)) return "tts";
     if (/whisper|stt|audio-transcri|speech-to|paraformer/.test(lower)) return "stt";
     if (/embed|bge-|text-embedding|e5-|jina-embed/.test(lower)) return "embedding";
     if (/ocr|document-ai|vision-extract|doc-parse/.test(lower)) return "ocr";
@@ -237,6 +245,7 @@ async function fetchGoogle() {
         isLatest:      false,
         tags:          meta?.t ?? [],
         releaseDate:   "",
+        category:      "text",
       };
     });
 }
@@ -258,7 +267,7 @@ async function fetchOpenAI() {
 
   const json = await res.json();
   const data = json.data ?? [];
-  const KEEP = /^(gpt-4|o1|o3|o4)/;
+  const KEEP = /^(gpt-4|gpt-5|o1|o3|o4)/;
 
   return data
     .filter((m) => KEEP.test(m.id) && !m.id.includes("instruct") && !m.id.includes("realtime") && !m.id.includes("audio"))
@@ -279,6 +288,7 @@ async function fetchOpenAI() {
         isLatest:      false,
         tags:          meta?.t ?? [],
         releaseDate:   new Date(m.created * 1000).toISOString().slice(0, 10),
+        category:      "text",
       };
     });
 }
@@ -301,7 +311,7 @@ async function fetchAnthropic() {
   const json = await res.json();
   const data = json.data ?? [];
   return data.map((m) => {
-    const meta = META[m.id];
+    const meta = lookupMeta(m.id);
     return {
       id:            m.id,
       name:          m.display_name ?? m.id,
@@ -317,6 +327,7 @@ async function fetchAnthropic() {
       isLatest:      false,
       tags:          meta?.t ?? [],
       releaseDate:   m.created_at?.slice(0, 10) ?? "",
+      category:      "text",
     };
   });
 }
