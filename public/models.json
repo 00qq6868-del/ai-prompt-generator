@@ -1277,18 +1277,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 10,
-    "outputCostPer1M": 40,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
     "speed": "fast",
-    "accuracy": "supreme",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
-      "reasoning",
-      "code",
+      "fast",
+      "cheap",
       "vision"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -1304,8 +1304,12 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -1315,18 +1319,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 10,
-    "outputCostPer1M": 40,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
     "speed": "fast",
-    "accuracy": "supreme",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
-      "reasoning",
-      "code",
+      "fast",
+      "cheap",
       "vision"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -1342,8 +1346,12 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -1353,18 +1361,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 10,
-    "outputCostPer1M": 40,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
     "speed": "fast",
-    "accuracy": "supreme",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
-      "reasoning",
-      "code",
+      "fast",
+      "cheap",
       "vision"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -1374,18 +1382,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 10,
-    "outputCostPer1M": 40,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
     "speed": "fast",
-    "accuracy": "supreme",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
-      "reasoning",
-      "code",
+      "fast",
+      "cheap",
       "vision"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -1395,18 +1403,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 10,
-    "outputCostPer1M": 40,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
     "speed": "fast",
-    "accuracy": "supreme",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
-      "reasoning",
-      "code",
+      "fast",
+      "cheap",
       "vision"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "2025-04-17",
     "category": "text"
   },
   {
@@ -2183,8 +2191,11 @@
     "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "ultra-cheap",
+      "fast"
+    ],
+    "releaseDate": "2025-04-14",
     "category": "text"
   },
   {
@@ -2200,8 +2211,11 @@
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "cheap",
+      "fast"
+    ],
+    "releaseDate": "2025-04-14",
     "category": "text"
   },
   {
@@ -2217,8 +2231,11 @@
     "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "code"
+    ],
+    "releaseDate": "2025-04-14",
     "category": "text"
   },
   {
@@ -2464,8 +2481,12 @@
     "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "reasoning",
+      "long-context"
+    ],
+    "releaseDate": "2025-03-25",
     "category": "text"
   },
   {
@@ -2481,8 +2502,12 @@
     "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "reasoning",
+      "long-context"
+    ],
+    "releaseDate": "2025-03-25",
     "category": "text"
   },
   {
@@ -2841,8 +2866,11 @@
     "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "vision"
+    ],
+    "releaseDate": "2025-02-24",
     "category": "text"
   },
   {
@@ -3352,7 +3380,7 @@
       "multilingual",
       "code"
     ],
-    "releaseDate": "2024-05-13",
+    "releaseDate": "2024-11-18",
     "category": "text"
   },
   {
