@@ -1772,26 +1772,6 @@
     "category": "text"
   },
   {
-    "id": "o1-2024-12-17",
-    "name": "o1-2024-12-17",
-    "provider": "OpenAI",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 15,
-    "outputCostPer1M": 60,
-    "speed": "slow",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "reasoning",
-      "math"
-    ],
-    "releaseDate": "2024-12-17",
-    "category": "text"
-  },
-  {
     "id": "mistral-large-3",
     "name": "mistral-large-3",
     "provider": "Mistral AI",
