@@ -1,6 +1,6 @@
 # AI Prompt Generator — Project Context
 
-> Last updated: 2026-04-23
+> Last updated: 2026-04-24
 > Site: https://www.myprompt.asia
 > Repo: https://github.com/00qq6868-del/ai-prompt-generator.git
 
@@ -49,8 +49,28 @@ src/
 └── workflows/update-models.yml # Cron: auto-update models.json
 
 public/
-└── models.json                 # ~240 models, auto-updated by CI
+└── models.json                 # ~251 models, auto-updated by CI every 2 hours
+
+context/
+├── PROJECT_CONTEXT.md          # This file — project overview
+├── QUICK_START.md              # 30-second onboarding for new AI sessions
+├── PROGRESS.md                 # Task progress tracker
+├── MEMORIES.md                 # All decisions, user preferences, gotchas
+├── SESSION_LOG.md              # Session handoff log
+└── SYSTEM_STATE.json           # Auto-generated model stats
+
+scripts/
+├── patch-models.cjs            # Post-process models.json (apply META + classify)
+└── save-context.sh             # One-click save context to GitHub
 ```
+
+## Cross-Session Context System
+
+This project uses a file-based context system in `context/` so that ANY AI assistant (Claude, GPT, Gemini, etc.) can pick up work seamlessly:
+
+1. **Start a new session** → Read `context/QUICK_START.md` + `context/PROGRESS.md`
+2. **Need full context** → Read `context/MEMORIES.md` + `context/SESSION_LOG.md`
+3. **Before session ends** → Update `PROGRESS.md`, add entry to `SESSION_LOG.md`, run `bash scripts/save-context.sh`
 
 ## Key Concepts
 
@@ -75,3 +95,7 @@ Users can configure a custom OpenAI-compatible relay (like AihubMix) that provid
 - AihubMix's `m.created` timestamp is always `1626739200` (platform launch date), not model release date. We use `meta?.d` from META instead.
 - `BUNDLED_MODELS` is the offline fallback when remote fetch fails — keep it reasonably up to date.
 - All user-facing error messages must be bilingual (Chinese + English).
+- 116/251 models still have zero-cost data (no META coverage). Scoring is non-deterministic among them.
+- `model-cache.ts` uses `readFileSync` for local file — this is fine for Next.js server-side but won't work in client components.
+- Git push may fail on first attempt with SSL error — just retry.
+- When working on models.json, GitHub Actions may commit auto-updates simultaneously. Use `git pull --no-rebase -X ours` then re-run `node scripts/patch-models.cjs`.
