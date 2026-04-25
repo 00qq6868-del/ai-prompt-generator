@@ -486,6 +486,27 @@
     "category": "text"
   },
   {
+    "id": "gpt-5.5",
+    "name": "gpt-5.5",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "grok-4-20-reasoning",
     "name": "grok-4-20-reasoning",
     "provider": "xAI",
