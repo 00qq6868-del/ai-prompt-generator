@@ -567,26 +567,6 @@
     "category": "text"
   },
   {
-    "id": "gemini-3-flash-preview-free",
-    "name": "gemini-3-flash-preview-free",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
     "id": "gemini-3-pro-image-preview",
     "name": "gemini-3-pro-image-preview",
     "provider": "Google",
@@ -605,6 +585,26 @@
     ],
     "releaseDate": "2025-06-01",
     "category": "image"
+  },
+  {
+    "id": "grok-4.20-multi-agent-0309",
+    "name": "grok-4.20-multi-agent-0309",
+    "provider": "xAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 20,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "real-time-web"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
   },
   {
     "id": "grok-4-1-fast-reasoning",
@@ -2302,6 +2302,23 @@
     "id": "k2.6-code-preview-free",
     "name": "k2.6-code-preview-free",
     "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "grok-code-fast-1",
+    "name": "grok-code-fast-1",
+    "provider": "xAI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
