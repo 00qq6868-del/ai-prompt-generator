@@ -166,86 +166,6 @@
     "category": "text"
   },
   {
-    "id": "gemini-3.1-pro-preview-customtools",
-    "name": "gemini-3.1-pro-preview-customtools",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-08-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3.1-pro-preview",
-    "name": "gemini-3.1-pro-preview",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-08-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3.1-flash-lite-preview",
-    "name": "gemini-3.1-flash-lite-preview",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-08-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3.1-flash-image-preview",
-    "name": "gemini-3.1-flash-image-preview",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-08-01",
-    "category": "image"
-  },
-  {
     "id": "gpt-5.2-codex",
     "name": "gpt-5.2-codex",
     "provider": "OpenAI",
@@ -297,7 +217,7 @@
     "speed": "medium",
     "accuracy": "supreme",
     "supportsStreaming": true,
-    "isLatest": false,
+    "isLatest": true,
     "tags": [
       "vision",
       "reasoning"
@@ -545,46 +465,6 @@
     ],
     "releaseDate": "2025-06-01",
     "category": "text"
-  },
-  {
-    "id": "gemini-3-flash-preview",
-    "name": "gemini-3-flash-preview",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3-pro-image-preview",
-    "name": "gemini-3-pro-image-preview",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "image"
   },
   {
     "id": "grok-4.20-multi-agent-0309",
@@ -933,50 +813,8 @@
     "category": "text"
   },
   {
-    "id": "gemini-2.5-flash-image",
-    "name": "gemini-2.5-flash-image",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.15,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "fast",
-      "cheap",
-      "vision"
-    ],
-    "releaseDate": "2025-04-17",
-    "category": "image"
-  },
-  {
     "id": "gemini-2.5-flash-preview-09-2025",
     "name": "gemini-2.5-flash-preview-09-2025",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.15,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "fast",
-      "cheap",
-      "vision"
-    ],
-    "releaseDate": "2025-04-17",
-    "category": "text"
-  },
-  {
-    "id": "gemini-2.5-flash",
-    "name": "gemini-2.5-flash",
     "provider": "Google",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
@@ -1040,27 +878,6 @@
   {
     "id": "gemini-2.5-flash-lite-nothink",
     "name": "gemini-2.5-flash-lite-nothink",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.15,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "fast",
-      "cheap",
-      "vision"
-    ],
-    "releaseDate": "2025-04-17",
-    "category": "text"
-  },
-  {
-    "id": "gemini-2.5-flash-lite",
-    "name": "gemini-2.5-flash-lite",
     "provider": "Google",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
@@ -1361,27 +1178,6 @@
     "category": "text"
   },
   {
-    "id": "gemini-2.5-pro",
-    "name": "gemini-2.5-pro",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning",
-      "long-context"
-    ],
-    "releaseDate": "2025-03-25",
-    "category": "text"
-  },
-  {
     "id": "gemini-2.5-pro-preview-05-06",
     "name": "gemini-2.5-pro-preview-05-06",
     "provider": "Google",
@@ -1526,27 +1322,6 @@
     "category": "text"
   },
   {
-    "id": "gemini-2.0-flash",
-    "name": "gemini-2.0-flash",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.1,
-    "outputCostPer1M": 0.4,
-    "speed": "ultrafast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "fast",
-      "cheap",
-      "vision"
-    ],
-    "releaseDate": "2025-02-05",
-    "category": "text"
-  },
-  {
     "id": "gemini-2.0-flash-exp",
     "name": "gemini-2.0-flash-exp",
     "provider": "Google",
@@ -1584,26 +1359,6 @@
       "fast",
       "cheap",
       "vision"
-    ],
-    "releaseDate": "2025-02-05",
-    "category": "text"
-  },
-  {
-    "id": "gemini-2.0-flash-lite",
-    "name": "gemini-2.0-flash-lite",
-    "provider": "Google",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.075,
-    "outputCostPer1M": 0.3,
-    "speed": "ultrafast",
-    "accuracy": "medium",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "ultra-cheap",
-      "fast"
     ],
     "releaseDate": "2025-02-05",
     "category": "text"
@@ -3995,6 +3750,251 @@
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-pro-preview-customtools",
+    "name": "Gemini 3.1 Pro Preview Custom Tools",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-pro-preview",
+    "name": "Gemini 3.1 Pro Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-flash-lite-preview",
+    "name": "Gemini 3.1 Flash Lite Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-flash-image-preview",
+    "name": "Nano Banana 2",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 65536,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3-flash-preview",
+    "name": "Gemini 3 Flash Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3-pro-image-preview",
+    "name": "Nano Banana Pro",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 32768,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.5-flash-image",
+    "name": "Nano Banana",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 32768,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.5-flash",
+    "name": "Gemini 2.5 Flash",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.5-flash-lite",
+    "name": "Gemini 2.5 Flash-Lite",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.5-pro",
+    "name": "Gemini 2.5 Pro",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning",
+      "long-context"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.0-flash",
+    "name": "Gemini 2.0 Flash",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.4,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.0-flash-lite",
+    "name": "Gemini 2.0 Flash-Lite",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 8192,
+    "inputCostPer1M": 0.075,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
+    "accuracy": "medium",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "ultra-cheap",
+      "fast"
+    ],
     "releaseDate": "",
     "category": "text"
   },

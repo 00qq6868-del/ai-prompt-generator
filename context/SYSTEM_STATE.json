@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2026-04-26T17:04:46.912Z",
+  "updatedAt": "2026-04-26T19:15:17.004Z",
   "totalModels": 242,
   "byCategory": {
-    "text": 237,
-    "image": 3,
+    "text": 240,
     "tts": 2
   },
   "zeroCostModels": 126,
