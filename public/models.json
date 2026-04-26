@@ -567,6 +567,26 @@
     "category": "text"
   },
   {
+    "id": "gemini-3-flash-preview-free",
+    "name": "gemini-3-flash-preview-free",
+    "provider": "Google",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "gemini-3-pro-image-preview",
     "name": "gemini-3-pro-image-preview",
     "provider": "Google",
@@ -2233,6 +2253,23 @@
   {
     "id": "deepinfra-gemma-4-26b-a4b-it",
     "name": "deepinfra-gemma-4-26b-a4b-it",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "sophnet-deepseek-v4-pro",
+    "name": "sophnet-deepseek-v4-pro",
     "provider": "Other",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
