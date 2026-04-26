@@ -5,6 +5,36 @@
 
 ---
 
+## Session #3 — 2026-04-26 (Claude Sonnet 4.6, Claude Code)
+
+### What was done
+7-task comprehensive upgrade, all verified with `npx tsc --noEmit` and `npm run build`:
+
+1. **Provider name consistency**: ModelPicker "深度求索"→"DeepSeek", ModelSelector added "Ollama" tab
+2. **BUNDLED_MODELS expanded**: 25→35 models. Added gpt-4.1 family, gemini-2.5-flash, llama-4 family, claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5, grok-4
+3. **mergeWithExisting() safety fix**: Rewrote to Map-based "only add, never delete" strategy with 20% shrink warning
+4. **GENERATOR_AFFINITY**: New export in models-registry.ts (13 prefix rules). PromptGenerator.tsx selectBestFromProbe uses affinity-first, then scoreModel fallback
+5. **prompt-optimizer.ts v4**: estimateTokens() now CJK-aware, SYSTEM_PROMPT expanded with reverse engineering, grounded persona, prompt chaining, anti-hallucination guards, adaptive verbosity. Model tuning updated to latest models
+6. **Auto-update safety**: fetch-models.mjs main() aborts on 0 models fetched. patch-models.cjs added claude-haiku-4-5 META
+7. **UI copy fixes**: Header "250+ 大模型", 3 bilingual toast messages in PromptGenerator
+
+### Files modified
+- `src/lib/models-registry.ts` — BUNDLED_MODELS +10 models, GENERATOR_AFFINITY export
+- `src/lib/prompt-optimizer.ts` — v4 rewrite
+- `src/components/PromptGenerator.tsx` — GENERATOR_AFFINITY integration, bilingual toasts
+- `src/components/ModelPicker.tsx` — "DeepSeek" provider tab
+- `src/components/ModelSelector.tsx` — "Ollama" tab
+- `src/components/Header.tsx` — "250+" copy
+- `.github/scripts/fetch-models.mjs` — mergeWithExisting rewrite, safety guards
+- `scripts/patch-models.cjs` — claude-haiku-4-5 META
+
+### State at end of session
+- All changes committed and pushed to GitHub
+- Build passes with 0 errors
+- Vercel should auto-deploy from `main`
+
+---
+
 ## Session #2 — 2026-04-24 (Claude Sonnet 4.6, Claude Code)
 
 ### What was done

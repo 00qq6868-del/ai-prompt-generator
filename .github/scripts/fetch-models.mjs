@@ -38,6 +38,7 @@ const META = {
   "claude-3-5-sonnet-20241022": { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["vision","code"],               d: "2024-10-22" },
   "claude-3-7-sonnet-20250219": { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["vision","code","thinking"],    d: "2025-02-19" },
   "claude-3-5-haiku-20241022":  { i: 0.8,  o: 4,    s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2024-10-22" },
+  "claude-haiku-4-5":           { i: 1,    o: 5,    s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2025-04-15" },
   "claude-3-haiku-20240307":    { i: 0.25, o: 1.25, s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2024-03-07" },
   "claude-3-opus-20240229":     { i: 15,   o: 75,   s: "slow",      a: "supreme", t: ["reasoning"],                   d: "2024-02-29" },
   // ── Google ──────────────────────────────────────────────────
@@ -332,7 +333,7 @@ async function fetchAnthropic() {
   });
 }
 
-// ── 合并：API 获取的 + 现有手动维护的 ─────────────────────────────────────
+// ── 合并：以 existing 为基础，用 fetched 更新/新增，永不删除 ──────────────
 function mergeWithExisting(fetched) {
   let existing = [];
   try {
@@ -342,18 +343,22 @@ function mergeWithExisting(fetched) {
     console.log("⚠ Could not read existing models.json:", e.message);
   }
 
-  // 不通过 API 获取的平台，保留手动维护的数据
-  const MANUAL = new Set(["groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"]);
-  const manual = existing.filter((m) => MANUAL.has(m.apiProvider));
+  if (fetched.length === 0) {
+    console.log("⚠ No models fetched from any API. Keeping existing models.json unchanged.");
+    return existing;
+  }
 
-  // 去重合并
-  const combined = [...fetched, ...manual];
-  const seen = new Set();
-  return combined.filter((m) => {
-    if (seen.has(m.id)) return false;
-    seen.add(m.id);
-    return true;
-  });
+  const byId = new Map(existing.map(m => [m.id, m]));
+  for (const m of fetched) {
+    byId.set(m.id, m);
+  }
+  const merged = [...byId.values()];
+
+  if (existing.length > 0 && merged.length < existing.length * 0.8) {
+    console.log(`⚠ Warning: merged count (${merged.length}) is >20% less than existing (${existing.length}). Possible data loss.`);
+  }
+
+  return merged;
 }
 
 // ── 标记每个 provider 最新发布的模型 ────────────────────────────────────
@@ -392,6 +397,11 @@ async function main() {
   }
 
   console.log(`\n📊 Total fetched from APIs: ${fetched.length}`);
+
+  if (fetched.length === 0) {
+    console.log("⚠ All API fetches returned 0 models. Aborting to prevent data loss.");
+    return;
+  }
 
   const merged = mergeWithExisting(fetched);
   const final  = markLatest(merged);

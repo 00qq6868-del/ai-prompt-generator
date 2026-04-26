@@ -28,6 +28,7 @@ const META = {
   "claude-3-5-sonnet-20241022": { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["vision","code"],               d: "2024-10-22" },
   "claude-3-7-sonnet-20250219": { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["vision","code","thinking"],    d: "2025-02-19" },
   "claude-3-5-haiku-20241022":  { i: 0.8,  o: 4,    s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2024-10-22" },
+  "claude-haiku-4-5":           { i: 1,    o: 5,    s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2025-04-15" },
   "claude-3-haiku-20240307":    { i: 0.25, o: 1.25, s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2024-03-07" },
   "claude-3-opus-20240229":     { i: 15,   o: 75,   s: "slow",      a: "supreme", t: ["reasoning"],                   d: "2024-02-29" },
   "gemini-2.5-pro":             { i: 1.25, o: 10,   s: "medium",    a: "supreme", t: ["vision","reasoning","long-context"], d: "2025-03-25" },

@@ -7,7 +7,7 @@ import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
 import toast from "react-hot-toast";
-import { scoreModel, ModelInfo, OptimizationMode } from "@/lib/models-registry";
+import { scoreModel, ModelInfo, OptimizationMode, GENERATOR_AFFINITY } from "@/lib/models-registry";
 
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
@@ -149,9 +149,7 @@ export function PromptGenerator() {
       .catch(() => setGeneratorModelId(PROVIDER_PRIORITY[0].modelId));
   }, []);
 
-  const selectBestFromProbe = (probeModelIds: string[], targetCategory?: string) => {
-    const generatorMode: OptimizationMode =
-      (targetCategory === "image" || targetCategory === "video") ? "accurate" : "token";
+  const selectBestFromProbe = (probeModelIds: string[], targetId?: string, targetCategory?: string) => {
     fetch("/api/models?mode=accurate")
       .then(r => {
         if (!r.ok) throw new Error(`获取模型列表失败 Failed to load models (${r.status})`);
@@ -166,6 +164,20 @@ export function PromptGenerator() {
           setGeneratorModelId("gpt-4o-mini");
           return;
         }
+
+        const tid = targetId ?? targetModelId;
+        const affinity = GENERATOR_AFFINITY.find(a => tid.startsWith(a.prefix));
+        if (affinity) {
+          const availableIds = new Set(available.map(m => m.id));
+          const match = affinity.recommended.find(id => availableIds.has(id));
+          if (match) {
+            setGeneratorModelId(match);
+            return;
+          }
+        }
+
+        const generatorMode: OptimizationMode =
+          (targetCategory === "image" || targetCategory === "video") ? "accurate" : "accurate";
         const best = available.reduce((a, b) =>
           scoreModel(b, generatorMode) > scoreModel(a, generatorMode) ? b : a
         );
@@ -182,18 +194,18 @@ export function PromptGenerator() {
       .then(data => {
         const target = (data.models ?? []).find((m: ModelInfo) => m.id === targetModelId);
         const category = target?.category ?? "text";
-        selectBestFromProbe(availableModelIds, category);
+        selectBestFromProbe(availableModelIds, targetModelId, category);
       })
       .catch(() => {});
   }, [targetModelId]);
 
   const generate = async () => {
     if (!idea.trim()) {
-      toast.error("请先输入你的想法或需求！");
+      toast.error("请先输入你的想法或需求！/ Please enter your idea first!");
       return;
     }
     if (!generatorModelId) {
-      toast.error("请先点击右上角钥匙图标填入至少一个 API Key");
+      toast.error("请先点击右上角钥匙图标填入至少一个 API Key / Please set at least one API Key first");
       return;
     }
     setLoading(true);
@@ -220,7 +232,7 @@ export function PromptGenerator() {
       if (!data.optimizedPrompt) throw new Error("返回数据异常 Invalid response data");
       setResult(data);
       toast.dismiss(tid);
-      toast.success("提示词生成成功！");
+      toast.success("提示词生成成功！/ Prompt generated!");
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (err: any) {
       toast.dismiss(tid);

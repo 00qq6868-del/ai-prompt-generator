@@ -39,9 +39,9 @@ const ACC_LABEL: Record<string, string> = {
 };
 
 const PROVIDER_TABS = [
-  "全部", "OpenAI", "Anthropic", "Google", "深度求索", "Meta",
-  "xAI", "Mistral AI", "智谱AI", "阿里巴巴", "月之暗面", "百度",
-  "MiniMax", "Cohere", "阶跃星辰", "Ollama", "Other",
+  "全部", "OpenAI", "Anthropic", "Google", "DeepSeek",
+  "Meta", "xAI", "Mistral AI", "智谱AI", "阿里巴巴",
+  "月之暗面", "百度", "MiniMax", "Cohere", "阶跃星辰", "Ollama", "Other",
 ];
 
 interface ModelPickerProps {

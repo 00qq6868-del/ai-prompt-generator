@@ -1,11 +1,11 @@
 # Task Progress Tracker
 
-> Last updated: 2026-04-24
-> Updated by: Claude Sonnet 4.6 (Session #2)
+> Last updated: 2026-04-26
+> Updated by: Claude Sonnet 4.6 (Session #3)
 
-## Current Status: ALL CORE FIXES DEPLOYED
+## Current Status: 7-TASK COMPREHENSIVE UPGRADE COMPLETE
 
-All critical fixes have been pushed to GitHub and should be live on Vercel.
+All 7 upgrade tasks completed, type-checked (`npx tsc --noEmit`) and built (`npm run build`).
 
 ---
 
@@ -40,6 +40,46 @@ Step 2 正在做 xxx，已经改了 fileA，还需要改 fileB 和 fileC。
 ---
 
 ## ✅ Completed Tasks (已完成的任务)
+
+### [DONE] Task C: 7 项综合升级 (Session #3, 2026-04-26)
+
+#### Task 1: Provider 名称统一 ✅
+- **改了**：`src/components/ModelPicker.tsx`, `src/components/ModelSelector.tsx`
+- **变更**：ModelPicker "深度求索" → "DeepSeek"，ModelSelector 添加 "Ollama" tab
+- **原因**：provider tab 名称与 models-registry.ts 中 provider 字段不一致
+
+#### Task 2: BUNDLED_MODELS 扩充 ✅
+- **改了**：`src/lib/models-registry.ts`
+- **变更**：新增 10 个模型（gpt-4.1/mini/nano, gemini-2.5-flash, llama-4-scout/maverick, claude-haiku-4-5, claude-opus-4-7, claude-sonnet-4-6, grok-4），更新 isLatest 标记
+- **结果**：BUNDLED_MODELS 从 25 个增到 35 个
+
+#### Task 3: mergeWithExisting() 安全修复 ✅
+- **改了**：`.github/scripts/fetch-models.mjs`
+- **变更**：重写为 Map 方式"只增不删"策略，新增 20% 缩水警告
+- **原因**：旧逻辑在 API 获取失败时会丢失已有模型数据
+
+#### Task 4: GENERATOR_AFFINITY 智能选择 ✅
+- **改了**：`src/lib/models-registry.ts`, `src/components/PromptGenerator.tsx`
+- **变更**：导出 GENERATOR_AFFINITY（13 条前缀映射），selectBestFromProbe 优先用亲和匹配再回退评分
+- **原因**：生成器模型应根据目标模型类型智能选择，而非只看评分
+
+#### Task 5: prompt-optimizer.ts v4 重写 ✅
+- **改了**：`src/lib/prompt-optimizer.ts`
+- **变更**：
+  - estimateTokens() 区分中英文字符
+  - SYSTEM_PROMPT 增加逆向工程法、接地气角色设定、提示链、反幻觉守卫、自适应详细度
+  - 模型适配更新到 GPT-4.1/5.x, Claude Opus 4.7/Sonnet 4.6, Gemini 2.5, Grok-4, Llama 4
+  - buildUserPrompt() 添加模型特定提示
+
+#### Task 6: 自动更新安全加固 ✅
+- **改了**：`.github/scripts/fetch-models.mjs`, `scripts/patch-models.cjs`
+- **变更**：main() 增加 fetched.length===0 时不写入保护，patch-models.cjs 增加 claude-haiku-4-5 META
+
+#### Task 7: UI 文案修复 ✅
+- **改了**：`src/components/Header.tsx`, `src/components/PromptGenerator.tsx`
+- **变更**：Header "230+" → "250+"，PromptGenerator 3 条 toast 消息改为中英双语
+
+---
 
 ### [DONE] Task A: 修复"自动更新模型无效"的根本原因 (Session #1-2)
 
@@ -123,6 +163,10 @@ Step 2 正在做 xxx，已经改了 fileA，还需要改 fileB 和 fileC。
 ### [ ] 考虑增加更多 provider
 - 当前 probe flow 支持 OpenAI 兼容的中转站
 - 可以添加更多国内 provider 的原生支持
+
+### [ ] model-cache.ts 本地文件读取（Plan Step 1）
+- 当 MODELS_REGISTRY_URL 未设置时，用 fs.readFileSync 读取 public/models.json
+- 当前仍回退到 BUNDLED_MODELS（已扩充到 35 个）
 
 ---
 
