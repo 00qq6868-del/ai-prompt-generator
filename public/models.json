@@ -1,5 +1,25 @@
 [
   {
+    "id": "gpt-5.5",
+    "name": "gpt-5.5",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-11-01",
+    "category": "text"
+  },
+  {
     "id": "gpt-5.4",
     "name": "gpt-5.4",
     "provider": "OpenAI",
@@ -11,7 +31,7 @@
     "speed": "fast",
     "accuracy": "supreme",
     "supportsStreaming": true,
-    "isLatest": true,
+    "isLatest": false,
     "tags": [
       "reasoning",
       "code",
@@ -160,6 +180,26 @@
     "isLatest": false,
     "tags": [
       "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-09-01",
+    "category": "text"
+  },
+  {
+    "id": "kimi-k2-instruct",
+    "name": "kimi-k2-instruct",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
       "code"
     ],
     "releaseDate": "2025-09-01",
@@ -406,23 +446,124 @@
     "category": "text"
   },
   {
-    "id": "gpt-5.5",
-    "name": "gpt-5.5",
+    "id": "qwen3-coder-30b-a3b-instruct",
+    "name": "qwen3-coder-30b-a3b-instruct",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
+    "id": "qwen3-coder-480b-a35b-instruct",
+    "name": "qwen3-coder-480b-a35b-instruct",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
+    "id": "qwen3-coder-plus-2025-07-22",
+    "name": "qwen3-coder-plus-2025-07-22",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
+    "id": "qwen3-coder-plus",
+    "name": "qwen3-coder-plus",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
+    "id": "qwen3-coder-flash",
+    "name": "qwen3-coder-flash",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
+    "id": "o3-pro",
+    "name": "o3-pro",
     "provider": "OpenAI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 10,
-    "outputCostPer1M": 40,
-    "speed": "fast",
+    "inputCostPer1M": 20,
+    "outputCostPer1M": 80,
+    "speed": "slow",
     "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
       "reasoning",
-      "code"
+      "math",
+      "science"
     ],
-    "releaseDate": "2025-11-01",
+    "releaseDate": "2025-06-10",
     "category": "text"
   },
   {
@@ -770,6 +911,166 @@
     "category": "text"
   },
   {
+    "id": "deepseek-v3.2-speciale",
+    "name": "deepseek-v3.2-speciale",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "code",
+      "math"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "ernie-5.0-thinking-exp",
+    "name": "ernie-5.0-thinking-exp",
+    "provider": "百度",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.2,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "qwen3-max-preview",
+    "name": "qwen3-max-preview",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "qwen3-max",
+    "name": "qwen3-max",
+    "provider": "阿里巴巴",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "ernie-5.0-thinking-preview",
+    "name": "ernie-5.0-thinking-preview",
+    "provider": "百度",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.2,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "minimax-m2",
+    "name": "minimax-m2",
+    "provider": "MiniMax",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3-flash-preview-free",
+    "name": "gemini-3-flash-preview-free",
+    "provider": "Google",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "codex-mini-latest",
+    "name": "codex-mini-latest",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.5,
+    "outputCostPer1M": 6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code"
+    ],
+    "releaseDate": "2025-05-16",
+    "category": "text"
+  },
+  {
     "id": "claude-opus-4-7-think",
     "name": "claude-opus-4-7-think",
     "provider": "Anthropic",
@@ -932,27 +1233,6 @@
       "math"
     ],
     "releaseDate": "2025-04-16",
-    "category": "text"
-  },
-  {
-    "id": "o3-pro",
-    "name": "o3-pro",
-    "provider": "OpenAI",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 20,
-    "outputCostPer1M": 80,
-    "speed": "slow",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "reasoning",
-      "math",
-      "science"
-    ],
-    "releaseDate": "2025-06-10",
     "category": "text"
   },
   {
@@ -1176,6 +1456,85 @@
     "category": "text"
   },
   {
+    "id": "grok-code-fast-1",
+    "name": "grok-code-fast-1",
+    "provider": "xAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 8,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code"
+    ],
+    "releaseDate": "2025-04-01",
+    "category": "text"
+  },
+  {
+    "id": "DeepSeek-V3.1-Terminus",
+    "name": "DeepSeek-V3.1-Terminus",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code",
+      "math"
+    ],
+    "releaseDate": "2025-04-01",
+    "category": "text"
+  },
+  {
+    "id": "DeepSeek-V3.1-Think",
+    "name": "DeepSeek-V3.1-Think",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code",
+      "math"
+    ],
+    "releaseDate": "2025-04-01",
+    "category": "text"
+  },
+  {
+    "id": "DeepSeek-V3.1-Fast",
+    "name": "DeepSeek-V3.1-Fast",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code",
+      "math"
+    ],
+    "releaseDate": "2025-04-01",
+    "category": "text"
+  },
+  {
     "id": "gemini-2.5-pro-preview-05-06",
     "name": "gemini-2.5-pro-preview-05-06",
     "provider": "Google",
@@ -1260,23 +1619,41 @@
     "category": "text"
   },
   {
-    "id": "deepseek-v3.2-speciale",
-    "name": "deepseek-v3.2-speciale",
-    "provider": "DeepSeek",
+    "id": "step-3.5-flash-free",
+    "name": "step-3.5-flash-free",
+    "provider": "阶跃星辰",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0.27,
-    "outputCostPer1M": 1.1,
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
     "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": true,
     "tags": [
-      "code",
-      "math"
+      "chinese"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "2025-03-01",
+    "category": "text"
+  },
+  {
+    "id": "step-3.5-flash",
+    "name": "step-3.5-flash",
+    "provider": "阶跃星辰",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -1362,6 +1739,26 @@
     "category": "text"
   },
   {
+    "id": "claude-opus-4-1",
+    "name": "claude-opus-4-1",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 15,
+    "outputCostPer1M": 75,
+    "speed": "slow",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "vision"
+    ],
+    "releaseDate": "2025-02-01",
+    "category": "text"
+  },
+  {
     "id": "o3-mini",
     "name": "o3-mini",
     "provider": "OpenAI",
@@ -1413,7 +1810,7 @@
     "speed": "fast",
     "accuracy": "medium",
     "supportsStreaming": true,
-    "isLatest": true,
+    "isLatest": false,
     "tags": [
       "chinese",
       "cheap"
@@ -1523,6 +1920,46 @@
       "fast"
     ],
     "releaseDate": "2025-01-15",
+    "category": "text"
+  },
+  {
+    "id": "claude-opus-4-0",
+    "name": "claude-opus-4-0",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 15,
+    "outputCostPer1M": 75,
+    "speed": "slow",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "vision"
+    ],
+    "releaseDate": "2025-01-01",
+    "category": "text"
+  },
+  {
+    "id": "claude-sonnet-4-0",
+    "name": "claude-sonnet-4-0",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 3,
+    "outputCostPer1M": 15,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2035,25 +2472,6 @@
     "category": "text"
   },
   {
-    "id": "step-3.5-flash-free",
-    "name": "step-3.5-flash-free",
-    "provider": "阶跃星辰",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.3,
-    "outputCostPer1M": 0.9,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese"
-    ],
-    "releaseDate": "2025-03-01",
-    "category": "text"
-  },
-  {
     "id": "k2.6-code-preview-free",
     "name": "k2.6-code-preview-free",
     "provider": "Other",
@@ -2068,25 +2486,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "grok-code-fast-1",
-    "name": "grok-code-fast-1",
-    "provider": "xAI",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 2,
-    "outputCostPer1M": 8,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "code"
-    ],
-    "releaseDate": "2025-04-01",
     "category": "text"
   },
   {
@@ -2121,66 +2520,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "DeepSeek-V3.1-Terminus",
-    "name": "DeepSeek-V3.1-Terminus",
-    "provider": "DeepSeek",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.27,
-    "outputCostPer1M": 1.1,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "code",
-      "math"
-    ],
-    "releaseDate": "2025-04-01",
-    "category": "text"
-  },
-  {
-    "id": "DeepSeek-V3.1-Think",
-    "name": "DeepSeek-V3.1-Think",
-    "provider": "DeepSeek",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.27,
-    "outputCostPer1M": 1.1,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "code",
-      "math"
-    ],
-    "releaseDate": "2025-04-01",
-    "category": "text"
-  },
-  {
-    "id": "claude-opus-4-1",
-    "name": "claude-opus-4-1",
-    "provider": "Anthropic",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 15,
-    "outputCostPer1M": 75,
-    "speed": "slow",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "reasoning",
-      "vision"
-    ],
-    "releaseDate": "2025-02-01",
     "category": "text"
   },
   {
@@ -2456,25 +2795,6 @@
     "category": "text"
   },
   {
-    "id": "step-3.5-flash",
-    "name": "step-3.5-flash",
-    "provider": "阶跃星辰",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.3,
-    "outputCostPer1M": 0.9,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese"
-    ],
-    "releaseDate": "2025-03-01",
-    "category": "text"
-  },
-  {
     "id": "kimi-for-coding-free",
     "name": "kimi-for-coding-free",
     "provider": "Other",
@@ -2574,66 +2894,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "DeepSeek-V3.1-Fast",
-    "name": "DeepSeek-V3.1-Fast",
-    "provider": "DeepSeek",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.27,
-    "outputCostPer1M": 1.1,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "code",
-      "math"
-    ],
-    "releaseDate": "2025-04-01",
-    "category": "text"
-  },
-  {
-    "id": "claude-opus-4-0",
-    "name": "claude-opus-4-0",
-    "provider": "Anthropic",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 15,
-    "outputCostPer1M": 75,
-    "speed": "slow",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "reasoning",
-      "vision"
-    ],
-    "releaseDate": "2025-01-01",
-    "category": "text"
-  },
-  {
-    "id": "claude-sonnet-4-0",
-    "name": "claude-sonnet-4-0",
-    "provider": "Anthropic",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 3,
-    "outputCostPer1M": 15,
-    "speed": "fast",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "code"
-    ],
-    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2739,46 +2999,6 @@
     "category": "text"
   },
   {
-    "id": "kimi-k2-instruct",
-    "name": "kimi-k2-instruct",
-    "provider": "Other",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 2,
-    "outputCostPer1M": 2,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code"
-    ],
-    "releaseDate": "2025-09-01",
-    "category": "text"
-  },
-  {
-    "id": "ernie-5.0-thinking-exp",
-    "name": "ernie-5.0-thinking-exp",
-    "provider": "百度",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.2,
-    "speed": "medium",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
     "id": "aihubmix-router",
     "name": "aihubmix-router",
     "provider": "Other",
@@ -2793,27 +3013,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "qwen3-max-preview",
-    "name": "qwen3-max-preview",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.4,
-    "outputCostPer1M": 1.2,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2851,27 +3050,6 @@
     "category": "text"
   },
   {
-    "id": "qwen3-max",
-    "name": "qwen3-max",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.4,
-    "outputCostPer1M": 1.2,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
     "id": "qwen3-235b-a22b-thinking-2507",
     "name": "qwen3-235b-a22b-thinking-2507",
     "provider": "阿里巴巴",
@@ -2906,106 +3084,6 @@
     "category": "text"
   },
   {
-    "id": "qwen3-coder-30b-a3b-instruct",
-    "name": "qwen3-coder-30b-a3b-instruct",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code"
-    ],
-    "releaseDate": "2025-07-01",
-    "category": "text"
-  },
-  {
-    "id": "qwen3-coder-480b-a35b-instruct",
-    "name": "qwen3-coder-480b-a35b-instruct",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code"
-    ],
-    "releaseDate": "2025-07-01",
-    "category": "text"
-  },
-  {
-    "id": "qwen3-coder-plus-2025-07-22",
-    "name": "qwen3-coder-plus-2025-07-22",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code"
-    ],
-    "releaseDate": "2025-07-01",
-    "category": "text"
-  },
-  {
-    "id": "qwen3-coder-plus",
-    "name": "qwen3-coder-plus",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code"
-    ],
-    "releaseDate": "2025-07-01",
-    "category": "text"
-  },
-  {
-    "id": "qwen3-coder-flash",
-    "name": "qwen3-coder-flash",
-    "provider": "阿里巴巴",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "code"
-    ],
-    "releaseDate": "2025-07-01",
-    "category": "text"
-  },
-  {
     "id": "inclusionAI/Ring-1T",
     "name": "inclusionAI/Ring-1T",
     "provider": "Other",
@@ -3037,26 +3115,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "ernie-5.0-thinking-preview",
-    "name": "ernie-5.0-thinking-preview",
-    "provider": "百度",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.2,
-    "outputCostPer1M": 0.2,
-    "speed": "medium",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3159,25 +3217,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "codex-mini-latest",
-    "name": "codex-mini-latest",
-    "provider": "Other",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.5,
-    "outputCostPer1M": 6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "code"
-    ],
-    "releaseDate": "2025-05-16",
     "category": "text"
   },
   {
@@ -3314,25 +3353,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "minimax-m2",
-    "name": "minimax-m2",
-    "provider": "MiniMax",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.3,
-    "outputCostPer1M": 0.9,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "chinese"
-    ],
-    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3828,7 +3848,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -3848,7 +3868,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -3868,7 +3888,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -3888,8 +3908,8 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
-    "category": "image"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-3-flash-preview",
@@ -3908,7 +3928,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -3928,8 +3948,8 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-06-01",
-    "category": "image"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-image",
@@ -3949,8 +3969,8 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
-    "category": "image"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash",
@@ -3970,7 +3990,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -3991,7 +4011,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4012,7 +4032,7 @@
       "reasoning",
       "long-context"
     ],
-    "releaseDate": "2025-03-25",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4033,7 +4053,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4053,7 +4073,7 @@
       "ultra-cheap",
       "fast"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4074,7 +4094,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4094,7 +4114,7 @@
       "ultra-cheap",
       "fast"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4115,8 +4135,8 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
-    "category": "tts"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro-preview-tts",
@@ -4136,8 +4156,8 @@
       "reasoning",
       "long-context"
     ],
-    "releaseDate": "2025-03-25",
-    "category": "tts"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-flash-latest",
@@ -4207,7 +4227,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4227,8 +4247,8 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
-    "category": "tts"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-robotics-er-1.5-preview",
@@ -4413,7 +4433,7 @@
     "speed": "medium",
     "accuracy": "supreme",
     "supportsStreaming": true,
-    "isLatest": true,
+    "isLatest": false,
     "tags": [
       "reasoning",
       "math",
@@ -4516,7 +4536,7 @@
     "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
-    "isLatest": true,
+    "isLatest": false,
     "tags": [
       "chinese",
       "search"
