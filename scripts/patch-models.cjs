@@ -63,6 +63,29 @@ const META = {
   "moonshot-v1-8k":             { i: 0.5,  o: 0.5,  s: "fast",      a: "high",    t: ["chinese","cheap"],             d: "2024-03-01" },
   "ernie-4.0-8k":               { i: 0.12, o: 0.12, s: "medium",    a: "high",    t: ["chinese","search"],            d: "2024-06-01" },
   "step-2-16k":                 { i: 0.38, o: 1.14, s: "fast",      a: "high",    t: ["chinese"],                     d: "2024-09-01" },
+  "step-3.5":                   { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-03-01" },
+  "gpt-image-1":                { i: 5,    o: 40,   s: "medium",    a: "supreme", t: ["image-gen"],                   d: "2025-04-23" },
+  "gpt-5.5":                    { i: 10,   o: 40,   s: "fast",      a: "supreme", t: ["reasoning","code"],            d: "2025-11-01" },
+  "gpt-5-mini":                 { i: 2,    o: 8,    s: "fast",      a: "supreme", t: ["reasoning","code"],            d: "2025-06-01" },
+  "gpt-5-nano":                 { i: 0.4,  o: 1.6,  s: "ultrafast", a: "high",    t: ["fast","cheap"],                d: "2025-06-01" },
+  "gpt-5-pro":                  { i: 20,   o: 80,   s: "medium",    a: "supreme", t: ["reasoning","code","vision"],   d: "2025-06-01" },
+  "o3-pro":                     { i: 20,   o: 80,   s: "slow",      a: "supreme", t: ["reasoning","math","science"],  d: "2025-06-10" },
+  "codex-mini":                 { i: 1.5,  o: 6,    s: "fast",      a: "high",    t: ["code"],                        d: "2025-05-16" },
+  "deepseek-v4":                { i: 0.27, o: 1.1,  s: "fast",      a: "supreme", t: ["code","math","reasoning"],     d: "2025-07-01" },
+  "DeepSeek-V3.1":              { i: 0.27, o: 1.1,  s: "fast",      a: "high",    t: ["code","math"],                 d: "2025-04-01" },
+  "deepseek-v3.2":              { i: 0.27, o: 1.1,  s: "fast",      a: "high",    t: ["code","math"],                 d: "2025-06-01" },
+  "seedance-1.0":               { i: 0,    o: 0,    s: "medium",    a: "high",    t: ["video-gen"],                   d: "2025-03-01" },
+  "seedance-2.0":               { i: 0,    o: 0,    s: "medium",    a: "supreme", t: ["video-gen"],                   d: "2025-06-01" },
+  "claude-opus-4-0":            { i: 15,   o: 75,   s: "slow",      a: "supreme", t: ["reasoning","vision"],          d: "2025-01-01" },
+  "claude-opus-4-1":            { i: 15,   o: 75,   s: "slow",      a: "supreme", t: ["reasoning","vision"],          d: "2025-02-01" },
+  "claude-sonnet-4-0":          { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["vision","code"],               d: "2025-01-01" },
+  "qwen3-max":                  { i: 0.4,  o: 1.2,  s: "fast",      a: "high",    t: ["chinese","code","reasoning"],  d: "2025-06-01" },
+  "qwen3-coder":                { i: 0.2,  o: 0.6,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-07-01" },
+  "glm-5":                      { i: 0.7,  o: 0.7,  s: "fast",      a: "high",    t: ["chinese","code","vision"],     d: "2025-06-01" },
+  "ernie-5.0":                  { i: 0.2,  o: 0.2,  s: "medium",    a: "high",    t: ["chinese","reasoning"],         d: "2025-06-01" },
+  "kimi-k2":                    { i: 2,    o: 2,    s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-09-01" },
+  "minimax-m2":                 { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-06-01" },
+  "grok-code":                  { i: 2,    o: 8,    s: "fast",      a: "high",    t: ["code"],                        d: "2025-04-01" },
 };
 
 function lookupMeta(id) {
@@ -76,9 +99,9 @@ function lookupMeta(id) {
 
 function classifyModel(id) {
   const lower = id.toLowerCase();
-  if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|seedance|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview/.test(lower)) return "image";
-  if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video/.test(lower)) return "video";
-  if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview/.test(lower)) return "tts";
+  if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo/.test(lower)) return "image";
+  if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse|pika|minimax-video|jimeng-video/.test(lower)) return "video";
+  if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs/.test(lower)) return "tts";
   if (/whisper|stt|audio-transcri|speech-to|paraformer/.test(lower)) return "stt";
   if (/embed|bge-|text-embedding|e5-|jina-embed/.test(lower)) return "embedding";
   if (/ocr|document-ai|vision-extract|doc-parse/.test(lower)) return "ocr";
@@ -103,6 +126,7 @@ for (const m of models) {
   }
   if (m.releaseDate === "2021-07-20") m.releaseDate = meta?.d ?? "";
   m.category = classifyModel(m.id);
+  if (m.provider === "深度求索") m.provider = "DeepSeek";
 }
 
 fs.writeFileSync(modelsPath, JSON.stringify(models, null, 2) + "\n");
