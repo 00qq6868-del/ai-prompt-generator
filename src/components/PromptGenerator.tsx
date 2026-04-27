@@ -12,7 +12,6 @@ import { scoreModel, ModelInfo, OptimizationMode, GENERATOR_AFFINITY } from "@/l
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
 
-// Map provider name → the env-key name stored in localStorage
 const PROVIDER_KEY_MAP: Record<string, string> = {
   custom:    "CUSTOM_API_KEY",
   aihubmix:  "AIHUBMIX_API_KEY",
@@ -29,7 +28,6 @@ const PROVIDER_KEY_MAP: Record<string, string> = {
   baidu:     "BAIDU_API_KEY",
 };
 
-// Fallback priority when no probe result is available
 const PROVIDER_PRIORITY = [
   { provider: "custom",    modelId: "gpt-4o-mini" },
   { provider: "aihubmix",  modelId: "gpt-4o-mini" },
@@ -45,6 +43,19 @@ const PROVIDER_PRIORITY = [
   { provider: "qwen",      modelId: "qwen-turbo" },
   { provider: "baidu",     modelId: "ernie-4.0-8k" },
 ];
+
+interface GenerateResult {
+  optimizedPrompt: string;
+  stats: {
+    inputTokens: number;
+    outputTokens: number;
+    latencyMs: number;
+    tokensDelta: number;
+    changePercent: number;
+  };
+  meta: { generatorModel: string; targetModel: string };
+  generatorModelCost: { input: number; output: number };
+}
 
 function loadProbeCache(): string[] | null {
   if (typeof window === "undefined") return null;
@@ -66,21 +77,10 @@ export function PromptGenerator() {
   const [generatorModelId, setGeneratorModelId] = useState<string>("");
   const [loading, setLoading]     = useState(false);
   const [availableModelIds, setAvailableModelIds] = useState<string[] | undefined>(undefined);
-  const [result, setResult]       = useState<null | {
-    optimizedPrompt: string;
-    stats: {
-      inputTokens: number;
-      outputTokens: number;
-      latencyMs: number;
-      tokensDelta: number;
-      changePercent: number;
-    };
-    meta: { generatorModel: string; targetModel: string };
-    generatorModelCost: { input: number; output: number };
-  }>(null);
+  const [streamingText, setStreamingText] = useState("");
+  const [result, setResult]       = useState<GenerateResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  // Auto-select best generator model
   useEffect(() => {
     const userKeys = loadUserKeys();
     const hasCustomRelay = userKeys["CUSTOM_API_KEY"]?.trim().length > 5 && userKeys["CUSTOM_BASE_URL"]?.trim();
@@ -186,7 +186,6 @@ export function PromptGenerator() {
       .catch(() => setGeneratorModelId("gpt-4o-mini"));
   };
 
-  // Re-select generator when target model changes (adapt scoring mode)
   useEffect(() => {
     if (!availableModelIds?.length) return;
     fetch("/api/models")
@@ -210,30 +209,96 @@ export function PromptGenerator() {
     }
     setLoading(true);
     setResult(null);
+    setStreamingText("");
     const tid = toast.loading("AI 正在生成优化提示词…");
+
     try {
       const userKeys = loadUserKeys();
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userIdea: idea,
           targetModelId,
           generatorModelId,
           language,
-          maxTokens: 1200,
+          maxTokens: 4096,
           userKeys,
+          stream: true,
         }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "生成失败，请重试 Generation failed, please retry");
-      if (!data.optimizedPrompt) throw new Error("返回数据异常 Invalid response data");
-      setResult(data);
-      toast.dismiss(tid);
-      toast.success("提示词生成成功！/ Prompt generated!");
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "生成失败，请重试 Generation failed, please retry");
+      }
+
+      const contentType = res.headers.get("content-type") ?? "";
+
+      if (contentType.includes("text/event-stream") && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let accumulated = "";
+        let scrolledOnce = false;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6);
+            if (jsonStr === "[DONE]") continue;
+
+            try {
+              const event = JSON.parse(jsonStr);
+              if (event.t === "chunk") {
+                accumulated += event.c;
+                setStreamingText(accumulated);
+                if (!scrolledOnce) {
+                  scrolledOnce = true;
+                  setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+                }
+              } else if (event.t === "done" && event.data) {
+                setResult(event.data);
+                setStreamingText("");
+                toast.dismiss(tid);
+                toast.success("提示词生成成功！/ Prompt generated!");
+              } else if (event.t === "error") {
+                throw new Error(event.error);
+              }
+            } catch (parseErr: any) {
+              if (parseErr?.message && !parseErr.message.includes("JSON")) {
+                throw parseErr;
+              }
+            }
+          }
+        }
+
+        if (!result && accumulated) {
+          setResult({
+            optimizedPrompt: accumulated,
+            stats: { inputTokens: 0, outputTokens: 0, latencyMs: 0, tokensDelta: 0, changePercent: 0 },
+            meta: { generatorModel: generatorModelId, targetModel: targetModelId },
+            generatorModelCost: { input: 0, output: 0 },
+          });
+          setStreamingText("");
+          toast.dismiss(tid);
+          toast.success("提示词生成成功！/ Prompt generated!");
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (!data.optimizedPrompt) throw new Error("返回数据异常 Invalid response data");
+        setResult(data);
+        toast.dismiss(tid);
+        toast.success("提示词生成成功！/ Prompt generated!");
+        setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }
     } catch (err: any) {
       toast.dismiss(tid);
       toast.error(err.message ?? "生成失败，请检查 API Key / Generation failed, check your API Key");
@@ -244,6 +309,8 @@ export function PromptGenerator() {
 
   const charCount    = idea.length;
   const approxTokens = Math.ceil(charCount / (language === "zh" ? 1.8 : 4));
+
+  const showStreamingPreview = loading && streamingText.length > 0;
 
   return (
     <div className="space-y-6">
@@ -320,9 +387,44 @@ export function PromptGenerator() {
         )}
       </motion.button>
 
-      {/* Result */}
+      {/* Streaming preview */}
       <AnimatePresence>
-        {result && (
+        {showStreamingPreview && (
+          <motion.div
+            key="streaming"
+            ref={resultRef}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="relative rounded-2xl border border-indigo-500/20 bg-indigo-950/40 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-white/[0.03]">
+                <div className="flex items-center gap-2 text-xs text-white/50">
+                  <motion.div
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="w-2 h-2 rounded-full bg-indigo-400"
+                  />
+                  <span className="text-indigo-400 font-medium">正在生成中 Streaming...</span>
+                </div>
+              </div>
+              <pre className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto">
+                {streamingText}
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                  className="inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 align-text-bottom"
+                />
+              </pre>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Final result */}
+      <AnimatePresence>
+        {result && !loading && (
           <motion.div
             key="result"
             ref={resultRef}

@@ -472,6 +472,199 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
   }
 }
 
+// ─── Streaming helpers ────────────────────────────────────────
+
+async function streamOpenAICompatible(
+  client: OpenAI,
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
+  const t0 = Date.now();
+  const stream = await client.chat.completions.create({
+    model: opts.model,
+    max_tokens: opts.maxTokens ?? 2048,
+    temperature: opts.temperature ?? 0.7,
+    messages: [
+      { role: "system", content: opts.systemPrompt },
+      { role: "user",   content: opts.userPrompt },
+    ],
+    stream: true,
+    stream_options: { include_usage: true },
+  });
+
+  let text = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) {
+      text += delta;
+      onChunk(delta);
+    }
+    if (chunk.usage) {
+      inputTokens  = chunk.usage.prompt_tokens ?? 0;
+      outputTokens = chunk.usage.completion_tokens ?? 0;
+    }
+  }
+
+  return { text, inputTokens, outputTokens, latencyMs: Date.now() - t0 };
+}
+
+async function callOpenAIStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("openai", opts.userKeys);
+  const client = new OpenAI({ apiKey: resolveKey("openai", opts.userKeys) });
+  return streamOpenAICompatible(client, opts, onChunk);
+}
+
+async function callAnthropicStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("anthropic", opts.userKeys);
+  const client = new Anthropic({ apiKey: resolveKey("anthropic", opts.userKeys) });
+  const t0 = Date.now();
+
+  const stream = client.messages.stream({
+    model: opts.model,
+    max_tokens: opts.maxTokens ?? 2048,
+    system: opts.systemPrompt,
+    messages: [{ role: "user", content: opts.userPrompt }],
+  });
+
+  let text = "";
+  stream.on("text", (delta) => {
+    text += delta;
+    onChunk(delta);
+  });
+
+  const finalMessage = await stream.finalMessage();
+  return {
+    text,
+    inputTokens:  finalMessage.usage.input_tokens,
+    outputTokens: finalMessage.usage.output_tokens,
+    latencyMs: Date.now() - t0,
+  };
+}
+
+async function callGoogleStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("google", opts.userKeys);
+  const genAI = new GoogleGenerativeAI(resolveKey("google", opts.userKeys));
+  const t0 = Date.now();
+  const model = genAI.getGenerativeModel({
+    model: opts.model,
+    systemInstruction: opts.systemPrompt,
+    generationConfig: {
+      maxOutputTokens: opts.maxTokens ?? 2048,
+      temperature: opts.temperature ?? 0.7,
+    },
+  });
+
+  const result = await model.generateContentStream(opts.userPrompt);
+  let text = "";
+
+  for await (const chunk of result.stream) {
+    const chunkText = chunk.text();
+    if (chunkText) {
+      text += chunkText;
+      onChunk(chunkText);
+    }
+  }
+
+  const response = await result.response;
+  const usage = response.usageMetadata;
+  return {
+    text,
+    inputTokens:  usage?.promptTokenCount ?? 0,
+    outputTokens: usage?.candidatesTokenCount ?? 0,
+    latencyMs: Date.now() - t0,
+  };
+}
+
+async function callXAIStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("xai", opts.userKeys);
+  const client = new OpenAI({ apiKey: resolveKey("xai", opts.userKeys), baseURL: "https://api.x.ai/v1" });
+  return streamOpenAICompatible(client, opts, onChunk);
+}
+
+async function callDeepSeekStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("deepseek", opts.userKeys);
+  const client = new OpenAI({ apiKey: resolveKey("deepseek", opts.userKeys), baseURL: "https://api.deepseek.com/v1" });
+  return streamOpenAICompatible(client, opts, onChunk);
+}
+
+async function callMoonshotStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("moonshot", opts.userKeys);
+  const client = new OpenAI({ apiKey: resolveKey("moonshot", opts.userKeys), baseURL: "https://api.moonshot.cn/v1" });
+  return streamOpenAICompatible(client, opts, onChunk);
+}
+
+async function callCustomStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  assertKey("custom", opts.userKeys);
+  const baseURL = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  if (!baseURL) {
+    throw new Error("请在设置中填入中转站 Base URL（如 https://aihubmix.com/v1）");
+  }
+  const client = new OpenAI({ apiKey: resolveKey("custom", opts.userKeys), baseURL });
+  try {
+    return await streamOpenAICompatible(client, opts, onChunk);
+  } catch (err: any) {
+    const msg = err?.message ?? err?.error?.message ?? "";
+    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
+      throw new Error(`当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`);
+    }
+    throw err;
+  }
+}
+
+async function callAihubmixStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  const rawUrl    = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  const customKey = opts.userKeys?.["CUSTOM_API_KEY"]?.trim() || "";
+  const aihubKey  = resolveKey("aihubmix", opts.userKeys);
+
+  let baseURL = rawUrl || "https://aihubmix.com/v1";
+  if (baseURL && !baseURL.endsWith("/v1") && !baseURL.endsWith("/v1/")) {
+    baseURL = baseURL.replace(/\/+$/, "") + "/v1";
+  }
+  const apiKey = customKey || aihubKey;
+
+  if (!apiKey) {
+    throw new Error("Missing API Key. 请点击🔑设置，填入中转站的 Base URL 和 API Key");
+  }
+
+  const client = new OpenAI({ apiKey, baseURL });
+  try {
+    return await streamOpenAICompatible(client, opts, onChunk);
+  } catch (err: any) {
+    const msg = err?.message ?? err?.error?.message ?? "";
+    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
+      throw new Error(`当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`);
+    }
+    throw err;
+  }
+}
+
+async function fallbackStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+  const result = await callProvider(opts);
+  onChunk(result.text);
+  return result;
+}
+
+// ─── Streaming Dispatcher ─────────────────────────────────────
+export async function callProviderStream(
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
+  switch (opts.apiProvider) {
+    case "custom":    return callCustomStream(opts, onChunk);
+    case "aihubmix":  return callAihubmixStream(opts, onChunk);
+    case "openai":    return callOpenAIStream(opts, onChunk);
+    case "anthropic": return callAnthropicStream(opts, onChunk);
+    case "google":    return callGoogleStream(opts, onChunk);
+    case "xai":       return callXAIStream(opts, onChunk);
+    case "deepseek":  return callDeepSeekStream(opts, onChunk);
+    case "moonshot":  return callMoonshotStream(opts, onChunk);
+    default:          return fallbackStream(opts, onChunk);
+  }
+}
+
 // ─── Dispatcher ───────────────────────────────────────────────
 export async function callProvider(opts: GenerateOptions): Promise<GenerateResult> {
   switch (opts.apiProvider) {
