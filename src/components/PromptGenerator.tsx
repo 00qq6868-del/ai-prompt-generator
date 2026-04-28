@@ -8,6 +8,9 @@ import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
 import toast from "react-hot-toast";
 import { scoreModel, ModelInfo, OptimizationMode, GENERATOR_AFFINITY } from "@/lib/models-registry";
+import { recommendModel } from "@/lib/model-recommender";
+import { saveHistory } from "@/lib/history";
+import { HistoryPanel } from "./HistoryPanel";
 
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
@@ -269,6 +272,7 @@ export function PromptGenerator() {
                 setStreamingText("");
                 toast.dismiss(tid);
                 toast.success("提示词生成成功！/ Prompt generated!");
+                saveHistory({ userIdea: idea, optimizedPrompt: event.data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelId, language });
               } else if (event.t === "error") {
                 throw new Error(event.error);
               }
@@ -290,6 +294,7 @@ export function PromptGenerator() {
           setStreamingText("");
           toast.dismiss(tid);
           toast.success("提示词生成成功！/ Prompt generated!");
+          saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelId, language });
         }
       } else {
         const data = await res.json().catch(() => ({}));
@@ -297,6 +302,7 @@ export function PromptGenerator() {
         setResult(data);
         toast.dismiss(tid);
         toast.success("提示词生成成功！/ Prompt generated!");
+        saveHistory({ userIdea: idea, optimizedPrompt: data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelId, language });
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
     } catch (err: any) {
@@ -309,6 +315,7 @@ export function PromptGenerator() {
 
   const charCount    = idea.length;
   const approxTokens = Math.ceil(charCount / (language === "zh" ? 1.8 : 4));
+  const recommendation = recommendModel(idea);
 
   const showStreamingPreview = loading && streamingText.length > 0;
 
@@ -319,9 +326,17 @@ export function PromptGenerator() {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-medium text-white/60">输入你的想法或需求</h2>
           <div className="flex items-center gap-3">
+            <HistoryPanel
+              onReuse={(item) => {
+                setIdea(item.userIdea);
+                setTargetModelId(item.targetModel);
+                setLanguage(item.language);
+              }}
+            />
             <button
               onClick={() => setLanguage((l) => (l === "zh" ? "en" : "zh"))}
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+              aria-label={language === "zh" ? "切换为英文输出" : "Switch to Chinese output"}
             >
               <Languages size={12} />
               {language === "zh" ? "中文输出" : "English output"}
@@ -342,6 +357,23 @@ export function PromptGenerator() {
           )}
         </div>
       </div>
+
+      {/* Smart model recommendation */}
+      {recommendation && recommendation.modelId !== targetModelId && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2"
+        >
+          <span className="text-xs text-white/40">推荐模型 Suggested:</span>
+          <button
+            onClick={() => setTargetModelId(recommendation.modelId)}
+            className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/25 transition-all"
+          >
+            {recommendation.label} →
+          </button>
+        </motion.div>
+      )}
 
       {/* Model selector */}
       <ModelSelector
@@ -438,6 +470,7 @@ export function PromptGenerator() {
               stats={result.stats}
               meta={result.meta}
               generatorModelCost={result.generatorModelCost}
+              originalPrompt={idea}
             />
           </motion.div>
         )}

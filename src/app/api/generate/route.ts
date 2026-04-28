@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { callProvider, callProviderStream } from "@/lib/providers";
 import { buildSystemPrompt, buildUserPrompt, comparePrompts } from "@/lib/prompt-optimizer";
 import { getModels } from "@/lib/model-cache";
+import { ModelInfo } from "@/lib/models-registry";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -39,14 +40,14 @@ export async function POST(req: NextRequest) {
     }
 
     const models         = await getModels();
-    const targetModel    = models.find((m) => m.id === targetModelId);
-    const generatorModel = models.find((m) => m.id === generatorModelId);
+    const targetModel    = models.find((m: ModelInfo) => m.id === targetModelId);
+    const generatorModel = models.find((m: ModelInfo) => m.id === generatorModelId);
 
     if (!targetModel || !generatorModel) {
       return NextResponse.json({ error: "未知的模型 ID / Unknown model id" }, { status: 400 });
     }
 
-    const targetCategory = (targetModel as any).category ?? "text";
+    const targetCategory = targetModel.category ?? "text";
 
     const systemPrompt = buildSystemPrompt({
       userIdea,

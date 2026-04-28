@@ -105,6 +105,46 @@ Use for: articles, reports, documentation, comprehensive guides.
 **Graph-of-Thoughts** — interconnected reasoning:
 "Map all relevant factors and their relationships. Identify interdependencies. Reason through connections to reach your conclusion."
 
+**Meta-Prompting** — prompt self-improvement:
+"Before answering, first design the ideal prompt for this task. Then follow that prompt to produce the answer."
+Use for: open-ended tasks where the user's framing may be suboptimal.
+
+**Constitutional AI Prompting** — self-critique with principles:
+"Generate a response, then review it against these principles: [accuracy, helpfulness, safety]. Revise any violations."
+Use for: sensitive topics, public-facing content, policy-compliant outputs.
+
+**Least-to-Most** — decompose complex into subproblems:
+"Break this into the simplest sub-problems. Solve each in order, using previous solutions as context for the next."
+Use for: multi-step math, layered logic, cascading dependencies.
+
+**Program-of-Thought (PoT)** — code-based reasoning:
+"Write a program/pseudocode to solve this, then execute it mentally and report the result."
+Use for: numerical computation, data transformation, algorithmic problems.
+
+**Analogical Reasoning** — leverage familiar domains:
+"Solve this like you would solve [analogous simpler problem]. Map the solution pattern to the current problem."
+Use for: novel problems where direct examples are scarce.
+
+**Step-Back Prompting** — abstract first, then solve:
+"Before solving, ask: what is the underlying principle or concept? Answer that first, then apply it to the specific problem."
+Use for: physics, chemistry, complex reasoning where first principles matter.
+
+**Emotion Prompting** — stakes-aware motivation:
+Add "This is very important to my career/project/deadline" to increase model attention and effort.
+Use sparingly and authentically — effective for critical tasks.
+
+**SimToM (Simulated Theory of Mind)** — perspective tasks:
+"Consider what [person/role] would think, feel, and prioritize given their background and constraints. Respond from their perspective."
+Use for: user research, empathy mapping, stakeholder analysis, character writing.
+
+**Directional Stimulus Prompting** — guided creativity:
+"Include these keywords/concepts in your response: [list]. Use them as creative anchors."
+Use for: creative writing with thematic constraints, brainstorming within boundaries.
+
+**Contrastive Chain-of-Thought** — learn from errors:
+"Here is a wrong approach: [incorrect reasoning]. Explain why it fails, then provide the correct solution."
+Use for: common misconceptions, tricky problems, educational content.
+
 ### D. Structured Output Specification
 Always specify output structure explicitly:
 - **Format**: JSON / Markdown / bullet list / code block / prose / table / XML / YAML / CSV
@@ -136,6 +176,20 @@ Always specify output structure explicitly:
 **Math & Logic**: Show all derivation steps, verify by substitution/alternative method, notation (LaTeX/plain), check boundary conditions (n=0, empty set)
 
 **Role-play & Dialogue**: Character grounding (backstory + personality + speech patterns), behavioral constraints ("Never break character"), dialogue style + response length
+
+**Data Processing**: Specify input/output format precisely (CSV→JSON, XML→table). Data cleaning rules ("remove nulls, trim whitespace, normalize dates to ISO 8601"). Aggregation logic ("group by category, sum values, sort descending"). Validation ("reject rows where price < 0"). Sampling strategy if dataset is large.
+
+**Creative Writing**: Genre conventions — sci-fi (worldbuilding + tech consistency), romance (emotional arc + character chemistry), mystery (clue planting + red herrings + reveal timing), horror (tension pacing + atmospheric dread). Narrative structure: 3-act, hero's journey, in medias res, non-linear/flashback. POV selection: first person (intimate), third limited (focused), third omniscient (epic), second person (immersive). Voice: lyrical, terse, stream-of-consciousness, epistolary.
+
+**Research & Academic**: Literature review structure (thesis → evidence → counter-evidence → synthesis). Hypothesis framing ("If X then Y because Z"). Methodology selection guidance. Citation format specification (APA/MLA/Chicago). Distinguish primary vs secondary sources. Statistical significance thresholds.
+
+**Education & Tutoring**: Bloom's taxonomy alignment — remember/understand/apply/analyze/evaluate/create. Scaffolded explanations ("Explain first at ELI5 level, then at college level"). Socratic questioning ("Don't give the answer — guide the student with leading questions"). Practice problem generation with worked solutions.
+
+**Legal & Compliance**: Always include disclaimers ("This is not legal advice"). Evidence-based reasoning with statute/case references. Jurisdictional awareness ("Specify which country/state's law applies"). Risk assessment format. Compliance checklist structure.
+
+**Medical & Health**: Mandatory disclaimer ("Consult a healthcare professional"). Evidence hierarchy (meta-analyses > RCTs > observational > expert opinion). Drug interaction awareness. Symptom differential format. Patient-friendly language options.
+
+**Product & UX**: User story format ("As a [role], I want [goal], so that [benefit]"). Acceptance criteria with testable conditions. Edge case enumeration. Accessibility requirements (WCAG 2.1). Competitive analysis framework.
 
 ### G. Anti-Hallucination Guards (factual tasks only)
 - "If uncertain about a fact, explicitly state uncertainty rather than guessing"
@@ -195,9 +249,16 @@ Be maximally precise. Replace vague words with concrete visual descriptions:
 - Quantity and arrangement: "three red apples arranged in a triangle on a marble countertop"
 
 ## Style & Medium 风格媒介词汇库
-photorealistic, oil painting, watercolor, acrylic painting, 3D render, pixel art, vector illustration, isometric, anime, pencil sketch, digital painting, concept art, cinematic still, matte painting, low poly, voxel art, papercut, stained glass, embroidery, woodblock print, linocut, charcoal drawing, gouache, pastel drawing, collage, mixed media, ink wash, ukiyo-e, art deco poster, retro poster, comic book style, manga style
+photorealistic, oil painting, watercolor, acrylic painting, 3D render, pixel art, vector illustration, isometric, anime, pencil sketch, digital painting, concept art, cinematic still, matte painting, low poly, voxel art, papercut, stained glass, embroidery, woodblock print, linocut, charcoal drawing, gouache, pastel drawing, collage, mixed media, ink wash, ukiyo-e, art deco poster, retro poster, comic book style, manga style, clay render, wireframe, blueprint, technical illustration, infographic, caricature, silkscreen print, mosaic, batik, cross-stitch, origami, felt craft, ceramic glaze, fresco, encaustic, tempera
+
+Art Movements: Impressionism, Post-Impressionism, Art Nouveau, Art Deco, Bauhaus, Surrealism, Cubism, Pop Art, Minimalism, Brutalism, Maximalism, Expressionism, Fauvism, Futurism, Constructivism, De Stijl, Romanticism, Pre-Raphaelite, Rococo, Baroque, Renaissance, Gothic, Byzantine, Ukiyo-e
+
+Aesthetic Movements: Vaporwave, Cottagecore, Dark Academia, Afrofuturism, Solarpunk, Steampunk, Dieselpunk, Biopunk, Cyberpunk, Synthwave/Retrowave, Y2K, Dreamcore, Weirdcore, Liminal Space, Goblincore, Kidcore, Indie Sleaze, Old Money, Clean Girl, Cluttercore
 
 Style references: "in the style of Studio Ghibli" / "shot on Hasselblad H6D" / "oil on canvas texture" / "Kodak Portra 400 film grain" / "Unreal Engine 5 render" / "Wes Anderson color palette"
+
+## Material & Texture 材质纹理词汇库
+marble, granite, concrete, sandstone, limestone, weathered stone, brick, terracotta, glass, frosted glass, crystal, obsidian, jade, amber, opal, quartz, chrome, brushed steel, copper patina, gold leaf, silver, mercury, rust, iron, bronze, brass, wood grain, driftwood, bamboo, cork, rattan, velvet, silk, satin, linen, burlap, denim, leather, suede, fur, wool, cashmere, lace, tulle, chiffon, ceramic, porcelain, clay, latex, rubber, resin, wax, ice, frost, snow, sand, ash, coal, volcanic rock, coral, mother of pearl, bone, ivory, papyrus, parchment, kraft paper
 
 ## Environment 环境
 Specify the scene context: indoor/outdoor, time of day, weather, season, location type.
@@ -206,25 +267,26 @@ Specify the scene context: indoor/outdoor, time of day, weather, season, locatio
 - "vast Icelandic highland, rolling green moss, distant snow-capped mountains under overcast sky"
 
 ## Lighting 光照词汇库
-golden hour, blue hour, rim light, backlight, studio lighting, ambient occlusion, volumetric lighting, chiaroscuro, Rembrandt lighting, butterfly lighting, split lighting, neon glow, bioluminescent, candlelight, moonlight, overcast soft light, harsh midday sun, dappled light through trees, light rays through window, caustics, crepuscular rays, light painting, spotlight, ring light, natural window light
+golden hour, blue hour, magic hour, rim light, backlight, studio lighting, ambient occlusion, volumetric lighting, chiaroscuro, Rembrandt lighting, butterfly lighting, split lighting, neon glow, bioluminescent, candlelight, moonlight, overcast soft light, harsh midday sun, dappled light through trees, light rays through window, caustics, crepuscular rays, light painting, spotlight, ring light, natural window light, bounce light, fill light, hair light, practical lighting, motivated lighting, silhouette lighting, uplighting, cross-lighting, beauty dish, softbox, umbrella lighting, theatrical spotlight, stadium floodlight, streetlight, firelight, aurora borealis glow, underwater caustics, stained glass color filter
 
-Light quality modifiers: soft / hard / diffused / specular / high-key / low-key / dramatic / flat / contrasty
+Light quality modifiers: soft / hard / diffused / specular / high-key / low-key / dramatic / flat / contrasty / warm (3200K) / cool (5600K) / daylight balanced / tungsten / fluorescent green cast
 
 ## Composition 构图词汇库
-rule of thirds, golden ratio, symmetrical, asymmetrical, centered, leading lines, framing, bird's eye view, worm's eye view, dutch angle, close-up, extreme close-up, medium shot, full shot, wide shot, panoramic, fisheye, tilt-shift, macro, aerial, top-down flat lay, over-the-shoulder, POV first person, silhouette, negative space, minimalist composition
+rule of thirds, golden ratio, golden spiral, symmetrical, asymmetrical, centered, leading lines, framing, natural frame, bird's eye view, worm's eye view, dutch angle, close-up, extreme close-up, medium shot, medium close-up, full shot, wide shot, extreme wide shot, panoramic, fisheye, tilt-shift, macro, aerial, top-down flat lay, over-the-shoulder, POV first person, silhouette, negative space, minimalist composition, layered depth, foreground interest, vanishing point, diagonal composition, triangular composition, S-curve, juxtaposition, fill the frame, isolate subject, environmental portrait, candid composition
 
-Lens simulation: 24mm wide-angle / 35mm street / 50mm standard / 85mm portrait / 135mm compression / 200mm telephoto / macro 1:1 / tilt-shift miniature
+Lens simulation: 14mm ultra-wide / 24mm wide-angle / 35mm street / 50mm standard / 85mm portrait / 100mm macro / 135mm compression / 200mm telephoto / 400mm super-telephoto / 800mm extreme telephoto / tilt-shift miniature / Lensbaby selective focus / pinhole
 
 ## Color Palette 色彩词汇库
-monochromatic, complementary, analogous, triadic, pastel, muted, vibrant, saturated, desaturated, warm tones, cool tones, earth tones, jewel tones, neon, sepia, duotone, gradient, iridescent, metallic, holographic
+monochromatic, complementary, analogous, triadic, split-complementary, tetradic, pastel, muted, vibrant, saturated, desaturated, warm tones, cool tones, earth tones, jewel tones, neon, sepia, duotone, tritone, gradient, iridescent, metallic, holographic, pearlescent, opalescent, chromatic, achromatic, high saturation pop art, faded vintage, Kodachrome warm, Fuji Velvia vivid, cross-processed, bleach bypass, teal and orange, cyan and magenta, black and gold, red and teal, film noir B&W
 
 ## Mood 情绪词汇库
-serene, dramatic, mysterious, whimsical, melancholic, euphoric, eerie, cozy, epic, intimate, chaotic, peaceful, nostalgic, futuristic, dystopian, ethereal, gritty, dreamy, haunting, playful, romantic, dark academia, cottagecore, cyberpunk, solarpunk, dark fantasy
+serene, dramatic, mysterious, whimsical, melancholic, euphoric, eerie, cozy, epic, intimate, chaotic, peaceful, nostalgic, futuristic, dystopian, ethereal, gritty, dreamy, haunting, playful, romantic, dark academia, cottagecore, cyberpunk, solarpunk, dark fantasy, hopeful, ominous, triumphant, contemplative, rebellious, sacred, profane, absurdist, surreal, meditative, frenetic, languid, opulent, austere, primal, otherworldly, uncanny, bittersweet, wistful, defiant
 
 ## Quality Modifiers 质量词
-Photography: RAW, DSLR, bokeh, shallow depth of field, sharp focus, 8K UHD, high resolution
-Art: masterpiece, best quality, ultra detailed, intricate details, fine art, award-winning illustration
-3D: octane render, ray tracing, subsurface scattering, global illumination, PBR materials
+Photography: RAW, DSLR, bokeh, shallow depth of field, sharp focus, 8K UHD, high resolution, tack sharp, crisp details, film grain, analog feel
+Art: masterpiece, best quality, ultra detailed, intricate details, fine art, award-winning illustration, museum quality, gallery piece, exquisite craftsmanship
+3D: octane render, ray tracing, subsurface scattering, global illumination, PBR materials, physically based rendering, cinema 4D, Blender cycles, V-Ray, KeyShot, Arnold render, ambient occlusion pass, HDRI environment
+Photography techniques: long exposure silk water, double exposure overlay, infrared false color, HDR tone mapping, focus stacking, panoramic stitch, light trail photography, star trail, Milky Way astrophotography, macro extreme close-up
 
 ## Model-Specific Optimization 模型差异化
 
@@ -248,7 +310,7 @@ Art: masterpiece, best quality, ultra detailed, intricate details, fine art, awa
   - --seed [number] (reproducibility)
 - Output structure: /imagine prompt: [comma-separated descriptors] --ar 16:9 --v 7 --s 250
 
-### DALL-E 3 / GPT Image 2.0
+### DALL-E 3 / GPT Image 1.0 / GPT Image 2.0
 - Use natural language with precise spatial descriptions ("in the foreground... in the background...")
 - Avoid negation — say "clean background" instead of "no watermark"
 - Explicitly name the medium: "a photorealistic photograph of..." / "a digital illustration of..." / "an oil painting of..."
@@ -256,16 +318,27 @@ Art: masterpiece, best quality, ultra detailed, intricate details, fine art, awa
 - Supported sizes: 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait)
 - Does NOT support negative prompts, weight syntax, or parameter flags
 - Longer, more descriptive prompts produce better results
+- GPT Image 2.0 specifics:
+  - Transparent background: "with a transparent background" or "PNG with alpha channel, no background"
+  - Multi-panel: "a 4-panel comic strip layout showing [scene 1] | [scene 2] | [scene 3] | [scene 4]"
+  - Text overlay: excellent text rendering — specify font, size, color, position precisely
+  - Style consistency: reference same visual style across multi-image sets
+  - Product mockups: "product photography on white background, studio lighting, e-commerce style"
 
 ### Stable Diffusion / SDXL / Flux
 - Separate positive prompt and negative prompt
 - Weight syntax: (important detail:1.3) to emphasize, (unwanted:0.5) to reduce
 - Start with quality tags: masterpiece, best quality, ultra detailed, 8K
-- Standard negative prompt template: lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, deformed
+- Comprehensive negative prompt template:
+  Basic: lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, deformed
+  Anatomy: bad proportions, cloned face, disfigured, gross proportions, malformed limbs, mutation, mutated, extra arms, extra legs, fused fingers, too many fingers, long neck, poorly drawn face, poorly drawn hands
+  Quality: out of frame, duplicate, morbid, mutilated, ugly, distorted, grainy, noise, overexposed, underexposed, oversaturated
+  Style-specific: 3D render (for 2D art), anime (for realism), photorealistic (for stylized)
 - CFG Scale guidance: 7-12 typical range (lower=creative, higher=literal)
+- Sampling steps: 20-30 for quality, 10-15 for speed
 - Mention LoRA/embedding trigger words when relevant
-- SDXL: responds well to quality tags and specific artist style references
-- Flux: more natural language friendly, less dependent on tag stacking
+- SDXL: responds well to quality tags and specific artist style references. Larger base resolution (1024x1024)
+- Flux: more natural language friendly, less dependent on tag stacking. Excellent at text rendering. Supports guidance scale 1-5 (lower range than SD)
 
 ### Ideogram
 - Specializes in accurate text rendering — always specify exact text content, font style, size, color, and placement
@@ -368,11 +441,39 @@ Structure every video prompt chronologically:
 Example: "The scene opens with a wide aerial view of a misty mountain valley at dawn. A lone hiker emerges from the tree line, walking steadily uphill. Over 8 seconds, the camera slowly descends and tracks alongside the hiker as morning light breaks through the clouds, casting golden rays across the landscape. The hiker reaches the summit ridge and pauses, gazing out at the panoramic vista. The shot concludes with a slow orbit around the hiker silhouetted against the sunrise."
 
 ## Visual Style 视觉风格
-Cinematic / documentary / music video / commercial / anime / stop-motion / found footage / noir / neon-noir / retro VHS / film grain / anamorphic widescreen / IMAX / vertical mobile-first
+Cinematic / documentary / music video / commercial / anime / stop-motion / found footage / noir / neon-noir / retro VHS / film grain / anamorphic widescreen / IMAX / vertical mobile-first / mockumentary / vlog style / security camera / dash cam / webcam / screen recording / split screen / picture-in-picture
 
-Camera reference: "shot on ARRI ALEXA Mini LF" / "RED V-RAPTOR 8K" / "Super 16mm Bolex" / "iPhone vertical video" / "GoPro POV"
+Camera reference: "shot on ARRI ALEXA Mini LF" / "RED V-RAPTOR 8K" / "Super 16mm Bolex" / "iPhone vertical video" / "GoPro POV" / "Blackmagic URSA" / "Sony Venice 2" / "Canon C70" / "DJI Ronin 4D"
 
-Color grading: teal and orange / bleach bypass / cross-processed / log flat / high contrast B&W / pastel desaturated / hyper-saturated
+Color grading: teal and orange / bleach bypass / cross-processed / log flat / high contrast B&W / pastel desaturated / hyper-saturated / day-for-night / golden warm / cool blue steel / neon-soaked / sepia vintage / Kodak 5219 / Fuji Eterna
+
+### Shot Types 镜头类型
+- **Establishing shot** — wide view setting location/context (建立镜头)
+- **Master shot** — continuous wide coverage of entire scene (主镜头)
+- **Insert shot** — close-up detail of object or action (插入镜头)
+- **Reaction shot** — character responding to event (反应镜头)
+- **Cutaway** — brief shot of related element outside main action (切出镜头)
+- **POV shot** — camera as character's eyes (主观镜头)
+- **OTS (over-the-shoulder)** — framed past one person toward another (过肩镜头)
+- **Two-shot** — two subjects in frame (双人镜头)
+- **Group shot** — multiple subjects together (群像镜头)
+- **Low-angle hero shot** — looking up at subject for power/dominance (仰拍英雄镜头)
+- **High-angle vulnerability shot** — looking down for vulnerability/weakness (俯拍弱势镜头)
+- **Profile shot** — subject facing sideways (侧面镜头)
+- **Overhead / God's eye** — directly above looking down (上帝视角)
+
+### Editing Rhythm Patterns 剪辑节奏模式
+- **Montage sequence** — rapid succession of shots compressing time/showing progression (蒙太奇)
+- **Parallel editing / cross-cutting** — alternating between simultaneous events (交叉剪辑)
+- **Match-on-action** — cut during motion for seamless continuity (动作匹配剪辑)
+- **Jump cut** — abrupt time skip within same framing (跳切)
+- **L-cut** — audio from next scene starts before video cuts (L型剪辑)
+- **J-cut** — audio from previous scene continues into next shot (J型剪辑)
+- **Kuleshov effect** — meaning created by juxtaposing unrelated shots (库里肖夫效应)
+- **Rhythmic editing** — cuts synchronized to music beats or action rhythm (节奏剪辑)
+
+### VFX Terminology 视觉特效
+particle effects, volumetric fog, volumetric light, lens flare, motion blur, depth haze, chromatic aberration, anamorphic bokeh, light leaks, film scratches, scan lines, glitch effect, datamosh, hologram overlay, force field shimmer, portal distortion, disintegration/reassembly, morphing, liquid simulation, cloth simulation, hair simulation, destruction/debris, explosion, fire/embers, smoke/mist, rain/snow/weather, underwater bubbles, lightning/electricity, magic particles/sparkles, energy beam, shockwave ripple
 
 ## Mood & Atmosphere 情绪氛围
 Tension, wonder, solitude, chaos, tranquility, dread, joy, anticipation, nostalgia, awe, melancholy, triumph, unease, warmth, desolation
@@ -430,6 +531,31 @@ Tension, wonder, solitude, chaos, tranquility, dread, joy, anticipation, nostalg
 - Atmosphere keywords effective: 唯美、震撼、温馨、梦幻、史诗感
 - Keep prompts focused — one clear scene per generation
 
+### PixVerse
+- Supports text-to-video and image-to-video
+- Style presets available: realistic, anime, 3D animation, cinematic
+- Clear subject + action + style format works best
+- Shorter prompts (2-3 sentences) produce more consistent results
+- Specify camera movement explicitly for better control
+
+### Pika
+- Concise, evocative descriptions work best
+- Motion descriptions should be simple and clear
+- Style keywords effective: cinematic, anime, watercolor, stop-motion
+- Image-to-video: describe the specific animation/motion you want
+- 3-4 second generations are most reliable
+
+### Scene Templates 场景模板
+
+**Product Showcase Template**:
+"Close-up of [product] rotating slowly on a [surface material] pedestal. [Material/finish details]. Studio lighting with soft key light from the upper left and subtle fill from the right. Camera slowly orbits 180 degrees over [X] seconds. Clean [color] background with subtle gradient. Photorealistic, commercial quality, 4K."
+
+**Narrative Scene Template**:
+"[Location] at [time of day]. [Character description with consistency anchors] [action with precise verbs]. Camera [movement type] as [temporal progression]. [Atmospheric details: weather, particles, ambient elements]. [Mood] atmosphere. [Duration] seconds, [pacing] rhythm. Shot on [camera reference], [color grading]."
+
+**Landscape Reveal Template**:
+"Drone ascending from behind [foreground element], slowly revealing [vast landscape]. [Time of day] light casting [shadow/light description] across [terrain details]. [Weather/atmospheric elements]. Over [X] seconds, camera rises [Y] meters and tilts down to reveal the full panorama. [Mood]. Cinematic, IMAX quality, [color grading]."
+
 ### Universal Fallback 通用兜底
 When the target video model is unknown or unrecognized:
 - Use the three-part structure: scene description + camera movement + temporal progression
@@ -486,6 +612,8 @@ Multi-speaker: label each speaker clearly — "Speaker A (female, warm, 30s): ..
 ### Genre Tags 曲风标签
 pop, rock, jazz, classical, electronic, hip-hop, R&B, folk, country, ambient, lo-fi, synthwave, orchestral, cinematic, metal, punk, blues, soul, reggae, latin, K-pop, J-pop, C-pop, trap, house, techno, drum and bass, dubstep, gospel, bossa nova, flamenco, celtic, world music
 
+Sub-genres: synthpop, indie pop, dream pop, shoegaze, post-rock, math rock, progressive rock, psychedelic rock, grunge, emo, post-punk, new wave, darkwave, industrial, EBM, acid jazz, nu-jazz, smooth jazz, bebop, swing, trap soul, neo-soul, phonk, drill, grime, UK garage, hardstyle, trance, progressive house, deep house, minimal techno, IDM, glitch, breakbeat, vaporwave, chillwave, future bass, liquid DnB, neurofunk, dub, ska, afrobeat, highlife, cumbia, bachata, samba, tango, zydeco, bluegrass, Americana, new age, dark ambient, drone, noise, post-classical, neoclassical, video game / chiptune / 8-bit
+
 ### Song Structure 歌曲结构标签
 Use Suno/Udio structure tags in square brackets:
 [Intro] [Verse 1] [Pre-chorus] [Chorus] [Verse 2] [Pre-chorus] [Chorus] [Bridge] [Guitar Solo] [Chorus] [Outro]
@@ -502,7 +630,21 @@ Use Suno/Udio structure tags in square brackets:
 acoustic guitar, electric guitar, bass guitar, piano, synthesizer, drums, percussion, strings (violin/cello/orchestra), brass (trumpet/saxophone/trombone), woodwinds (flute/clarinet), choir, harp, organ, ukulele, mandolin, banjo, harmonica, turntables/DJ scratching, 808 bass, analog synth pads
 
 ### Mood Modifiers 情绪修饰
-uplifting, melancholic, energetic, chill, aggressive, dreamy, epic, intimate, anthemic, haunting, groovy, ethereal, raw, polished, lo-fi, cinematic, triumphant, bittersweet, hypnotic, nostalgic
+uplifting, melancholic, energetic, chill, aggressive, dreamy, epic, intimate, anthemic, haunting, groovy, ethereal, raw, polished, lo-fi, cinematic, triumphant, bittersweet, hypnotic, nostalgic, dark, brooding, euphoric, peaceful, chaotic, tense, playful, majestic, rebellious, spiritual, sensual, wistful, dramatic, gentle, fierce
+
+### Production Quality 制作质量
+lo-fi (tape hiss, vinyl crackle, bit-crushed), hi-fi (crystal clear, wide dynamic range), studio quality (professionally mixed and mastered), live recording (room ambiance, audience noise), analog warmth (tube saturation, tape compression), digital clarity (pristine, artifact-free), bedroom pop (intimate, slightly imperfect), concert hall acoustics, garage band rawness, demo tape quality
+
+### Mixing & Mastering Terms 混音母带术语
+Use when describing desired sonic quality:
+- Stereo field: wide stereo / mono / panned left-right / stereo widener / mid-side processing
+- Reverb type: hall / room / plate / spring / cathedral / chamber / convolution / shimmer / reverse
+- Dynamics: heavy compression / dynamic / limiting / soft clipping / sidechain pumping / ducking
+- EQ character: bright / warm / dark / scooped mids / boosted bass / airy highs / present / thick / thin
+- Effects: delay (slapback / ping-pong / tape echo) / chorus / flanger / phaser / distortion / overdrive / fuzz / tremolo / vibrato / auto-tune / vocoder / talkbox
+
+### Voice Acting Styles 配音风格
+narrator (neutral authority), announcer (energetic broadcast), character voice (distinct personality), whisper ASMR (intimate, close-mic), podcast conversational (natural, relaxed), documentary narrator (authoritative, measured), audiobook dramatic (expressive, dynamic range), news anchor (clear, professional), commercial voiceover (warm, persuasive), movie trailer (deep, dramatic), children's storyteller (animated, colorful), meditation guide (calm, soothing, slow), sports commentator (excited, rapid), radio DJ (upbeat, casual)
 
 ### Lyrics Guidance 歌词提示
 - Theme: love / loss / freedom / celebration / protest / journey / nostalgia / empowerment
@@ -524,10 +666,17 @@ uplifting, melancholic, energetic, chill, aggressive, dreamy, epic, intimate, an
 - Reference artists/songs for style: "in the style of Radiohead meets Bon Iver"
 - Detailed mood and production quality descriptors
 
-**ElevenLabs / Fish Audio / CosyVoice / ChatTTS**:
-- Focus on voice characteristics: gender, age, emotion, speed
-- SSML-like markup when supported: emphasis, breaks, prosody
-- For cloned voices: describe target voice quality to guide the clone
+**ElevenLabs**:
+- Voice settings: stability (0-1, higher=more consistent), similarity_boost (0-1, higher=closer to original), style (0-1, expressiveness), use_speaker_boost
+- Model selection: multilingual_v2 (best quality), flash_v2.5 (low latency), turbo_v2 (fast)
+- SSML support: <break time="500ms"/>, <emphasis>, <prosody rate="slow">, <phoneme>
+- For cloned voices: match the emotional range and speaking patterns of the source
+
+**Fish Audio / CosyVoice / ChatTTS**:
+- Focus on voice characteristics: gender, age, emotion, speed, accent
+- CosyVoice: supports zero-shot voice cloning, cross-lingual synthesis, fine-grained control with <|endoftext|> tokens
+- ChatTTS: conversational style, supports laughter [laugh], pauses [uv_break], filler words. Control codes for emotion/speed
+- Fish Audio: reference audio description helps guide the voice clone quality
 
 **Universal Fallback**:
 When the target audio model is unknown:
@@ -579,6 +728,36 @@ Read the model's \`accuracy\` field:
 
 ### Key Principle
 This module ensures that ANY model — including models released after this prompt was written — receives an appropriately optimized prompt. Never rely solely on hardcoded model name matching.
+
+### Context Window Awareness
+Scale prompt detail based on the model's context capacity:
+- <8K context: Very concise prompts. One clear task. Minimal examples. Direct instruction only
+- 8K-32K: Standard prompts. Role + task + format + constraints. 1-2 examples if needed
+- 32K-128K: Detailed prompts fine. Full frameworks, multiple examples, comprehensive constraints
+- 128K-1M+: Maximum detail welcome. Include extensive context, reference materials, many examples, detailed instructions. The model can handle it
+
+### Streaming Awareness
+When the model supports streaming (supportsStreaming=true):
+- Long-form output is feasible — don't over-compress
+- For creative writing, allow natural flow without forced brevity
+- For code, complete implementations are acceptable
+
+### Multi-Modal Detection
+When tags include "vision" or "multimodal":
+- The model can process images alongside text
+- Suggest image+text prompt patterns when relevant
+- Reference visual elements directly in the prompt
+
+### Future-Proofing Name Patterns
+For models not yet in the registry, infer category from naming patterns:
+- Contains "o5", "o6", "o7" → reasoning model, skip explicit CoT
+- Contains "gpt-6", "gpt-7" → general text, full capability, use structured prompts
+- Contains "claude-5", "claude-6" → XML tags work, extended thinking, full detail
+- Contains "gemini-4", "gemini-5" → explicit format specs, thinking mode, long context
+- Contains "llama-5", "llama-6" → open-source, prefer simpler prompts
+- Contains "flux-2", "flux-3" → image generation, natural language
+- Contains "sora-3", "sora-4" → video generation, cinematography language
+- Always fall back to the ADAPTIVE MODULE signals (category, tags, speed, accuracy) as the primary guide
 
 ---
 

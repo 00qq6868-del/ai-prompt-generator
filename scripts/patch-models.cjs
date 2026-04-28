@@ -86,13 +86,91 @@ const META = {
   "kimi-k2":                    { i: 2,    o: 2,    s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-09-01" },
   "minimax-m2":                 { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-06-01" },
   "grok-code":                  { i: 2,    o: 8,    s: "fast",      a: "high",    t: ["code"],                        d: "2025-04-01" },
+  // ── Qwen3 / 阿里巴巴 ─────────────────────────────────────────
+  "qwen3-235b":                 { i: 0.4,  o: 1.2,  s: "fast",      a: "supreme", t: ["chinese","code","reasoning"],  d: "2025-04-28" },
+  "qwen3-32b":                  { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-04-28" },
+  "qwen3-14b":                  { i: 0.06, o: 0.18, s: "ultrafast", a: "high",    t: ["chinese","cheap"],             d: "2025-04-28" },
+  "qwen3-8b":                   { i: 0.04, o: 0.12, s: "ultrafast", a: "medium",  t: ["chinese","cheap"],             d: "2025-04-28" },
+  "qwen3-4b":                   { i: 0.02, o: 0.06, s: "ultrafast", a: "medium",  t: ["chinese","ultra-cheap"],       d: "2025-04-28" },
+  "qwen3-1.7b":                 { i: 0.01, o: 0.03, s: "ultrafast", a: "medium",  t: ["chinese","ultra-cheap"],       d: "2025-04-28" },
+  "qwen3-0.6b":                 { i: 0.01, o: 0.03, s: "ultrafast", a: "low",     t: ["chinese","ultra-cheap"],       d: "2025-04-28" },
+  "qwen3-next":                 { i: 0.2,  o: 0.6,  s: "fast",      a: "high",    t: ["chinese","code","reasoning"],  d: "2025-07-01" },
+  "qwen3-vl-plus":              { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese","vision"],            d: "2025-05-01" },
+  "qwen3-vl-flash":             { i: 0.1,  o: 0.3,  s: "ultrafast", a: "high",    t: ["chinese","vision","cheap"],    d: "2025-05-01" },
+  "qwen3-vl-235b":              { i: 0.4,  o: 1.2,  s: "fast",      a: "supreme", t: ["chinese","vision","reasoning"],d: "2025-05-01" },
+  "qwen3-vl-30b":               { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["chinese","vision"],            d: "2025-05-01" },
+  "qwen-mt-":                   { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["chinese","translation"],       d: "2025-03-01" },
+  // ── MiniMax ───────────────────────────────────────────────────
+  "minimax-m2":                 { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-06-01" },
+  "cc-minimax-m2":              { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-06-01" },
+  "mm-minimax-m2":              { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-06-01" },
+  "coding-minimax-m2":          { i: 0.3,  o: 0.9,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-06-01" },
+  // ── Zhipu GLM ────────────────────────────────────────────────
+  "glm-4.5v":                   { i: 0.5,  o: 0.5,  s: "fast",      a: "high",    t: ["chinese","vision"],            d: "2025-01-01" },
+  "glm-4.7-flash":              { i: 0.05, o: 0.05, s: "ultrafast", a: "medium",  t: ["chinese","cheap"],             d: "2025-03-01" },
+  "coding-glm-5":               { i: 0.5,  o: 0.5,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-06-01" },
+  "coding-glm-4":               { i: 0.3,  o: 0.3,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-01-01" },
+  "cc-glm-5":                   { i: 0.5,  o: 0.5,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-06-01" },
+  "zai-glm-5":                  { i: 0.5,  o: 0.5,  s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-06-01" },
+  // ── Baidu ERNIE ──────────────────────────────────────────────
+  "ernie-4.5-turbo":            { i: 0.05, o: 0.05, s: "ultrafast", a: "high",    t: ["chinese","cheap"],             d: "2025-03-01" },
+  "ernie-4.5-0.3b":             { i: 0.01, o: 0.01, s: "ultrafast", a: "low",     t: ["chinese","ultra-cheap"],       d: "2025-03-01" },
+  "baidu/ERNIE-4.5":            { i: 0.1,  o: 0.1,  s: "fast",      a: "high",    t: ["chinese","reasoning"],         d: "2025-03-01" },
+  // ── Cohere ───────────────────────────────────────────────────
+  "command-a":                  { i: 2.5,  o: 10,   s: "fast",      a: "high",    t: ["multilingual","code"],         d: "2025-03-01" },
+  "cohere-command-a":           { i: 2.5,  o: 10,   s: "fast",      a: "high",    t: ["multilingual","code"],         d: "2025-03-01" },
+  "command-r-plus":             { i: 3,    o: 15,   s: "fast",      a: "high",    t: ["multilingual","reasoning"],    d: "2024-04-04" },
+  "command-r":                  { i: 0.5,  o: 1.5,  s: "fast",      a: "medium",  t: ["multilingual"],                d: "2024-03-11" },
+  "command":                    { i: 1,    o: 2,    s: "fast",      a: "medium",  t: ["legacy"],                      d: "2023-01-01" },
+  // ── AihubMix relay mirrors ───────────────────────────────────
+  "cc-deepseek-v3":             { i: 0.27, o: 1.1,  s: "fast",      a: "high",    t: ["code","math"],                 d: "2025-04-01" },
+  "cc-kimi-k2":                 { i: 2,    o: 2,    s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-09-01" },
+  "cc-ernie-4.5":               { i: 0.1,  o: 0.1,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-03-01" },
+  "sophnet-deepseek":           { i: 0.27, o: 1.1,  s: "fast",      a: "supreme", t: ["code","math","reasoning"],     d: "2025-07-01" },
+  "DeepSeek-V3-Fast":           { i: 0.27, o: 1.1,  s: "ultrafast", a: "high",    t: ["code","math","fast"],          d: "2025-03-15" },
+  "DeepSeek-R1":                { i: 0.55, o: 2.19, s: "medium",    a: "supreme", t: ["reasoning","math"],            d: "2025-01-20" },
+  "Kimi-K2":                    { i: 2,    o: 2,    s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-09-01" },
+  "k2.6-code":                  { i: 2,    o: 2,    s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-10-01" },
+  "kimi-for-coding":            { i: 2,    o: 2,    s: "fast",      a: "high",    t: ["chinese","code"],              d: "2025-06-01" },
+  // ── Older Claude ─────────────────────────────────────────────
+  "claude-3-sonnet-20240229":   { i: 3,    o: 15,   s: "fast",      a: "high",    t: ["vision","code"],               d: "2024-02-29" },
+  "claude-3-5-sonnet-20240620": { i: 3,    o: 15,   s: "fast",      a: "supreme", t: ["vision","code"],               d: "2024-06-20" },
+  // ── Google relay aliases ─────────────────────────────────────
+  "gemini-flash-latest":        { i: 0.1,  o: 0.4,  s: "ultrafast", a: "high",    t: ["fast","cheap","vision"],       d: "2025-02-05" },
+  "gemini-flash-lite-latest":   { i: 0.075,o: 0.3,  s: "ultrafast", a: "medium",  t: ["ultra-cheap","fast"],          d: "2025-02-05" },
+  "gemini-pro-latest":          { i: 1.25, o: 10,   s: "medium",    a: "supreme", t: ["vision","reasoning"],          d: "2025-03-25" },
+  "gemini-2.0-pro":             { i: 1.25, o: 10,   s: "medium",    a: "supreme", t: ["vision","reasoning"],          d: "2025-02-05" },
+  "gemini-robotics":            { i: 1,    o: 5,    s: "medium",    a: "high",    t: ["vision","robotics"],           d: "2025-06-01" },
+  "gemini-2.5-computer-use":    { i: 1.25, o: 10,   s: "medium",    a: "supreme", t: ["vision","computer-use"],       d: "2025-10-01" },
+  // ── InclusionAI / Ling / Ring ────────────────────────────────
+  "inclusionAI/Ring":           { i: 0.2,  o: 0.6,  s: "fast",      a: "high",    t: ["chinese","reasoning"],         d: "2025-06-01" },
+  "inclusionAI/Ling":           { i: 0.2,  o: 0.6,  s: "fast",      a: "high",    t: ["chinese"],                     d: "2025-06-01" },
+  "ling-2":                     { i: 0.1,  o: 0.3,  s: "ultrafast", a: "medium",  t: ["chinese","cheap"],             d: "2025-06-01" },
+  // ── Phi / Microsoft ──────────────────────────────────────────
+  "AiHubmix-Phi-4":             { i: 0.07, o: 0.14, s: "fast",      a: "high",    t: ["reasoning","code"],            d: "2025-01-01" },
+  "aihub-Phi-4":                { i: 0.07, o: 0.14, s: "fast",      a: "high",    t: ["reasoning","code"],            d: "2025-01-01" },
+  // ── ByteDance / Seed ─────────────────────────────────────────
+  "ByteDance-Seed/Seed-OSS":    { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["code"],                        d: "2025-05-01" },
+  // ── xiaomi mimo ──────────────────────────────────────────────
+  "xiaomi-mimo":                { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["chinese","vision"],            d: "2025-06-01" },
+  // ── Qwen misc ────────────────────────────────────────────────
+  "Qwen/Qwen2.5-VL":           { i: 0.15, o: 0.6,  s: "fast",      a: "high",    t: ["vision","chinese"],            d: "2025-01-01" },
+  "Qwen/QwQ":                   { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["reasoning","chinese"],         d: "2025-03-01" },
+  // ── gpt-oss (OpenAI open source) ─────────────────────────────
+  "gpt-oss":                    { i: 0.15, o: 0.6,  s: "fast",      a: "high",    t: ["open-source"],                 d: "2025-06-01" },
+  // ── Ollama local models ──────────────────────────────────────
+  "llama3.2":                   { i: 0,    o: 0,    s: "fast",      a: "medium",  t: ["open-source","local"],         d: "2024-09-25" },
+  "qwen2.5:7b":                 { i: 0,    o: 0,    s: "fast",      a: "medium",  t: ["chinese","local"],             d: "2024-09-19" },
+  // ── aihubmix router ──────────────────────────────────────────
+  "aihubmix-router":            { i: 0.5,  o: 2,    s: "fast",      a: "high",    t: ["router","auto-select"],        d: "2025-01-01" },
 };
 
 function lookupMeta(id) {
   if (META[id]) return META[id];
+  const lower = id.toLowerCase();
   const keys = Object.keys(META).sort((a, b) => b.length - a.length);
   for (const k of keys) {
-    if (id.startsWith(k)) return META[k];
+    if (id.startsWith(k) || lower.startsWith(k.toLowerCase())) return META[k];
   }
   return null;
 }

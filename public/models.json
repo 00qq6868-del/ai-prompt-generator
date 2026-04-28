@@ -2189,14 +2189,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2206,14 +2209,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2223,14 +2229,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2240,14 +2249,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2257,14 +2269,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2274,14 +2289,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2291,14 +2309,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2308,14 +2329,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2325,14 +2349,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2342,14 +2369,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2.5,
+    "outputCostPer1M": 10,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "multilingual",
+      "code"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -2359,14 +2389,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2376,14 +2409,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2393,14 +2429,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.05,
+    "outputCostPer1M": 0.05,
+    "speed": "ultrafast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -2410,14 +2449,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2444,14 +2486,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "code",
+      "math",
+      "reasoning"
+    ],
+    "releaseDate": "2025-07-01",
     "category": "text"
   },
   {
@@ -2461,14 +2507,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2478,14 +2527,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-10-01",
     "category": "text"
   },
   {
@@ -2495,14 +2547,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2512,14 +2567,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2529,14 +2587,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -2546,14 +2607,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision",
+      "cheap"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -2563,14 +2628,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision",
+      "cheap"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -2580,14 +2649,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2597,14 +2668,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2614,14 +2687,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2631,14 +2706,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2648,14 +2726,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2665,14 +2746,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2682,14 +2766,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2699,14 +2786,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2716,14 +2805,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2733,14 +2824,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2750,14 +2844,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2767,14 +2864,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2784,14 +2884,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2801,14 +2903,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2818,14 +2923,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2835,14 +2943,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -2852,14 +2963,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2869,14 +2983,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2886,14 +3003,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-09-01",
     "category": "text"
   },
   {
@@ -2903,14 +3023,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -2920,14 +3043,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "code",
+      "math",
+      "fast"
+    ],
+    "releaseDate": "2025-03-15",
     "category": "text"
   },
   {
@@ -2937,14 +3064,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -2954,14 +3084,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -2971,14 +3104,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -2988,14 +3125,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -3005,14 +3146,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 2,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "router",
+      "auto-select"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3022,14 +3166,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code",
+      "reasoning"
+    ],
+    "releaseDate": "2025-07-01",
     "category": "text"
   },
   {
@@ -3039,14 +3187,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code",
+      "reasoning"
+    ],
+    "releaseDate": "2025-07-01",
     "category": "text"
   },
   {
@@ -3056,14 +3208,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code",
+      "reasoning"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3073,14 +3229,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code",
+      "reasoning"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3090,14 +3250,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3107,14 +3270,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3124,14 +3289,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "translation"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3141,14 +3309,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "translation"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3158,14 +3329,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3175,14 +3349,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3192,14 +3368,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3209,14 +3387,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.05,
+    "outputCostPer1M": 0.05,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3226,14 +3407,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
+    "inputCostPer1M": 0.55,
+    "outputCostPer1M": 2.19,
     "speed": "medium",
-    "accuracy": "high",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "math"
+    ],
+    "releaseDate": "2025-01-20",
     "category": "text"
   },
   {
@@ -3243,14 +3427,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.05,
+    "outputCostPer1M": 0.05,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3260,14 +3447,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "open-source"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3277,14 +3466,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "chinese"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3294,14 +3486,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "code"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {
@@ -3311,14 +3505,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3328,14 +3525,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3345,14 +3544,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
     "speed": "medium",
-    "accuracy": "high",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-02-05",
     "category": "text"
   },
   {
@@ -3362,14 +3564,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "chinese"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3379,14 +3584,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.05,
+    "outputCostPer1M": 0.05,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3396,14 +3604,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.01,
+    "outputCostPer1M": 0.01,
+    "speed": "ultrafast",
+    "accuracy": "low",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "ultra-cheap"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3413,14 +3624,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.1,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "reasoning"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3430,14 +3644,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "chinese"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3447,14 +3664,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.14,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3464,14 +3684,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.14,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3481,14 +3704,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.14,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3498,14 +3724,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.3,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3515,14 +3744,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.06,
+    "outputCostPer1M": 0.18,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3532,14 +3764,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.14,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-01-01",
     "category": "text"
   },
   {
@@ -3549,14 +3784,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.04,
+    "outputCostPer1M": 0.12,
+    "speed": "ultrafast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "cheap"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3566,14 +3804,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.02,
+    "outputCostPer1M": 0.06,
+    "speed": "ultrafast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "ultra-cheap"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3583,14 +3824,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.01,
+    "outputCostPer1M": 0.03,
+    "speed": "ultrafast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "ultra-cheap"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3600,14 +3844,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.01,
+    "outputCostPer1M": 0.03,
+    "speed": "ultrafast",
+    "accuracy": "low",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "ultra-cheap"
+    ],
+    "releaseDate": "2025-04-28",
     "category": "text"
   },
   {
@@ -3617,14 +3864,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2.5,
+    "outputCostPer1M": 10,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "multilingual",
+      "code"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3634,14 +3884,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-09-01",
     "category": "text"
   },
   {
@@ -3651,14 +3904,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-09-01",
     "category": "text"
   },
   {
@@ -3668,14 +3924,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.1,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-03-01",
     "category": "text"
   },
   {
@@ -3685,14 +3943,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "code",
+      "math"
+    ],
+    "releaseDate": "2025-04-01",
     "category": "text"
   },
   {
@@ -3702,14 +3963,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3736,14 +3999,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "open-source"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -3753,14 +4018,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 3,
+    "outputCostPer1M": 15,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "multilingual",
+      "reasoning"
+    ],
+    "releaseDate": "2024-04-04",
     "category": "text"
   },
   {
@@ -3770,14 +4038,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 1.5,
+    "speed": "fast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "multilingual"
+    ],
+    "releaseDate": "2024-03-11",
     "category": "text"
   },
   {
@@ -3787,14 +4057,16 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 2,
+    "speed": "fast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "legacy"
+    ],
+    "releaseDate": "2023-01-01",
     "category": "text"
   },
   {
@@ -3804,14 +4076,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 3,
+    "outputCostPer1M": 15,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "code"
+    ],
+    "releaseDate": "2024-02-29",
     "category": "text"
   },
   {
@@ -3821,14 +4096,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 3,
+    "outputCostPer1M": 15,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "code"
+    ],
+    "releaseDate": "2024-06-20",
     "category": "text"
   },
   {
@@ -4166,14 +4444,18 @@
     "apiProvider": "google",
     "contextWindow": 1048576,
     "maxOutput": 65536,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.4,
+    "speed": "ultrafast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "2025-02-05",
     "category": "text"
   },
   {
@@ -4183,14 +4465,17 @@
     "apiProvider": "google",
     "contextWindow": 1048576,
     "maxOutput": 65536,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
-    "accuracy": "high",
+    "inputCostPer1M": 0.075,
+    "outputCostPer1M": 0.3,
+    "speed": "ultrafast",
+    "accuracy": "medium",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "ultra-cheap",
+      "fast"
+    ],
+    "releaseDate": "2025-02-05",
     "category": "text"
   },
   {
@@ -4200,14 +4485,17 @@
     "apiProvider": "google",
     "contextWindow": 1048576,
     "maxOutput": 65536,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
-    "accuracy": "high",
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-03-25",
     "category": "text"
   },
   {
@@ -4257,14 +4545,17 @@
     "apiProvider": "google",
     "contextWindow": 1048576,
     "maxOutput": 65536,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "robotics"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -4274,14 +4565,17 @@
     "apiProvider": "google",
     "contextWindow": 131072,
     "maxOutput": 65536,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "medium",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "robotics"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -4291,14 +4585,17 @@
     "apiProvider": "google",
     "contextWindow": 131072,
     "maxOutput": 65536,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
-    "accuracy": "high",
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "vision",
+      "computer-use"
+    ],
+    "releaseDate": "2025-10-01",
     "category": "text"
   },
   {
@@ -4558,9 +4855,8 @@
     "supportsStreaming": false,
     "isLatest": true,
     "tags": [
-      "local",
-      "free",
-      "privacy"
+      "open-source",
+      "local"
     ],
     "releaseDate": "2024-09-25",
     "category": "text"
@@ -4574,16 +4870,72 @@
     "maxOutput": 8192,
     "inputCostPer1M": 0,
     "outputCostPer1M": 0,
-    "speed": "medium",
+    "speed": "fast",
     "accuracy": "medium",
     "supportsStreaming": false,
     "isLatest": false,
     "tags": [
-      "local",
-      "free",
-      "chinese"
+      "chinese",
+      "local"
     ],
     "releaseDate": "2024-09-19",
     "category": "text"
+  },
+  {
+    "id": "gpt-image-1",
+    "name": "GPT Image 1",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 32768,
+    "maxOutput": 4096,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 40,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "image-gen"
+    ],
+    "releaseDate": "2025-04-23",
+    "category": "image"
+  },
+  {
+    "id": "seedance-1.0",
+    "name": "Seedance 1.0",
+    "provider": "ByteDance",
+    "apiProvider": "aihubmix",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": false,
+    "isLatest": false,
+    "tags": [
+      "video-gen"
+    ],
+    "releaseDate": "2025-03-01",
+    "category": "video"
+  },
+  {
+    "id": "seedance-2.0",
+    "name": "Seedance 2.0",
+    "provider": "ByteDance",
+    "apiProvider": "aihubmix",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "video-gen"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "video"
   }
 ]
