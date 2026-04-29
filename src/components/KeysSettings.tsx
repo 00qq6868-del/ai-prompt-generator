@@ -136,13 +136,20 @@ export function KeysSettings({ open, onClose }: Props) {
   useEffect(() => {
     if (open) {
       setKeys(loadUserKeys());
-      // prevent background scroll
       document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") onClose();
+      };
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        document.removeEventListener("keydown", handleKeyDown);
+      };
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  }, [open, onClose]);
 
   const set = (id: string, val: string) => setKeys((k) => ({ ...k, [id]: val }));
   const toggleVisible = (id: string) => setVisible((v) => ({ ...v, [id]: !v[id] }));
@@ -197,6 +204,9 @@ export function KeysSettings({ open, onClose }: Props) {
     <AnimatePresence>
       {open && (
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label="API Key 设置 Settings"
           className="fixed inset-0 z-50 flex flex-col bg-[#08080f]"
           style={{ height: "100dvh" }}
           initial={{ opacity: 0, y: 16 }}
@@ -221,6 +231,7 @@ export function KeysSettings({ open, onClose }: Props) {
             </div>
             <button
               onClick={onClose}
+              aria-label="关闭设置 Close settings"
               className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/8 hover:text-white transition-all"
             >
               <X size={17} />
@@ -264,6 +275,7 @@ export function KeysSettings({ open, onClose }: Props) {
                       value={keys["CUSTOM_BASE_URL"] || ""}
                       onChange={(e) => set("CUSTOM_BASE_URL", e.target.value)}
                       placeholder="https://aihubmix.com/v1"
+                      aria-label="中转站 Base URL"
                       className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 text-[13px] text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
                     />
                     <p className="mt-2 text-[10px] text-white/30">
@@ -447,11 +459,13 @@ function ProviderCard({ provider: p, value, show, onChange, onToggleVisible }: P
           onChange={(e) => onChange(e.target.value)}
           placeholder={p.placeholder}
           autoComplete="off"
+          aria-label={`${p.name} API Key`}
           className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 pr-10 text-[13px] text-white placeholder:text-white/15 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
         />
         <button
           type="button"
           onClick={onToggleVisible}
+          aria-label={show ? "隐藏密钥 Hide key" : "显示密钥 Show key"}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
         >
           {show ? <EyeOff size={13} /> : <Eye size={13} />}

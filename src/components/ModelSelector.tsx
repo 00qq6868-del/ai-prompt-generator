@@ -3,7 +3,7 @@
 import { ModelInfo, ModelCategory } from "@/lib/models-registry";
 import { useModels } from "@/hooks/useModels";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, RefreshCw, Cpu, Type, Image, Film, Mic, Headphones, Database, ScanSearch, ChevronRight } from "lucide-react";
+import { ChevronDown, RefreshCw, Cpu, Type, Image, Film, Mic, Headphones, Database, ScanSearch, ChevronRight, Search, X, ArrowUpDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ModelPicker } from "./ModelPicker";
 
@@ -49,6 +49,18 @@ const ACC_LABEL: Record<string, string> = {
   supreme: "卓越", high: "优秀", medium: "良好", low: "基础",
 };
 
+type SortKey = "release" | "price" | "speed" | "accuracy";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "release",  label: "发布日期 Date" },
+  { key: "price",    label: "价格 Price" },
+  { key: "speed",    label: "速度 Speed" },
+  { key: "accuracy", label: "精度 Accuracy" },
+];
+
+const SPEED_RANK: Record<string, number> = { ultrafast: 4, fast: 3, medium: 2, slow: 1 };
+const ACC_RANK: Record<string, number> = { supreme: 4, high: 3, medium: 2, low: 1 };
+
 export function ModelSelector({
   selectedTargetId,
   selectedGeneratorId,
@@ -59,6 +71,8 @@ export function ModelSelector({
   const { models, loading, source, updatedAt, refresh } = useModels("accurate");
   const [category, setCategory] = useState<ModelCategory | "all">("text");
   const [provider, setProvider] = useState("全部");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortKey>("release");
   const [generatorPickerOpen, setGeneratorPickerOpen] = useState(false);
 
   const selectedGenerator = useMemo(
@@ -77,19 +91,7 @@ export function ModelSelector({
     ? "目标是视频模型 — 推荐选质量高的生成器 / Target is video model"
     : "用来写提示词的 AI — 推荐选便宜快速的模型";
 
-  // Filter + sort: latest first
-  const filtered = useMemo(() => {
-    let list = models;
-    if (category !== "all") {
-      list = list.filter((m) => (m.category ?? "text") === category);
-    }
-    if (provider !== "全部") {
-      list = list.filter((m) => m.provider === provider);
-    }
-    return list.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
-  }, [models, category, provider]);
-
-  // Category counts
+  // Category counts (across all models, unaffected by filters)
   const catCounts = useMemo(() => {
     const counts: Record<string, number> = { all: models.length };
     for (const m of models) {
@@ -111,6 +113,47 @@ export function ModelSelector({
     }
     return counts;
   }, [models, category]);
+
+  // Filter + search + sort
+  const filtered = useMemo(() => {
+    let list = models;
+
+    if (category !== "all") {
+      list = list.filter((m) => (m.category ?? "text") === category);
+    }
+    if (provider !== "全部") {
+      list = list.filter((m) => m.provider === provider);
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((m) =>
+        m.id.toLowerCase().includes(q) ||
+        m.name.toLowerCase().includes(q) ||
+        m.provider.toLowerCase().includes(q)
+      );
+    }
+
+    const sorted = [...list];
+    switch (sortBy) {
+      case "release":
+        sorted.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
+        break;
+      case "price":
+        sorted.sort((a, b) =>
+          (a.inputCostPer1M + a.outputCostPer1M) - (b.inputCostPer1M + b.outputCostPer1M)
+        );
+        break;
+      case "speed":
+        sorted.sort((a, b) => (SPEED_RANK[b.speed] ?? 0) - (SPEED_RANK[a.speed] ?? 0));
+        break;
+      case "accuracy":
+        sorted.sort((a, b) => (ACC_RANK[b.accuracy] ?? 0) - (ACC_RANK[a.accuracy] ?? 0));
+        break;
+    }
+
+    return sorted;
+  }, [models, category, provider, search, sortBy]);
 
   return (
     <div className="space-y-5">
@@ -175,43 +218,72 @@ export function ModelSelector({
               {source === "remote" ? "🌐 远程" : "📦 内置"}
               {updatedAt && ` · ${new Date(updatedAt).toLocaleDateString()}`}
             </span>
-            <button onClick={refresh} title="刷新模型列表" className="text-white/40 hover:text-white transition-colors">
+            <button onClick={refresh} aria-label="刷新模型列表 Refresh model list" className="text-white/40 hover:text-white transition-colors">
               <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
             </button>
           </div>
         </div>
 
+        {/* ── Search input ── */}
+        <div className="relative mb-3">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="搜索模型名称、ID、供应商... Search models"
+            aria-label="搜索模型 Search models"
+            className="w-full pl-9 pr-9 py-2 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 outline-none focus:border-indigo-500/50 transition-all"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="清除搜索 Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
         {/* ── Category tabs (horizontal scroll) ── */}
-        <div className="flex gap-1 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        <div role="tablist" aria-label="模型分类 Model categories" className="flex gap-1 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
           {CATEGORIES.map((c) => {
             const count = catCounts[c.id] ?? 0;
-            if (c.id !== "all" && count === 0) return null;
+            const isEmpty = c.id !== "all" && count === 0;
             return (
               <button
                 key={c.id}
-                onClick={() => { setCategory(c.id); setProvider("全部"); }}
+                role="tab"
+                aria-selected={category === c.id}
+                disabled={isEmpty}
+                onClick={() => { if (!isEmpty) { setCategory(c.id); setProvider("全部"); } }}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0
-                  ${category === c.id
-                    ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/40"
-                    : "text-white/40 hover:text-white/60 border border-transparent"
+                  ${isEmpty
+                    ? "text-white/15 cursor-not-allowed border border-transparent"
+                    : category === c.id
+                      ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/40"
+                      : "text-white/40 hover:text-white/60 border border-transparent"
                   }`}
               >
                 {c.icon}
                 {c.label}
-                <span className="text-[9px] opacity-60">{count}</span>
+                <span className={`text-[9px] ${isEmpty ? "opacity-30" : "opacity-60"}`}>{count}</span>
               </button>
             );
           })}
         </div>
 
         {/* ── Provider filter (horizontal scroll) ── */}
-        <div className="flex gap-1 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex gap-1 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
           {PROVIDER_TABS.map((p) => {
             const count = provCounts[p] ?? 0;
             if (p !== "全部" && count === 0) return null;
             return (
               <button
                 key={p}
+                role="tab"
+                aria-selected={provider === p}
                 onClick={() => setProvider(p)}
                 className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
                   ${provider === p
@@ -225,10 +297,28 @@ export function ModelSelector({
           })}
         </div>
 
+        {/* ── Sort options ── */}
+        <div className="flex items-center gap-1.5 mb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          <ArrowUpDown size={11} className="text-white/25 shrink-0" />
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setSortBy(opt.key)}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
+                ${sortBy === opt.key
+                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                  : "text-white/25 hover:text-white/45 border border-transparent"
+                }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
         {/* ── Model grid ── */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${category}-${provider}`}
+            key={`${category}-${provider}-${sortBy}`}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -236,10 +326,12 @@ export function ModelSelector({
           >
             {loading
               ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
+                  <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" role="status" aria-label="加载中 Loading" />
                 ))
               : filtered.length === 0
-                ? <div className="col-span-2 text-center text-white/30 text-sm py-8">暂无此类模型</div>
+                ? <div className="col-span-2 text-center text-white/30 text-sm py-8">
+                    {search ? "未找到匹配的模型 No matching models" : "暂无此类模型 No models in this category"}
+                  </div>
                 : filtered.slice(0, 50).map((m) => (
                     <ModelCard
                       key={m.id}
@@ -252,7 +344,7 @@ export function ModelSelector({
         </AnimatePresence>
         {filtered.length > 50 && (
           <p className="text-[11px] text-white/25 text-center mt-2">
-            显示前 50 个（共 {filtered.length} 个）
+            显示前 50 个（共 {filtered.length} 个）Showing 50 of {filtered.length}
           </p>
         )}
       </div>
@@ -271,6 +363,8 @@ function ModelCard({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
+      aria-label={`${m.name} — ${m.provider}, ${SPEED_LABEL[m.speed] ?? m.speed}, ${ACC_LABEL[m.accuracy] ?? m.accuracy}`}
+      aria-pressed={selected}
       className={`relative text-left rounded-xl border px-3 py-2.5 transition-all
         ${selected
           ? "border-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10"
@@ -279,13 +373,13 @@ function ModelCard({
     >
       {m.isLatest && (
         <span className="absolute top-2 right-2 text-[9px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded-full">
-          最新
+          最新 New
         </span>
       )}
       <div className="flex items-center gap-1.5 mb-1">
         <span className="text-xs text-white/50">{m.provider}</span>
       </div>
-      <div className="font-semibold text-sm text-white leading-tight mb-1.5">{m.name}</div>
+      <div className="font-semibold text-sm text-white leading-tight mb-1.5 pr-14">{m.name}</div>
       <div className="flex flex-wrap gap-1.5">
         <span className={`text-[10px] font-medium ${SPEED_COLOR[m.speed] ?? "text-white/40"}`}>
           ⚡ {SPEED_LABEL[m.speed] ?? m.speed}
@@ -293,8 +387,10 @@ function ModelCard({
         <span className={`text-[10px] px-1.5 rounded-full ${ACC_BADGE[m.accuracy] ?? "bg-gray-500/20 text-gray-300"}`}>
           {ACC_LABEL[m.accuracy] ?? m.accuracy}
         </span>
-        {Number(avgCost) > 0 && (
+        {Number(avgCost) > 0 ? (
           <span className="text-[10px] text-white/30">${avgCost}/1M</span>
+        ) : (
+          <span className="text-[10px] text-green-400/70">免费 Free</span>
         )}
         {m.contextWindow >= 100000 && (
           <span className="text-[10px] text-emerald-400/70">

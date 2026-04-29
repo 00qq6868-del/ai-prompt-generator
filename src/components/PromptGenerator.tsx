@@ -350,6 +350,7 @@ export function PromptGenerator() {
             onChange={(e) => setIdea(e.target.value)}
             placeholder="例如：写一首关于秋天的古风诗 / Write a function that validates email addresses / 帮我分析这段代码的时间复杂度…"
             rows={5}
+            aria-label="输入你的想法或需求 Enter your idea or requirement"
             className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/25 focus:border-indigo-500/50 focus:outline-none transition-all leading-relaxed"
           />
           {charCount > 0 && (
@@ -389,6 +390,8 @@ export function PromptGenerator() {
         onClick={generate}
         disabled={loading || !idea.trim()}
         whileTap={{ scale: 0.98 }}
+        aria-busy={loading}
+        aria-label={loading ? "正在生成中 Generating..." : "生成优化提示词 Generate optimized prompt"}
         className={`relative w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-base font-semibold transition-all duration-300
           ${loading || !idea.trim()
             ? "bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
@@ -441,7 +444,12 @@ export function PromptGenerator() {
                   <span className="text-indigo-400 font-medium">正在生成中 Streaming...</span>
                 </div>
               </div>
-              <pre className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto">
+              <pre
+                role="status"
+                aria-live="polite"
+                aria-label="流式生成预览 Streaming preview"
+                className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto"
+              >
                 {streamingText}
                 <motion.span
                   animate={{ opacity: [1, 0] }}

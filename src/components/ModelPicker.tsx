@@ -77,11 +77,19 @@ export function ModelPicker({
       setProvider("全部");
       setShowFavoritesOnly(false);
       document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") onClose();
+      };
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        document.removeEventListener("keydown", handleKeyDown);
+      };
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  }, [open, onClose]);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites(prev => {
@@ -154,6 +162,9 @@ export function ModelPicker({
     <AnimatePresence>
       {open && (
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
           className="fixed inset-0 z-50 flex flex-col bg-[#08080f]"
           style={{ height: "100dvh" }}
           initial={{ opacity: 0, y: 16 }}
@@ -169,6 +180,7 @@ export function ModelPicker({
             </div>
             <button
               onClick={onClose}
+              aria-label="关闭 Close"
               className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/8 hover:text-white transition-all"
             >
               <X size={17} />
@@ -184,11 +196,12 @@ export function ModelPicker({
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="搜索模型名称、提供商、标签..."
+                aria-label="搜索模型 Search models"
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 outline-none focus:border-indigo-500/50 transition-all"
                 autoFocus
               />
               {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
                   <X size={14} />
                 </button>
               )}
@@ -207,13 +220,15 @@ export function ModelPicker({
                 收藏
               </button>
               <div className="h-3 w-px bg-white/10" />
-              <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+              <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
                 {PROVIDER_TABS.map(p => {
                   const count = providerCounts[p] ?? 0;
                   if (p !== "全部" && count === 0) return null;
                   return (
                     <button
                       key={p}
+                      role="tab"
+                      aria-selected={provider === p}
                       onClick={() => setProvider(p)}
                       className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
                         ${provider === p
@@ -298,6 +313,8 @@ function PickerCard({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
+      aria-label={`${m.name} — ${m.provider}`}
+      aria-pressed={isSelected}
       className={`relative text-left rounded-2xl border p-4 transition-all duration-200
         ${isSelected
           ? "border-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30"
@@ -320,6 +337,7 @@ function PickerCard({
         )}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          aria-label={isFavorite ? "取消收藏 Unfavorite" : "收藏 Favorite"}
           className="text-white/20 hover:text-amber-400 transition-colors"
         >
           <Star size={12} fill={isFavorite ? "currentColor" : "none"} className={isFavorite ? "text-amber-400" : ""} />

@@ -15,7 +15,14 @@ export function HistoryPanel({ onReuse }: Props) {
   const [filter, setFilter] = useState<"all" | "favorites">("all");
 
   useEffect(() => {
-    if (open) setItems(getHistory());
+    if (open) {
+      setItems(getHistory());
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setOpen(false);
+      };
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
   }, [open]);
 
   const filtered = filter === "favorites" ? items.filter(i => i.isFavorite) : items;
@@ -70,13 +77,20 @@ export function HistoryPanel({ onReuse }: Props) {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setOpen(false)}
             />
-            <div className="relative w-full max-w-2xl max-h-[70vh] rounded-2xl border border-white/10 bg-[#0d0f1a] overflow-hidden flex flex-col">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="历史记录 History"
+              className="relative w-full max-w-2xl max-h-[70vh] rounded-2xl border border-white/10 bg-[#0d0f1a] overflow-hidden flex flex-col"
+            >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
                 <div className="flex items-center gap-3">
                   <h3 className="text-sm font-medium text-white">历史记录 History</h3>
-                  <div className="flex rounded-lg overflow-hidden border border-white/10">
+                  <div role="tablist" aria-label="历史筛选 History filter" className="flex rounded-lg overflow-hidden border border-white/10">
                     <button
+                      role="tab"
+                      aria-selected={filter === "all"}
                       onClick={() => setFilter("all")}
                       className={`px-3 py-1 text-xs transition-all ${
                         filter === "all" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
@@ -85,6 +99,8 @@ export function HistoryPanel({ onReuse }: Props) {
                       全部 All ({items.length})
                     </button>
                     <button
+                      role="tab"
+                      aria-selected={filter === "favorites"}
                       onClick={() => setFilter("favorites")}
                       className={`px-3 py-1 text-xs transition-all ${
                         filter === "favorites" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
@@ -99,6 +115,7 @@ export function HistoryPanel({ onReuse }: Props) {
                   {items.length > 0 && (
                     <button
                       onClick={handleClear}
+                      aria-label="清空历史 Clear all history"
                       className="text-xs text-red-400/60 hover:text-red-400 transition-all"
                     >
                       清空 Clear
@@ -124,8 +141,12 @@ export function HistoryPanel({ onReuse }: Props) {
                   filtered.map(item => (
                     <div
                       key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${item.userIdea} — ${item.targetModel}`}
                       className="group rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] p-3 cursor-pointer transition-all"
                       onClick={() => { onReuse(item); setOpen(false); }}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onReuse(item); setOpen(false); } }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">

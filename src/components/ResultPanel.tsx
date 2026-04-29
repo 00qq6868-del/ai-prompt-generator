@@ -89,7 +89,7 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
       </div>
 
       {/* Prompt output */}
-      <div className="relative rounded-2xl border border-indigo-500/20 bg-indigo-950/40 overflow-hidden">
+      <div role="region" aria-label="优化结果 Optimized prompt" className="relative rounded-2xl border border-indigo-500/20 bg-indigo-950/40 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-white/[0.03]">
           <div className="flex items-center gap-2 text-xs text-white/50">
             <span className="text-indigo-400 font-medium">{meta.generatorModel}</span>

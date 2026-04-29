@@ -1,6 +1,5 @@
 // ============================================================
 //  Provider adapters — unified interface for all AI APIs
-//  [S3] All adapters validate API key existence before calling
 // ============================================================
 
 import OpenAI from "openai";
@@ -15,7 +14,7 @@ export interface GenerateOptions {
   userPrompt: string;
   maxTokens?: number;
   temperature?: number;
-  userKeys?: Record<string, string>; // keys supplied by the user at runtime
+  userKeys?: Record<string, string>;
 }
 
 export interface GenerateResult {
@@ -25,31 +24,47 @@ export interface GenerateResult {
   latencyMs: number;
 }
 
-// ── [S3 FIX] Key validation map ───────────────────────────────
+// ── Constants ─────────────────────────────────────────────────
+
+const API_TIMEOUT = 60_000;
+
 const KEY_MAP: Record<string, string> = {
-  custom:    "CUSTOM_API_KEY",
-  aihubmix: "AIHUBMIX_API_KEY",
-  openai:    "OPENAI_API_KEY",
-  anthropic: "ANTHROPIC_API_KEY",
-  google:    "GOOGLE_API_KEY",
-  groq:      "GROQ_API_KEY",
-  xai:       "XAI_API_KEY",
-  mistral:   "MISTRAL_API_KEY",
-  deepseek:  "DEEPSEEK_API_KEY",
-  zhipu:     "ZHIPU_API_KEY",
-  moonshot:  "MOONSHOT_API_KEY",
-  qwen:      "QWEN_API_KEY",
-  baidu:     "BAIDU_API_KEY",
+  custom:       "CUSTOM_API_KEY",
+  aihubmix:     "AIHUBMIX_API_KEY",
+  openai:       "OPENAI_API_KEY",
+  anthropic:    "ANTHROPIC_API_KEY",
+  google:       "GOOGLE_API_KEY",
+  groq:         "GROQ_API_KEY",
+  xai:          "XAI_API_KEY",
+  mistral:      "MISTRAL_API_KEY",
+  deepseek:     "DEEPSEEK_API_KEY",
+  zhipu:        "ZHIPU_API_KEY",
+  moonshot:     "MOONSHOT_API_KEY",
+  qwen:         "QWEN_API_KEY",
+  baidu:        "BAIDU_API_KEY",
+  baidu_secret: "BAIDU_SECRET_KEY",
 };
 
-/** Resolve an API key: user-supplied key takes priority over server env var */
+const OPENAI_COMPAT_ENDPOINTS: Record<string, string | undefined> = {
+  openai:   undefined,
+  xai:      "https://api.x.ai/v1",
+  deepseek: "https://api.deepseek.com/v1",
+  moonshot: "https://api.moonshot.cn/v1",
+};
+
+const AXIOS_ENDPOINTS: Record<string, string> = {
+  groq:    "https://api.groq.com/openai/v1/chat/completions",
+  mistral: "https://api.mistral.ai/v1/chat/completions",
+  zhipu:   "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+};
+
+// ── Utility functions ─────────────────────────────────────────
+
 function resolveKey(provider: string, userKeys?: Record<string, string>): string {
   const envVar = KEY_MAP[provider];
   if (!envVar) return "";
-  // User's own key wins
   const userKey = userKeys?.[envVar]?.trim();
   if (userKey) return userKey;
-  // Fall back to server env (admin default)
   return process.env[envVar] ?? "";
 }
 
@@ -62,10 +77,71 @@ function assertKey(provider: string, userKeys?: Record<string, string>): void {
   }
 }
 
-// ─── OpenAI ──────────────────────────────────────────────────
-async function callOpenAI(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("openai", opts.userKeys);
-  const client = new OpenAI({ apiKey: resolveKey("openai", opts.userKeys) });
+function validateBaseURL(url: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(
+      "Invalid Base URL format. 无效的 Base URL 格式，请检查是否以 https:// 开头"
+    );
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error(
+      "Base URL must use HTTP(S). Base URL 必须使用 HTTP 或 HTTPS 协议"
+    );
+  }
+  const host = parsed.hostname;
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host.startsWith("10.") ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    host.startsWith("192.168.") ||
+    host.startsWith("169.254.") ||
+    host === "metadata.google.internal" ||
+    host.endsWith(".internal")
+  ) {
+    throw new Error(
+      "Base URL must not point to private/internal networks. Base URL 不能指向内网地址"
+    );
+  }
+  return parsed.toString().replace(/\/+$/, "");
+}
+
+function handleRelayError(err: unknown, model: string): never {
+  if (typeof err === "object" && err !== null) {
+    const e = err as { status?: number; message?: string; error?: { message?: string } };
+    const msg = e.message ?? e.error?.message ?? "";
+    if (e.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
+      throw new Error(
+        `Access denied for model ${model}. 当前 API Key 无权访问模型 ${model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`
+      );
+    }
+  }
+  throw err;
+}
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+// ── OpenAI-compatible (OpenAI / xAI / DeepSeek / Moonshot) ────
+
+async function callOpenAICompatible(
+  provider: string,
+  opts: GenerateOptions,
+): Promise<GenerateResult> {
+  assertKey(provider, opts.userKeys);
+  const clientOpts: { apiKey: string; baseURL?: string; timeout: number } = {
+    apiKey: resolveKey(provider, opts.userKeys),
+    timeout: API_TIMEOUT,
+  };
+  const baseURL = OPENAI_COMPAT_ENDPOINTS[provider];
+  if (baseURL) clientOpts.baseURL = baseURL;
+
+  const client = new OpenAI(clientOpts);
   const t0 = Date.now();
   const res = await client.chat.completions.create({
     model: opts.model,
@@ -84,7 +160,41 @@ async function callOpenAI(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── Anthropic ───────────────────────────────────────────────
+// ── Axios-based OpenAI-compatible (Groq / Mistral / Zhipu) ───
+
+async function callAxiosOpenAI(
+  provider: string,
+  opts: GenerateOptions,
+): Promise<GenerateResult> {
+  assertKey(provider, opts.userKeys);
+  const url = AXIOS_ENDPOINTS[provider];
+  const t0 = Date.now();
+  const res = await axios.post(
+    url,
+    {
+      model: opts.model,
+      max_tokens: opts.maxTokens ?? 2048,
+      temperature: opts.temperature ?? 0.7,
+      messages: [
+        { role: "system", content: opts.systemPrompt },
+        { role: "user",   content: opts.userPrompt },
+      ],
+    },
+    {
+      headers: { Authorization: `Bearer ${resolveKey(provider, opts.userKeys)}` },
+      timeout: API_TIMEOUT,
+    }
+  );
+  return {
+    text: res.data.choices[0].message.content ?? "",
+    inputTokens:  res.data.usage?.prompt_tokens ?? 0,
+    outputTokens: res.data.usage?.completion_tokens ?? 0,
+    latencyMs: Date.now() - t0,
+  };
+}
+
+// ── Anthropic ────────────────────────────────────────────────
+
 async function callAnthropic(opts: GenerateOptions): Promise<GenerateResult> {
   assertKey("anthropic", opts.userKeys);
   const client = new Anthropic({ apiKey: resolveKey("anthropic", opts.userKeys) });
@@ -96,8 +206,8 @@ async function callAnthropic(opts: GenerateOptions): Promise<GenerateResult> {
     messages: [{ role: "user", content: opts.userPrompt }],
   });
   const text = res.content
-    .filter((c) => c.type === "text")
-    .map((c: any) => c.text)
+    .filter((c): c is Extract<typeof c, { type: "text" }> => c.type === "text")
+    .map((c) => c.text)
     .join("");
   return {
     text,
@@ -107,7 +217,8 @@ async function callAnthropic(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── Google Gemini ────────────────────────────────────────────
+// ── Google Gemini ─────────────────────────────────────────────
+
 async function callGoogle(opts: GenerateOptions): Promise<GenerateResult> {
   assertKey("google", opts.userKeys);
   const genAI = new GoogleGenerativeAI(resolveKey("google", opts.userKeys));
@@ -131,157 +242,8 @@ async function callGoogle(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── Groq (Meta Llama) ────────────────────────────────────────
-async function callGroq(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("groq", opts.userKeys);
-  const t0 = Date.now();
-  const res = await axios.post(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      model: opts.model,
-      max_tokens: opts.maxTokens ?? 2048,
-      temperature: opts.temperature ?? 0.7,
-      messages: [
-        { role: "system", content: opts.systemPrompt },
-        { role: "user",   content: opts.userPrompt },
-      ],
-    },
-    { headers: { Authorization: `Bearer ${resolveKey("groq", opts.userKeys)}` } }
-  );
-  return {
-    text: res.data.choices[0].message.content ?? "",
-    inputTokens:  res.data.usage?.prompt_tokens ?? 0,
-    outputTokens: res.data.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
-}
+// ── Alibaba Qwen ──────────────────────────────────────────────
 
-// ─── xAI Grok ─────────────────────────────────────────────────
-async function callXAI(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("xai", opts.userKeys);
-  const client = new OpenAI({
-    apiKey: resolveKey("xai", opts.userKeys),
-    baseURL: "https://api.x.ai/v1",
-  });
-  const t0 = Date.now();
-  const res = await client.chat.completions.create({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 2048,
-    temperature: opts.temperature ?? 0.7,
-    messages: [
-      { role: "system", content: opts.systemPrompt },
-      { role: "user",   content: opts.userPrompt },
-    ],
-  });
-  return {
-    text: res.choices[0].message.content ?? "",
-    inputTokens:  res.usage?.prompt_tokens ?? 0,
-    outputTokens: res.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
-}
-
-// ─── Mistral AI ───────────────────────────────────────────────
-async function callMistral(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("mistral", opts.userKeys);
-  const t0 = Date.now();
-  const res = await axios.post(
-    "https://api.mistral.ai/v1/chat/completions",
-    {
-      model: opts.model,
-      max_tokens: opts.maxTokens ?? 2048,
-      temperature: opts.temperature ?? 0.7,
-      messages: [
-        { role: "system", content: opts.systemPrompt },
-        { role: "user",   content: opts.userPrompt },
-      ],
-    },
-    { headers: { Authorization: `Bearer ${resolveKey("mistral", opts.userKeys)}` } }
-  );
-  return {
-    text: res.data.choices[0].message.content ?? "",
-    inputTokens:  res.data.usage?.prompt_tokens ?? 0,
-    outputTokens: res.data.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
-}
-
-// ─── DeepSeek ─────────────────────────────────────────────────
-async function callDeepSeek(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("deepseek", opts.userKeys);
-  const client = new OpenAI({
-    apiKey: resolveKey("deepseek", opts.userKeys),
-    baseURL: "https://api.deepseek.com/v1",
-  });
-  const t0 = Date.now();
-  const res = await client.chat.completions.create({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 2048,
-    temperature: opts.temperature ?? 0.7,
-    messages: [
-      { role: "system", content: opts.systemPrompt },
-      { role: "user",   content: opts.userPrompt },
-    ],
-  });
-  return {
-    text: res.choices[0].message.content ?? "",
-    inputTokens:  res.usage?.prompt_tokens ?? 0,
-    outputTokens: res.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
-}
-
-// ─── Zhipu GLM ────────────────────────────────────────────────
-async function callZhipu(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("zhipu", opts.userKeys);
-  const t0 = Date.now();
-  const res = await axios.post(
-    "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-    {
-      model: opts.model,
-      max_tokens: opts.maxTokens ?? 2048,
-      temperature: opts.temperature ?? 0.7,
-      messages: [
-        { role: "system", content: opts.systemPrompt },
-        { role: "user",   content: opts.userPrompt },
-      ],
-    },
-    { headers: { Authorization: `Bearer ${resolveKey("zhipu", opts.userKeys)}` } }
-  );
-  return {
-    text: res.data.choices[0].message.content ?? "",
-    inputTokens:  res.data.usage?.prompt_tokens ?? 0,
-    outputTokens: res.data.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
-}
-
-// ─── Moonshot Kimi ────────────────────────────────────────────
-async function callMoonshot(opts: GenerateOptions): Promise<GenerateResult> {
-  assertKey("moonshot", opts.userKeys);
-  const client = new OpenAI({
-    apiKey: resolveKey("moonshot", opts.userKeys),
-    baseURL: "https://api.moonshot.cn/v1",
-  });
-  const t0 = Date.now();
-  const res = await client.chat.completions.create({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 2048,
-    temperature: opts.temperature ?? 0.7,
-    messages: [
-      { role: "system", content: opts.systemPrompt },
-      { role: "user",   content: opts.userPrompt },
-    ],
-  });
-  return {
-    text: res.choices[0].message.content ?? "",
-    inputTokens:  res.usage?.prompt_tokens ?? 0,
-    outputTokens: res.usage?.completion_tokens ?? 0,
-    latencyMs: Date.now() - t0,
-  };
-}
-
-// ─── Alibaba Qwen ──────────────────────────────────────────────
 async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
   assertKey("qwen", opts.userKeys);
   const t0 = Date.now();
@@ -297,10 +259,8 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
       ],
     },
     {
-      headers: {
-        Authorization: `Bearer ${resolveKey("qwen", opts.userKeys)}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${resolveKey("qwen", opts.userKeys)}` },
+      timeout: API_TIMEOUT,
     }
   );
   return {
@@ -311,17 +271,27 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── Baidu ERNIE ──────────────────────────────────────────────
+// ── Baidu ERNIE ───────────────────────────────────────────────
+
 async function getBaiduToken(userKeys?: Record<string, string>): Promise<string> {
-  const apiKey    = userKeys?.["BAIDU_API_KEY"]?.trim()    || process.env.BAIDU_API_KEY;
-  const secretKey = userKeys?.["BAIDU_SECRET_KEY"]?.trim() || process.env.BAIDU_SECRET_KEY;
+  const apiKey    = resolveKey("baidu", userKeys);
+  const secretKey = resolveKey("baidu_secret", userKeys);
   if (!apiKey || !secretKey) {
     throw new Error(
-      "缺少 baidu 的 API Key，请点击右上角钥匙图标填入 BAIDU_API_KEY 和 BAIDU_SECRET_KEY"
+      "Missing Baidu API Key/Secret. 缺少百度 API Key，请填入 BAIDU_API_KEY 和 BAIDU_SECRET_KEY"
     );
   }
   const res = await axios.post(
-    `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`
+    "https://aip.baidubce.com/oauth/2.0/token",
+    new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: apiKey,
+      client_secret: secretKey,
+    }),
+    {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      timeout: API_TIMEOUT,
+    }
   );
   return res.data.access_token;
 }
@@ -347,7 +317,8 @@ async function callBaidu(opts: GenerateOptions): Promise<GenerateResult> {
       ],
       max_output_tokens: opts.maxTokens ?? 2048,
       temperature: opts.temperature ?? 0.7,
-    }
+    },
+    { timeout: API_TIMEOUT }
   );
   return {
     text: res.data.result ?? "",
@@ -357,7 +328,8 @@ async function callBaidu(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── Ollama (local, no API key required) ─────────────────────
+// ── Ollama (local, no API key required) ───────────────────────
+
 async function callOllama(opts: GenerateOptions): Promise<GenerateResult> {
   const baseUrl = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
   const t0 = Date.now();
@@ -367,12 +339,12 @@ async function callOllama(opts: GenerateOptions): Promise<GenerateResult> {
       model: opts.model,
       messages: [
         { role: "system", content: opts.systemPrompt },
-        { role: "user",   content: opts.userPrompt   },
+        { role: "user",   content: opts.userPrompt },
       ],
       stream: false,
       options: { temperature: opts.temperature ?? 0.7 },
     },
-    { timeout: 120_000 }  // local inference can be slow on CPU
+    { timeout: 120_000 }
   );
   return {
     text:         res.data.message?.content ?? "",
@@ -384,16 +356,21 @@ async function callOllama(opts: GenerateOptions): Promise<GenerateResult> {
   };
 }
 
-// ─── Custom relay/中转站 (user-defined base URL) ─────────────
+// ── Custom relay / 中转站 ─────────────────────────────────────
+
 async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
   assertKey("custom", opts.userKeys);
-  const baseURL = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
-  if (!baseURL) {
-    throw new Error("请在设置中填入中转站 Base URL（如 https://aihubmix.com/v1）");
+  const rawURL = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  if (!rawURL) {
+    throw new Error(
+      "Missing Base URL. 请在设置中填入中转站 Base URL（如 https://aihubmix.com/v1）"
+    );
   }
+  const baseURL = validateBaseURL(rawURL);
   const client = new OpenAI({
     apiKey: resolveKey("custom", opts.userKeys),
     baseURL,
+    timeout: API_TIMEOUT,
   });
   const t0 = Date.now();
   try {
@@ -412,30 +389,23 @@ async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
       outputTokens: res.usage?.completion_tokens ?? 0,
       latencyMs: Date.now() - t0,
     };
-  } catch (err: any) {
-    const msg = err?.message ?? err?.error?.message ?? "";
-    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
-      throw new Error(
-        `当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`
-      );
-    }
-    throw err;
+  } catch (err: unknown) {
+    handleRelayError(err, opts.model);
   }
 }
 
-// ─── AihubMix / 任何中转站（一个Key访问所有模型）────────────────
+// ── AihubMix / 中转站（一个 Key 访问所有模型）──────────────────
+
 async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
-  // 优先用用户自定义中转站，没有就用 AihubMix 默认地址
   const rawUrl    = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
   const customKey = opts.userKeys?.["CUSTOM_API_KEY"]?.trim() || "";
   const aihubKey  = resolveKey("aihubmix", opts.userKeys);
 
-  // Auto-append /v1 if the URL doesn't end with it
-  let baseURL = rawUrl || "https://aihubmix.com/v1";
-  if (baseURL && !baseURL.endsWith("/v1") && !baseURL.endsWith("/v1/")) {
+  let baseURL = rawUrl ? validateBaseURL(rawUrl) : "https://aihubmix.com/v1";
+  if (!baseURL.endsWith("/v1") && !baseURL.endsWith("/v1/")) {
     baseURL = baseURL.replace(/\/+$/, "") + "/v1";
   }
-  const apiKey  = customKey || aihubKey;
+  const apiKey = customKey || aihubKey;
 
   if (!apiKey) {
     throw new Error(
@@ -443,7 +413,7 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
     );
   }
 
-  const client = new OpenAI({ apiKey, baseURL });
+  const client = new OpenAI({ apiKey, baseURL, timeout: API_TIMEOUT });
   const t0 = Date.now();
   try {
     const res = await client.chat.completions.create({
@@ -461,18 +431,12 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
       outputTokens: res.usage?.completion_tokens ?? 0,
       latencyMs: Date.now() - t0,
     };
-  } catch (err: any) {
-    const msg = err?.message ?? err?.error?.message ?? "";
-    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
-      throw new Error(
-        `当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`
-      );
-    }
-    throw err;
+  } catch (err: unknown) {
+    handleRelayError(err, opts.model);
   }
 }
 
-// ─── Streaming helpers ────────────────────────────────────────
+// ── Streaming helpers ─────────────────────────────────────────
 
 async function streamOpenAICompatible(
   client: OpenAI,
@@ -508,16 +472,34 @@ async function streamOpenAICompatible(
     }
   }
 
+  if (inputTokens === 0 && outputTokens === 0 && text.length > 0) {
+    inputTokens  = estimateTokens(opts.systemPrompt + opts.userPrompt);
+    outputTokens = estimateTokens(text);
+  }
+
   return { text, inputTokens, outputTokens, latencyMs: Date.now() - t0 };
 }
 
-async function callOpenAIStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
-  assertKey("openai", opts.userKeys);
-  const client = new OpenAI({ apiKey: resolveKey("openai", opts.userKeys) });
+async function callOpenAICompatibleStream(
+  provider: string,
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
+  assertKey(provider, opts.userKeys);
+  const clientOpts: { apiKey: string; baseURL?: string; timeout: number } = {
+    apiKey: resolveKey(provider, opts.userKeys),
+    timeout: API_TIMEOUT,
+  };
+  const baseURL = OPENAI_COMPAT_ENDPOINTS[provider];
+  if (baseURL) clientOpts.baseURL = baseURL;
+  const client = new OpenAI(clientOpts);
   return streamOpenAICompatible(client, opts, onChunk);
 }
 
-async function callAnthropicStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+async function callAnthropicStream(
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
   assertKey("anthropic", opts.userKeys);
   const client = new Anthropic({ apiKey: resolveKey("anthropic", opts.userKeys) });
   const t0 = Date.now();
@@ -544,7 +526,10 @@ async function callAnthropicStream(opts: GenerateOptions, onChunk: (text: string
   };
 }
 
-async function callGoogleStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+async function callGoogleStream(
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
   assertKey("google", opts.userKeys);
   const genAI = new GoogleGenerativeAI(resolveKey("google", opts.userKeys));
   const t0 = Date.now();
@@ -578,111 +563,99 @@ async function callGoogleStream(opts: GenerateOptions, onChunk: (text: string) =
   };
 }
 
-async function callXAIStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
-  assertKey("xai", opts.userKeys);
-  const client = new OpenAI({ apiKey: resolveKey("xai", opts.userKeys), baseURL: "https://api.x.ai/v1" });
-  return streamOpenAICompatible(client, opts, onChunk);
-}
-
-async function callDeepSeekStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
-  assertKey("deepseek", opts.userKeys);
-  const client = new OpenAI({ apiKey: resolveKey("deepseek", opts.userKeys), baseURL: "https://api.deepseek.com/v1" });
-  return streamOpenAICompatible(client, opts, onChunk);
-}
-
-async function callMoonshotStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
-  assertKey("moonshot", opts.userKeys);
-  const client = new OpenAI({ apiKey: resolveKey("moonshot", opts.userKeys), baseURL: "https://api.moonshot.cn/v1" });
-  return streamOpenAICompatible(client, opts, onChunk);
-}
-
-async function callCustomStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+async function callCustomStream(
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
   assertKey("custom", opts.userKeys);
-  const baseURL = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
-  if (!baseURL) {
-    throw new Error("请在设置中填入中转站 Base URL（如 https://aihubmix.com/v1）");
+  const rawURL = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
+  if (!rawURL) {
+    throw new Error(
+      "Missing Base URL. 请在设置中填入中转站 Base URL（如 https://aihubmix.com/v1）"
+    );
   }
-  const client = new OpenAI({ apiKey: resolveKey("custom", opts.userKeys), baseURL });
+  const baseURL = validateBaseURL(rawURL);
+  const client = new OpenAI({
+    apiKey: resolveKey("custom", opts.userKeys),
+    baseURL,
+    timeout: API_TIMEOUT,
+  });
   try {
     return await streamOpenAICompatible(client, opts, onChunk);
-  } catch (err: any) {
-    const msg = err?.message ?? err?.error?.message ?? "";
-    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
-      throw new Error(`当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`);
-    }
-    throw err;
+  } catch (err: unknown) {
+    handleRelayError(err, opts.model);
   }
 }
 
-async function callAihubmixStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+async function callAihubmixStream(
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
   const rawUrl    = opts.userKeys?.["CUSTOM_BASE_URL"]?.trim() || process.env.CUSTOM_BASE_URL || "";
   const customKey = opts.userKeys?.["CUSTOM_API_KEY"]?.trim() || "";
   const aihubKey  = resolveKey("aihubmix", opts.userKeys);
 
-  let baseURL = rawUrl || "https://aihubmix.com/v1";
-  if (baseURL && !baseURL.endsWith("/v1") && !baseURL.endsWith("/v1/")) {
+  let baseURL = rawUrl ? validateBaseURL(rawUrl) : "https://aihubmix.com/v1";
+  if (!baseURL.endsWith("/v1") && !baseURL.endsWith("/v1/")) {
     baseURL = baseURL.replace(/\/+$/, "") + "/v1";
   }
   const apiKey = customKey || aihubKey;
 
   if (!apiKey) {
-    throw new Error("Missing API Key. 请点击🔑设置，填入中转站的 Base URL 和 API Key");
+    throw new Error(
+      "Missing API Key. 请点击🔑设置，填入中转站的 Base URL 和 API Key"
+    );
   }
 
-  const client = new OpenAI({ apiKey, baseURL });
+  const client = new OpenAI({ apiKey, baseURL, timeout: API_TIMEOUT });
   try {
     return await streamOpenAICompatible(client, opts, onChunk);
-  } catch (err: any) {
-    const msg = err?.message ?? err?.error?.message ?? "";
-    if (err?.status === 403 || msg.includes("无权访问") || msg.includes("permission denied")) {
-      throw new Error(`当前 API Key 无权访问模型 ${opts.model}，请换一个模型试试，或升级中转站套餐以解锁该模型分组。`);
-    }
-    throw err;
+  } catch (err: unknown) {
+    handleRelayError(err, opts.model);
   }
 }
 
-async function fallbackStream(opts: GenerateOptions, onChunk: (text: string) => void): Promise<GenerateResult> {
+async function fallbackStream(
+  opts: GenerateOptions,
+  onChunk: (text: string) => void,
+): Promise<GenerateResult> {
   const result = await callProvider(opts);
   onChunk(result.text);
   return result;
 }
 
-// ─── Streaming Dispatcher ─────────────────────────────────────
+// ── Dispatchers ───────────────────────────────────────────────
+
 export async function callProviderStream(
   opts: GenerateOptions,
   onChunk: (text: string) => void,
 ): Promise<GenerateResult> {
-  switch (opts.apiProvider) {
+  const p = opts.apiProvider;
+  if (p in OPENAI_COMPAT_ENDPOINTS) return callOpenAICompatibleStream(p, opts, onChunk);
+  switch (p) {
     case "custom":    return callCustomStream(opts, onChunk);
     case "aihubmix":  return callAihubmixStream(opts, onChunk);
-    case "openai":    return callOpenAIStream(opts, onChunk);
     case "anthropic": return callAnthropicStream(opts, onChunk);
     case "google":    return callGoogleStream(opts, onChunk);
-    case "xai":       return callXAIStream(opts, onChunk);
-    case "deepseek":  return callDeepSeekStream(opts, onChunk);
-    case "moonshot":  return callMoonshotStream(opts, onChunk);
     default:          return fallbackStream(opts, onChunk);
   }
 }
 
-// ─── Dispatcher ───────────────────────────────────────────────
 export async function callProvider(opts: GenerateOptions): Promise<GenerateResult> {
-  switch (opts.apiProvider) {
-    case "custom":   return callCustom(opts);
-    case "aihubmix": return callAihubmix(opts);
-    case "openai":    return callOpenAI(opts);
+  const p = opts.apiProvider;
+  if (p in OPENAI_COMPAT_ENDPOINTS) return callOpenAICompatible(p, opts);
+  if (p in AXIOS_ENDPOINTS) return callAxiosOpenAI(p, opts);
+  switch (p) {
+    case "custom":    return callCustom(opts);
+    case "aihubmix":  return callAihubmix(opts);
     case "anthropic": return callAnthropic(opts);
     case "google":    return callGoogle(opts);
-    case "groq":      return callGroq(opts);
-    case "xai":       return callXAI(opts);
-    case "mistral":   return callMistral(opts);
-    case "deepseek":  return callDeepSeek(opts);
-    case "zhipu":     return callZhipu(opts);
-    case "moonshot":  return callMoonshot(opts);
     case "qwen":      return callQwen(opts);
     case "baidu":     return callBaidu(opts);
     case "ollama":    return callOllama(opts);
     default:
-      throw new Error(`Unknown API provider: ${opts.apiProvider}`);
+      throw new Error(
+        `Unknown API provider: ${p}. 不支持的 API 提供商：${p}`
+      );
   }
 }
