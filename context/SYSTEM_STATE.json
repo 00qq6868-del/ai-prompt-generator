@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-04-29T04:05:22.333Z",
-  "totalModels": 246,
+  "updatedAt": "2026-04-30T06:43:57.644Z",
+  "totalModels": 250,
   "byCategory": {
-    "text": 241,
+    "text": 245,
     "video": 2,
     "image": 1,
     "tts": 2
   },
   "zeroCostModels": 6,
-  "metaCoverage": 240
+  "metaCoverage": 244
 }
