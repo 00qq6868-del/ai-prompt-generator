@@ -29,21 +29,26 @@ Codex fixed the failing GitHub E2E assertions in the Codex-safe worktree.
 - **Workspace**: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
 - **Branch**: `codex/safe-audit-20260501-232542`
 - **File changed**: `tests/e2e/prompt-generator.spec.ts`
+- **Follow-up files changed**: `playwright.config.ts` to generate CI HTML reports
 - **Root cause**: E2E tests were written against older UI assumptions:
   - `page.locator("h1")` became ambiguous after the header and hero both used `h1`
   - Character count expected `14`, but the real JavaScript string length for `Hello world 你好世界` is `16`
   - Target model selector is now an inline card grid, while the full-screen dialog belongs to the generator model picker
   - Placeholder copy changed to example-based text while the input keeps the intended `aria-label`
+  - CI exposed one flaky retry because the image category tab could be clicked before `/api/models` finished rendering model cards
 - **Fix**:
   - Scoped heading assertion to `header`
   - Updated character count expectation to `16`
   - Reworked model selector test to select `DALL·E 3` from the image tab and then open the generator picker dialog
   - Completed mock model objects with `contextWindow`, `maxOutput`, `speed`, `accuracy`, `supportsStreaming`, `tags`, and `releaseDate`
   - Updated placeholder/aria assertions to match current accessible UI
+  - Added an explicit wait for loaded model cards before switching to the image tab
+  - Configured CI reporters as `github + html` so the uploaded Playwright report path is populated
 - **Verified locally**:
   - `npx tsc --noEmit` passes
   - `npm run build` passes
   - `npx playwright test --project=chromium` passes: 8/8 tests
+  - `npx playwright test --project=chromium --repeat-each=3` passes: 24/24 tests
 - **Main push authorization**: user approved continuing to completion on 2026-05-02; push to `main` after local validation.
 
 ---

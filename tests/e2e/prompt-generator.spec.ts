@@ -166,8 +166,14 @@ test.describe("PromptGenerator E2E", () => {
   });
 
   test("5. target model cards select and generator picker opens", async ({ page }) => {
-    await page.getByRole("tab", { name: /文生图/ }).click();
+    await expect(page.getByRole("button", { name: /GPT-4o/ }).first()).toBeVisible();
+
+    const imageTab = page.getByRole("tab", { name: /文生图/ });
+    await expect(imageTab).toBeEnabled();
+    await imageTab.click();
+
     const imageModel = page.getByRole("button", { name: /DALL·E 3/ });
+    await expect(imageModel).toBeVisible();
     await imageModel.click();
     await expect(imageModel).toHaveAttribute("aria-pressed", "true");
 
