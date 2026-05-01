@@ -1,177 +1,148 @@
 # Task Progress Tracker
 
-> Last updated: 2026-04-26
-> Updated by: Claude Sonnet 4.6 (Session #3)
+> Last updated: 2026-04-30
+> Updated by: Claude Sonnet 4.6 (Session #4)
 
-## Current Status: 7-TASK COMPREHENSIVE UPGRADE COMPLETE
+## Current Status: COMPREHENSIVE UPGRADE — 8 MAJOR TASKS COMPLETE
 
-All 7 upgrade tasks completed, type-checked (`npx tsc --noEmit`) and built (`npm run build`).
+All tasks type-checked (`npx tsc --noEmit` passes) and pushed to GitHub.
 
 ---
 
-## 🔄 Active Task (当前正在执行的任务)
+## 🔄 Active Task
 
 无。等待用户下达新任务。
 
-<!-- 
-模板：开始新任务时，按以下格式填写：
-
-### 任务：[任务名称]
-- **目标**：要达到什么效果
-- **预计修改文件**：
-  - `file1.ts` — 改什么
-  - `file2.tsx` — 改什么
-
-#### 步骤分解：
-- [DONE] Step 1：xxx
-  - 改了：`src/lib/xxx.ts` 第 10-25 行
-  - 变更：把 functionA() 的参数从 string 改为 string[]
-  - 原因：支持多值输入
-  - Commit: abc1234
-- [DOING] Step 2：xxx
-  - 正在进行...
-- [ ] Step 3：xxx
-- [ ] Step 4：xxx
-
-#### 如果中断，下次从这里继续：
-Step 2 正在做 xxx，已经改了 fileA，还需要改 fileB 和 fileC。
--->
+**未完成的 Plan（可选继续）**：
+- `C:\Users\zero\.claude\plans\floating-conjuring-treasure.md` 中的 Phase 2（重写 prompt-optimizer.ts 核心 SYSTEM_PROMPT）和 Phase 3（模型数据更新）尚未开始
+- 这是把 prompt-optimizer 从纯文本优化升级为支持 image/video/audio 全模态的大改动
 
 ---
 
-## ✅ Completed Tasks (已完成的任务)
+## ✅ Session #4 Completed Tasks (2026-04-30)
 
-### [DONE] Task C: 7 项综合升级 (Session #3, 2026-04-26)
+### Task 1: 依赖升级 + npm 镜像配置
+- **Commits**: `0e9f176`
+- **Files**: `package.json`, `.npmrc`
+- **Summary**: 13个生产依赖 + 11个开发依赖升级到最新稳定版。创建项目级 `.npmrc` 配置 npmmirror.com 镜像
 
-#### Task 1: Provider 名称统一 ✅
-- **改了**：`src/components/ModelPicker.tsx`, `src/components/ModelSelector.tsx`
-- **变更**：ModelPicker "深度求索" → "DeepSeek"，ModelSelector 添加 "Ollama" tab
-- **原因**：provider tab 名称与 models-registry.ts 中 provider 字段不一致
+### Task 2: Provider 适配器安全加固
+- **Commits**: included in `0368e29`
+- **File**: `src/lib/providers/index.ts`（689→~530行）
+- **Summary**:
+  - SSRF 防护：`validateBaseURL()` 屏蔽内网地址
+  - 代码去重：4个 OpenAI 兼容函数 → `callOpenAICompatible()`，3个 Axios 函数 → `callAxiosOpenAI()`（减少 ~160 行）
+  - 表驱动分发：`OPENAI_COMPAT_ENDPOINTS` / `AXIOS_ENDPOINTS` 配置对象
+  - 安全修复：百度 OAuth 凭证从 URL 移到 POST body
+  - 类型安全：所有 `catch(err: any)` → `catch(err: unknown)` + `handleRelayError()`
+  - 统一双语错误消息 + 60秒超时
 
-#### Task 2: BUNDLED_MODELS 扩充 ✅
-- **改了**：`src/lib/models-registry.ts`
-- **变更**：新增 10 个模型（gpt-4.1/mini/nano, gemini-2.5-flash, llama-4-scout/maverick, claude-haiku-4-5, claude-opus-4-7, claude-sonnet-4-6, grok-4），更新 isLatest 标记
-- **结果**：BUNDLED_MODELS 从 25 个增到 35 个
+### Task 3: WCAG 2.1 AA 无障碍修复
+- **Commits**: included in `0368e29`
+- **Files**: 所有 6 个组件（PromptGenerator, ModelSelector, ModelPicker, ResultPanel, HistoryPanel, KeysSettings）
+- **Summary**: dialog role/aria-modal, tablist/tab aria-selected, Escape 键关闭, Enter/Space 键盘导航, aria-labels 双语
 
-#### Task 3: mergeWithExisting() 安全修复 ✅
-- **改了**：`.github/scripts/fetch-models.mjs`
-- **变更**：重写为 Map 方式"只增不删"策略，新增 20% 缩水警告
-- **原因**：旧逻辑在 API 获取失败时会丢失已有模型数据
+### Task 4: ModelSelector 搜索/排序优化
+- **Commits**: included in `0368e29`
+- **File**: `src/components/ModelSelector.tsx`
+- **Summary**: 搜索框（名称/ID/供应商模糊匹配）, 空分类灰显 disabled, 4种排序（日期/价格/速度/精度）, 移动端横向滚动标签+单列卡片
 
-#### Task 4: GENERATOR_AFFINITY 智能选择 ✅
-- **改了**：`src/lib/models-registry.ts`, `src/components/PromptGenerator.tsx`
-- **变更**：导出 GENERATOR_AFFINITY（13 条前缀映射），selectBestFromProbe 优先用亲和匹配再回退评分
-- **原因**：生成器模型应根据目标模型类型智能选择，而非只看评分
+### Task 5: BUNDLED_MODELS 更新
+- **Commits**: `5506383`, `1254671`
+- **File**: `src/lib/models-registry.ts`（当前 45 个模型）
+- **Summary**: 添加 GPT-5-Pro, Qwen3-235B, GPT-Image-2。全部 26 个必要模型确认存在
 
-#### Task 5: prompt-optimizer.ts v4 重写 ✅
-- **改了**：`src/lib/prompt-optimizer.ts`
-- **变更**：
-  - estimateTokens() 区分中英文字符
-  - SYSTEM_PROMPT 增加逆向工程法、接地气角色设定、提示链、反幻觉守卫、自适应详细度
-  - 模型适配更新到 GPT-4.1/5.x, Claude Opus 4.7/Sonnet 4.6, Gemini 2.5, Grok-4, Llama 4
-  - buildUserPrompt() 添加模型特定提示
+### Task 6: 模型自动更新流水线增强
+- **Commits**: `cbcbf99`
+- **Files**: `.github/scripts/fetch-models.mjs`, `.github/workflows/update-models.yml`
+- **Summary**:
+  - `withRetry(fn, label, 2, 5000)` 每个 API 源失败重试 2 次
+  - 健康检查：模型数下降 >20% 时中止提交
+  - `SYSTEM_STATE.json` 生成（含 byCategory/byProvider/lastUpdate 统计）
+  - `classifyModel()` 增加 30+ 新 ID 模式
+  - GitHub Issue 通知：≥5 新模型或健康检查失败时自动创建 Issue
 
-#### Task 6: 自动更新安全加固 ✅
-- **改了**：`.github/scripts/fetch-models.mjs`, `scripts/patch-models.cjs`
-- **变更**：main() 增加 fetched.length===0 时不写入保护，patch-models.cjs 增加 claude-haiku-4-5 META
+### Task 7: Electron 桌面应用优化
+- **Commits**: `aa89818`
+- **Files**: `electron/main.js`, `electron/preload.js`, `electron/entitlements.mac.plist`, `package.json`
+- **Summary**:
+  - 系统托盘：关闭→隐藏到托盘，右键菜单（显示/开机自启/退出）
+  - macOS DMG universal binary + hardened runtime
+  - 开机自启：`app.setLoginItemSettings()` + 托盘 checkbox
+  - 窗口状态记忆：`window-state.json` 存位置/大小/最大化
+  - 自动更新：`electron-updater` 检查 GitHub Releases
+  - 包体积优化：排除 .cache/@swc/typescript/eslint + .map 文件
 
-#### Task 7: UI 文案修复 ✅
-- **改了**：`src/components/Header.tsx`, `src/components/PromptGenerator.tsx`
-- **变更**：Header "230+" → "250+"，PromptGenerator 3 条 toast 消息改为中英双语
+### Task 8: PWA 离线体验增强
+- **Commits**: `1e64dc0`
+- **Files**: `next.config.js`, `src/app/offline/page.tsx`, `src/components/PWAPrompts.tsx`, `src/app/layout.tsx`
+- **Summary**:
+  - 离线页面 `/offline` 匹配深色主题
+  - 缓存策略：CacheFirst(static) / StaleWhileRevalidate(models,1h) / NetworkOnly(generate) / NetworkFirst(HTML,10s)
+  - PWA 安装 banner（底部）+ 更新通知（顶部）
 
----
-
-### [DONE] Task A: 修复"自动更新模型无效"的根本原因 (Session #1-2)
-
-#### Step 1: model-cache.ts 三级加载 ✅
-- **改了**：`src/lib/model-cache.ts`
-- **变更**：添加本地 `public/models.json` 读取作为第二级 fallback
-- **之前**：只有 remote URL → BUNDLED_MODELS (25个)
-- **之后**：remote URL → local file (251个) → BUNDLED_MODELS
-- **原因**：`MODELS_REGISTRY_URL` 从未配置，models.json 完全没被读取
-- **Commit**: `ef3810a`
-
-#### Step 2: META 扩充新模型家族 ✅
-- **改了**：`.github/scripts/fetch-models.mjs`
-- **变更**：META 从 8 个增加到 55+ 个，新增 gpt-5/5.1-5.4, grok-4, gemini-3/3.1
-- **原因**：新模型没有 META 覆盖，cost/speed/tags 全部是默认值
-- **Commit**: `da7163e`
-
-#### Step 3: classifyModel() 增强 ✅
-- **改了**：`.github/scripts/fetch-models.mjs`
-- **变更**：image 正则加 `image-preview`，tts 正则加 `tts-preview|audio-preview`
-- **之前**：gemini-*-tts-preview 和 gpt-4o-audio-preview 被分类为 text
-- **之后**：3 image + 5 tts 正确分类
-- **Commit**: `da7163e`
-
-#### Step 4: 修复遗留 bug ✅
-- **改了**：`.github/scripts/fetch-models.mjs`
-- **变更**：
-  - fetchAnthropic 第304行：`META[m.id]` → `lookupMeta(m.id)`
-  - fetchGoogle/OpenAI/Anthropic：添加 `category: "text"` 返回字段
-  - OpenAI KEEP regex：加 `gpt-5` 模式
-- **Commit**: `da7163e`
-
-#### Step 5: 后处理 models.json ✅
-- **改了**：`public/models.json`
-- **新建**：`scripts/patch-models.cjs`
-- **变更**：对 251 个模型重新应用 META 和分类
-- **结果**：134/251 有正确的 cost/speed/tags，8 个非文本模型正确分类
-- **Commit**: `1b89bd1`
-
-#### Step 6: 模型系统全面改造 (Session #1) ✅
-- **改了**：
-  - `src/lib/models-registry.ts` — BUNDLED_MODELS 全加 `category: "text"`，gpt-4o 价格修正
-  - `src/components/PromptGenerator.tsx` — selectBestFromProbe 按目标类别适配评分模式
-  - `src/components/ModelSelector.tsx` — 目标模型显示所有分类标签
-  - `src/components/ModelPicker.tsx` — 生成器只显示 text 类别
-  - `src/components/KeysSettings.tsx` — 保存时清除 probe 缓存
-  - `.github/workflows/update-models.yml` — cron 改为 2 小时 + 生成 SYSTEM_STATE.json
-- **Commit**: `da7163e`
+### Task 9: 轻量级性能监控
+- **Commits**: `28161d3`
+- **Files**: `src/lib/analytics.ts`, `src/components/ErrorBoundary.tsx`, `src/components/WebVitals.tsx`, `src/app/api/analytics/route.ts`
+- **Summary**:
+  - Web Vitals：LCP/CLS/TTFB/INP（web-vitals v5，FID 已移除用 INP 替代）
+  - `trackApiCall()` / `trackTTFT()` 供 PromptGenerator 手动调用（尚未接入）
+  - ErrorBoundary 包裹 children，友好错误页 + 重试
+  - `/api/analytics` JSONL 追加到 `.analytics/`，5MB/天上限
+  - sendBeacon 批量发送，页面隐藏时 flush
 
 ---
 
-### [DONE] Task B: 跨AI会话持久化上下文系统 (Session #2)
+## 🔧 Known TODOs / Tech Debt
 
-#### 创建的文件：
-- `context/PROGRESS.md` — 本文件（任务进度）
-- `context/MEMORIES.md` — 决策、偏好、技术陷阱
-- `context/SESSION_LOG.md` — 会话交接日志
-- `context/TEMPLATE.md` — 一键复制粘贴模板
-- `scripts/save-context.sh` — 一键保存到 GitHub
-- `CLAUDE.md` — 更新了跨会话指令
-
-#### 更新的文件：
-- `context/PROJECT_CONTEXT.md` — 加入上下文系统说明
-- `context/QUICK_START.md` — 加入"新会话必读"指引
-
-**Commit**: `b3e23f1`
+1. **trackApiCall/trackTTFT 尚未接入** — 需要在 `PromptGenerator.tsx` 的 fetch 和 SSE 解析处调用
+2. **prompt-optimizer.ts Phase 2/3** — 全模态 SYSTEM_PROMPT 重写（text/image/video/audio）
+3. **颜色对比度** — `text-white/30`(~3.3:1) 未达 WCAG AA 4.5:1，待用户确认是否改为 `text-white/45`
+4. **electron-updater** 是 optionalDependencies，Vercel 部署不会安装
 
 ---
 
-## 📋 Pending / Future Tasks (待办)
+## 📁 Architecture Quick Reference
 
-### [ ] 验证部署
-- 访问 https://www.myprompt.asia 确认生效
-- `/api/models` 应返回 251+ 模型
-- 非文本模型应出现在目标模型选择器中
+```
+src/
+├── app/
+│   ├── layout.tsx          — ErrorBoundary + WebVitals + PWAPrompts + Toaster
+│   ├── page.tsx            — Hero + PromptGenerator
+│   ├── offline/page.tsx    — PWA 离线页面
+│   └── api/
+│       ├── generate/       — LLM 调用（流式 SSE）
+│       ├── analytics/      — 性能指标接收（JSONL）
+│       ├── models/         — 模型列表
+│       └── probe/          — 中转站探测
+├── components/
+│   ├── PromptGenerator.tsx — 核心业务组件
+│   ├── ModelSelector.tsx   — 目标模型选择（搜索/排序/分类）
+│   ├── ModelPicker.tsx     — 生成器模型选择（全屏 picker）
+│   ├── ResultPanel.tsx     — 优化结果展示 + 对比
+│   ├── HistoryPanel.tsx    — 历史记录
+│   ├── KeysSettings.tsx    — API Key 管理
+│   ├── PWAPrompts.tsx      — 安装/更新提示
+│   ├── ErrorBoundary.tsx   — 错误边界
+│   └── WebVitals.tsx       — 性能指标收集
+├── lib/
+│   ├── providers/index.ts  — 11 个 LLM provider 适配器
+│   ├── models-registry.ts  — BUNDLED_MODELS（45个）+ scoreModel + affinity
+│   ├── prompt-optimizer.ts — SYSTEM_PROMPT + buildUserPrompt（待 Phase 2 重写）
+│   ├── analytics.ts        — 指标队列 + batch flush
+│   └── history.ts          — localStorage 历史管理
+electron/
+├── main.js                 — 主进程（托盘/自启/窗口记忆/自动更新）
+├── preload.js              — IPC bridge
+└── entitlements.mac.plist  — macOS 签名权限
+.github/
+├── scripts/fetch-models.mjs — 8 源 API 抓取 + retry + 健康检查
+└── workflows/update-models.yml — 每 2h 自动更新 + Issue 通知
+```
 
-### [ ] 提升 META 覆盖率
-- 116 个模型仍然没有 META（cost=0, speed=medium）
-- 可以增加更多 META 条目或从 provider API 抓取定价
-
-### [ ] 考虑增加更多 provider
-- 当前 probe flow 支持 OpenAI 兼容的中转站
-- 可以添加更多国内 provider 的原生支持
-
-### [ ] model-cache.ts 本地文件读取（Plan Step 1）
-- 当 MODELS_REGISTRY_URL 未设置时，用 fs.readFileSync 读取 public/models.json
-- 当前仍回退到 BUNDLED_MODELS（已扩充到 35 个）
-
----
-
-## ⚠️ Known Issues (已知问题)
-
-1. **116 个零成本模型**：没有 META 条目的模型默认 cost=0, speed="medium", accuracy="high"，评分时结果不确定
-2. **AihubMix 假日期**：`m.created` 永远是 1626739200 (2021-07-20)，不是真实发布日期
-3. **无测试框架**：没有自动化测试，全靠手动验证
+## 🔑 Key Dependencies
+- next 14.2.35 (standalone output)
+- framer-motion 11.x, lucide-react 0.577
+- @anthropic-ai/sdk 0.91, openai 4.104, @google/generative-ai 0.24
+- web-vitals 5.2, electron 31.7, electron-builder 26.8
+- electron-updater 6.6 (optional)
