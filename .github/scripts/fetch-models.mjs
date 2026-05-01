@@ -2,12 +2,31 @@
 // 自动从各厂商 API 拉取最新模型列表，合并到 public/models.json
 // 运行环境：Node.js 22+，GitHub Actions
 
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-const MODELS_PATH = join(__dir, "../../public/models.json");
+const ROOT = join(__dir, "../..");
+const MODELS_PATH = join(ROOT, "public/models.json");
+const STATE_PATH = join(ROOT, "context/SYSTEM_STATE.json");
+
+// ── Retry wrapper ────────────────────────────────────────────────────────
+async function withRetry(fn, label, retries = 2, delayMs = 5000) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt < retries) {
+        console.log(`🔄 ${label} failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delayMs / 1000}s: ${err.message}`);
+        await new Promise(r => setTimeout(r, delayMs));
+      } else {
+        console.log(`❌ ${label} failed after ${retries + 1} attempts: ${err.message}`);
+        return [];
+      }
+    }
+  }
+}
 
 // ── 价格/速度 元数据（API 不提供这些）──────────────────────────────────────
 const META = {
@@ -227,12 +246,12 @@ async function fetchAihubmix() {
   // Classify model by category based on ID
   function classifyModel(id) {
     const lower = id.toLowerCase();
-    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo/.test(lower)) return "image";
-    if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse|pika|minimax-video|jimeng-video/.test(lower)) return "video";
-    if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs/.test(lower)) return "tts";
-    if (/whisper|stt|audio-transcri|speech-to|paraformer/.test(lower)) return "stt";
-    if (/embed|bge-|text-embedding|e5-|jina-embed/.test(lower)) return "embedding";
-    if (/ocr|document-ai|vision-extract|doc-parse/.test(lower)) return "ocr";
+    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo|kandinsky|omnigen|omnihuman|sana-|aura-flow|seeart/.test(lower)) return "image";
+    if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse(?!-image)|pika|minimax-video|jimeng-video|genmo|animatediff|cog-video|hunyuan-video|vchitect|pyramid-flow/.test(lower)) return "video";
+    if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs|parler-tts|bark|mars5|f5-tts|kokoro/.test(lower)) return "tts";
+    if (/whisper|stt|audio-transcri|speech-to|paraformer|sensevoice|funasr/.test(lower)) return "stt";
+    if (/embed|bge-|text-embedding|e5-|jina-embed|gte-|nomic-embed|voyage-/.test(lower)) return "embedding";
+    if (/ocr|document-ai|vision-extract|doc-parse|got-ocr|surya/.test(lower)) return "ocr";
     if (/rerank|reranker/.test(lower)) return "other";
     return "text";
   }
@@ -620,25 +639,38 @@ function mergeWithExisting(fetched) {
     existing = JSON.parse(readFileSync(MODELS_PATH, "utf8"));
     console.log(`📄 Existing models.json: ${existing.length} models`);
   } catch (e) {
-    console.log("⚠ Could not read existing models.json:", e.message);
+    console.log("⚠️ Could not read existing models.json:", e.message);
   }
 
   if (fetched.length === 0) {
-    console.log("⚠ No models fetched from any API. Keeping existing models.json unchanged.");
-    return existing;
+    console.log("⚠️ No models fetched from any API. Keeping existing models.json unchanged.");
+    return { models: existing, stats: { added: 0, updated: 0, total: existing.length, existingCount: existing.length } };
   }
 
+  const existingIds = new Set(existing.map(m => m.id));
   const byId = new Map(existing.map(m => [m.id, m]));
+  let added = 0;
+  let updated = 0;
+
   for (const m of fetched) {
+    if (byId.has(m.id)) {
+      updated++;
+    } else {
+      added++;
+    }
     byId.set(m.id, m);
   }
+
   const merged = [...byId.values()];
 
+  // Health check: abort if count drops >20%
   if (existing.length > 0 && merged.length < existing.length * 0.8) {
-    console.log(`⚠ Warning: merged count (${merged.length}) is >20% less than existing (${existing.length}). Possible data loss.`);
+    console.log(`🚨 HEALTH CHECK FAILED: merged count (${merged.length}) is >20% less than existing (${existing.length}). Aborting!`);
+    return { models: null, stats: { added, updated, total: merged.length, existingCount: existing.length, healthCheckFailed: true } };
   }
 
-  return merged;
+  console.log(`📊 Merge result: +${added} new, ${updated} updated, ${merged.length} total`);
+  return { models: merged, stats: { added, updated, total: merged.length, existingCount: existing.length } };
 }
 
 // ── 标记每个 provider 最新发布的模型 ────────────────────────────────────
@@ -656,19 +688,51 @@ function markLatest(models) {
   return models;
 }
 
+// ── Write SYSTEM_STATE.json ──────────────────────────────────────────────
+function writeSystemState(models, stats) {
+  const cats = {};
+  for (const m of models) {
+    const c = m.category || "text";
+    cats[c] = (cats[c] || 0) + 1;
+  }
+  const zeroCost = models.filter(m => m.inputCostPer1M === 0 && m.outputCostPer1M === 0).length;
+  const providers = {};
+  for (const m of models) {
+    providers[m.provider] = (providers[m.provider] || 0) + 1;
+  }
+
+  const state = {
+    updatedAt: new Date().toISOString(),
+    totalModels: models.length,
+    byCategory: cats,
+    byProvider: providers,
+    zeroCostModels: zeroCost,
+    metaCoverage: models.length - zeroCost,
+    lastUpdate: {
+      added: stats.added,
+      updated: stats.updated,
+      previousTotal: stats.existingCount,
+    },
+  };
+
+  mkdirSync(join(ROOT, "context"), { recursive: true });
+  writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + "\n");
+  console.log(`📋 Written SYSTEM_STATE.json (${models.length} models, +${stats.added} new)`);
+}
+
 // ── 主流程 ──────────────────────────────────────────────────────────────
 async function main() {
   console.log("🚀 Model auto-updater starting...\n");
 
   const results = await Promise.allSettled([
-    fetchAihubmix(),
-    fetchGoogle(),
-    fetchOpenAI(),
-    fetchAnthropic(),
-    fetchDeepSeek(),
-    fetchXAI(),
-    fetchMistral(),
-    fetchGroq(),
+    withRetry(fetchAihubmix,  "AihubMix"),
+    withRetry(fetchGoogle,    "Google"),
+    withRetry(fetchOpenAI,    "OpenAI"),
+    withRetry(fetchAnthropic, "Anthropic"),
+    withRetry(fetchDeepSeek,  "DeepSeek"),
+    withRetry(fetchXAI,       "xAI"),
+    withRetry(fetchMistral,   "Mistral"),
+    withRetry(fetchGroq,      "Groq"),
   ]);
 
   const fetched = [];
@@ -683,12 +747,23 @@ async function main() {
   console.log(`\n📊 Total fetched from APIs: ${fetched.length}`);
 
   if (fetched.length === 0) {
-    console.log("⚠ All API fetches returned 0 models. Aborting to prevent data loss.");
+    console.log("⚠️ All API fetches returned 0 models. Aborting to prevent data loss.");
+    process.exitCode = 1;
     return;
   }
 
-  const merged = mergeWithExisting(fetched);
-  const final  = markLatest(merged);
+  const { models: merged, stats } = mergeWithExisting(fetched);
+
+  if (stats.healthCheckFailed || !merged) {
+    console.log("🚨 Health check failed. models.json NOT updated. Creating alert.");
+    // Write output for workflow to detect
+    const summary = JSON.stringify({ alert: true, reason: "health_check", ...stats });
+    console.log(`::set-output name=summary::${summary}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const final = markLatest(merged);
 
   // 按 provider 排序
   const ORDER = ["aihubmix","openai","anthropic","google","groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"];
@@ -701,6 +776,17 @@ async function main() {
 
   writeFileSync(MODELS_PATH, JSON.stringify(final, null, 2) + "\n");
   console.log(`\n✅ Done! Written ${final.length} models to public/models.json`);
+
+  // Write SYSTEM_STATE.json
+  writeSystemState(final, stats);
+
+  // Output summary for workflow (GitHub Actions)
+  const needsIssue = stats.added >= 5;
+  const summary = JSON.stringify({ alert: needsIssue, added: stats.added, updated: stats.updated, total: final.length, previousTotal: stats.existingCount });
+  console.log(`::set-output name=summary::${summary}`);
+  if (needsIssue) {
+    console.log(`🔔 ${stats.added} new models added — workflow will create notification issue`);
+  }
 }
 
 main().catch((e) => {
