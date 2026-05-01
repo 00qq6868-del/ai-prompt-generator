@@ -9,9 +9,6 @@ on:
     - cron: "17 */2 * * *"
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   update-models:
     runs-on: ubuntu-latest
@@ -21,10 +18,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
 
@@ -82,7 +79,7 @@ jobs:
 
       - name: Create notification issue (≥5 new models)
         if: steps.diff.outputs.changed == 'true' && steps.stats.outputs.added >= 5
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const added = ${{ steps.stats.outputs.added }};
@@ -97,7 +94,7 @@ jobs:
 
       - name: Create alert issue (health check failed)
         if: env.scraper_failed == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.create({

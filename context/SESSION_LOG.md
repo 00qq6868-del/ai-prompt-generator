@@ -42,7 +42,8 @@ Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touchin
 9. Updated the Playwright CI reporter to generate both GitHub annotations and the HTML report artifact.
 10. Updated workflow hardening:
     - E2E workflow project commands now run on Node 22, avoiding dependency engine warnings.
-    - E2E and model-update workflows opt GitHub JavaScript actions into Node 24 execution via `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`.
+    - E2E workflow uses current GitHub actions (`checkout@v6`, `setup-node@v6`, `upload-artifact@v7`).
+    - Model-update workflow uses current GitHub actions (`checkout@v6`, `setup-node@v6`, `github-script@v9`).
 
 ### Verification
 
