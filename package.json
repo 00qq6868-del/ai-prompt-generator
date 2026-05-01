@@ -30,7 +30,8 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-hot-toast": "^2.6.0",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "web-vitals": "^5.2.0"
   },
   "optionalDependencies": {
     "electron-updater": "^6.6.0"
@@ -69,17 +70,28 @@
       {
         "from": ".next/standalone",
         "to": "app",
-        "filter": ["**/*", "!node_modules/.cache/**", "!node_modules/@swc/**", "!node_modules/typescript/**", "!node_modules/eslint/**"]
+        "filter": [
+          "**/*",
+          "!node_modules/.cache/**",
+          "!node_modules/@swc/**",
+          "!node_modules/typescript/**",
+          "!node_modules/eslint/**"
+        ]
       },
       {
         "from": ".next/static",
         "to": "app/.next/static",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "public",
         "to": "app/public",
-        "filter": ["**/*", "!*.map"]
+        "filter": [
+          "**/*",
+          "!*.map"
+        ]
       }
     ],
     "asar": true,
@@ -88,13 +100,23 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "public/icons/icon-512.png"
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": ["universal"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
       ],
       "icon": "public/icons/icon-512.png",
       "category": "public.app-category.productivity",
@@ -106,8 +128,16 @@
     "dmg": {
       "title": "AI提示词生成器",
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
     },
     "nsis": {
@@ -116,7 +146,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "AI提示词生成器",
-      "installerLanguages": ["zh_CN"],
+      "installerLanguages": [
+        "zh_CN"
+      ],
       "language": "2052"
     }
   }

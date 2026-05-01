@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { PWAPrompts } from "@/components/PWAPrompts";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { WebVitals } from "@/components/WebVitals";
 
 export const metadata: Metadata = {
   title: "AI 提示词生成器",
@@ -30,7 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN" className="dark">
       <body suppressHydrationWarning>
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+        <WebVitals />
         <PWAPrompts />
         <Toaster
           position="top-center"

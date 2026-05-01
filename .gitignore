@@ -20,3 +20,6 @@ server.log
 
 # 编辑器
 .vscode/settings.json
+
+# 分析数据
+.analytics/
