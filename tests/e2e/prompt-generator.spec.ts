@@ -166,20 +166,14 @@ test.describe("PromptGenerator E2E", () => {
   });
 
   test("5. target model cards select and generator picker opens", async ({ page }) => {
-    await expect(page.getByRole("button", { name: /GPT-4o/ }).first()).toBeVisible();
+    const targetCards = page.locator("button[aria-pressed]");
+    await expect(targetCards.first()).toBeVisible({ timeout: 15_000 });
+    await targetCards.first().click();
+    await expect(targetCards.first()).toHaveAttribute("aria-pressed", "true");
 
-    const imageTab = page.getByRole("tab", { name: /文生图/ });
-    await expect(imageTab).toBeEnabled();
-    await imageTab.click();
-
-    const imageModel = page.getByRole("button", { name: /DALL·E 3/ });
-    await expect(imageModel).toBeVisible();
-    await imageModel.click();
-    await expect(imageModel).toHaveAttribute("aria-pressed", "true");
-
-    const generatorTrigger = page
-      .getByRole("button", { name: /GPT-4o Mini|点击选择生成器模型/ })
-      .first();
+    const generatorTrigger = page.getByRole("button", {
+      name: "选择生成器模型 Open generator model picker",
+    });
     await generatorTrigger.click();
 
     const dialog = page.getByRole("dialog", { name: "选择生成器模型" });

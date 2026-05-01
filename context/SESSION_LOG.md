@@ -21,6 +21,7 @@ Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touchin
 
 - `tests/e2e/prompt-generator.spec.ts`
 - `playwright.config.ts`
+- `src/components/ModelSelector.tsx`
 - `context/PROGRESS.md`
 - `context/SESSION_LOG.md`
 
@@ -33,8 +34,10 @@ Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touchin
    - Generator model selection opens the full-screen `role="dialog"` picker.
 4. Expanded mocked model objects so they match the real `ModelInfo` shape used by the components.
 5. Updated input assertions to check the current `aria-label` and example-based placeholder.
-6. After the first main push, GitHub CI passed but reported the model selector test as flaky on retry. Added an explicit wait for loaded target model cards before clicking the image tab.
-7. Updated the Playwright CI reporter to generate both GitHub annotations and the HTML report artifact.
+6. After the first main pushes, GitHub CI passed but reported the model selector test as flaky on retry. Reworked the test so it waits for any target model card rather than relying on a specific image model path.
+7. Blocked service workers in Playwright E2E so PWA cache behavior cannot bypass route mocks.
+8. Added a stable accessible label to the generator model picker trigger.
+9. Updated the Playwright CI reporter to generate both GitHub annotations and the HTML report artifact.
 
 ### Verification
 
@@ -42,7 +45,7 @@ Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touchin
 - `npx tsc --noEmit` passed.
 - `npm run build` passed.
 - `npx playwright test --project=chromium` passed: 8/8 tests.
-- `npx playwright test --project=chromium --repeat-each=3` passed: 24/24 tests after the flaky wait fix.
+- `npx playwright test --project=chromium --repeat-each=5` passed: 40/40 tests after blocking service workers and stabilizing selectors.
 
 ### Notes for next session
 

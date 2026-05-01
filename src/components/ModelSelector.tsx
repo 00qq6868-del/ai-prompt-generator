@@ -168,6 +168,7 @@ export function ModelSelector({
         </div>
         <button
           onClick={() => setGeneratorPickerOpen(true)}
+          aria-label="选择生成器模型 Open generator model picker"
           className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/30 hover:bg-white/[0.06] text-sm text-white transition-all group"
         >
           {selectedGenerator ? (
