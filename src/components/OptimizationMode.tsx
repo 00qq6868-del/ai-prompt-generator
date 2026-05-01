@@ -151,7 +151,7 @@ export function OptimizationMode({ selected, onChange }: Props) {
                         : "bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/[0.06] hover:text-white/70"
                       }`}
                   >
-                    <span className={active ? m.color : "text-white/30"}>{m.icon}</span>
+                    <span className={active ? m.color : "text-white/45"}>{m.icon}</span>
                     <div>
                       <div className="text-sm font-semibold mb-1">{m.label}</div>
                       <div className="text-[11px] opacity-70 leading-relaxed">{m.desc}</div>

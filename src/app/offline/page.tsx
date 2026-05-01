@@ -25,7 +25,7 @@ export default function OfflinePage() {
         <p className="text-white/40 text-sm mb-2">
           You are currently offline
         </p>
-        <p className="text-white/30 text-xs leading-relaxed mb-8">
+        <p className="text-white/45 text-xs leading-relaxed mb-8">
           提示词生成需要调用 AI 接口，请检查你的网络连接后重试。
           <br />
           已缓存的页面和模型列表仍然可用。

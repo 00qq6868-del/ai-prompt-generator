@@ -163,7 +163,7 @@ export function ModelSelector({
           <h3 className="text-sm font-medium text-white/60 flex items-center gap-1.5">
             <Cpu size={13} />
             生成器模型
-            <span className="text-xs text-white/30">（用来写提示词的 AI）</span>
+            <span className="text-xs text-white/45">（用来写提示词的 AI）</span>
           </h3>
         </div>
         <button
@@ -192,7 +192,7 @@ export function ModelSelector({
           ) : (
             <span className="text-white/40">点击选择生成器模型</span>
           )}
-          <ChevronRight size={16} className="text-white/30 group-hover:text-indigo-400 transition-colors shrink-0" />
+          <ChevronRight size={16} className="text-white/45 group-hover:text-indigo-400 transition-colors shrink-0" />
         </button>
 
         <ModelPicker
@@ -212,10 +212,10 @@ export function ModelSelector({
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-white/60">
             目标模型
-            <span className="text-xs text-white/30 ml-2">（最终运行提示词的 AI）</span>
+            <span className="text-xs text-white/45 ml-2">（最终运行提示词的 AI）</span>
           </h3>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/30">
+            <span className="text-xs text-white/45">
               {source === "remote" ? "🌐 远程" : "📦 内置"}
               {updatedAt && ` · ${new Date(updatedAt).toLocaleDateString()}`}
             </span>
@@ -227,7 +227,7 @@ export function ModelSelector({
 
         {/* ── Search input ── */}
         <div className="relative mb-3">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/45" />
           <input
             type="text"
             value={search}
@@ -240,7 +240,7 @@ export function ModelSelector({
             <button
               onClick={() => setSearch("")}
               aria-label="清除搜索 Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/60 transition-colors"
             >
               <X size={14} />
             </button>
@@ -289,7 +289,7 @@ export function ModelSelector({
                 className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
                   ${provider === p
                     ? "bg-white/15 text-white border border-white/20"
-                    : "text-white/30 hover:text-white/50 border border-transparent"
+                    : "text-white/45 hover:text-white/50 border border-transparent"
                   }`}
               >
                 {p} {count > 0 && <span className="opacity-50">{count}</span>}
@@ -330,7 +330,7 @@ export function ModelSelector({
                   <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" role="status" aria-label="加载中 Loading" />
                 ))
               : filtered.length === 0
-                ? <div className="col-span-2 text-center text-white/30 text-sm py-8">
+                ? <div className="col-span-2 text-center text-white/45 text-sm py-8">
                     {search ? "未找到匹配的模型 No matching models" : "暂无此类模型 No models in this category"}
                   </div>
                 : filtered.slice(0, 50).map((m) => (
@@ -389,7 +389,7 @@ function ModelCard({
           {ACC_LABEL[m.accuracy] ?? m.accuracy}
         </span>
         {Number(avgCost) > 0 ? (
-          <span className="text-[10px] text-white/30">${avgCost}/1M</span>
+          <span className="text-[10px] text-white/45">${avgCost}/1M</span>
         ) : (
           <span className="text-[10px] text-green-400/70">免费 Free</span>
         )}

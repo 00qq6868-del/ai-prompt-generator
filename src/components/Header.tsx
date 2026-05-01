@@ -18,7 +18,7 @@ export function Header() {
         </div>
         <div>
           <h1 className="text-base font-bold text-white leading-tight">AI 提示词生成器</h1>
-          <p className="text-[10px] text-white/30 leading-tight">250+ 大模型 · 4 种优化模式 · 自动更新</p>
+          <p className="text-[10px] text-white/45 leading-tight">250+ 大模型 · 4 种优化模式 · 自动更新</p>
         </div>
       </div>
 
@@ -29,7 +29,7 @@ export function Header() {
         <button
           onClick={() => setShowKeys(true)}
           title="配置 API Key"
-          className="text-white/30 hover:text-violet-400 transition-colors"
+          className="text-white/45 hover:text-violet-400 transition-colors"
         >
           <KeyRound size={16} />
         </button>
@@ -39,7 +39,7 @@ export function Header() {
           <button
             onClick={() => setShowQR((v) => !v)}
             title="扫码在手机上打开"
-            className="text-white/30 hover:text-white transition-colors"
+            className="text-white/45 hover:text-white transition-colors"
           >
             <QrCode size={16} />
           </button>
@@ -56,7 +56,7 @@ export function Header() {
                   <span className="text-xs text-white/60 font-medium">手机扫码访问</span>
                   <button
                     onClick={() => setShowQR(false)}
-                    className="text-white/30 hover:text-white transition-colors"
+                    className="text-white/45 hover:text-white transition-colors"
                   >
                     <X size={12} />
                   </button>
@@ -69,7 +69,7 @@ export function Header() {
                   width={180}
                   height={180}
                 />
-                <p className="text-[10px] text-white/30 text-center mt-2">
+                <p className="text-[10px] text-white/45 text-center mt-2">
                   确保手机与电脑在同一 WiFi
                 </p>
               </motion.div>
@@ -81,7 +81,7 @@ export function Header() {
           href="https://github.com/00qq6868-del/ai-prompt-generator"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-white/30 hover:text-white transition-colors"
+          className="text-white/45 hover:text-white transition-colors"
         >
           <ExternalLink size={16} />
         </a>

@@ -190,7 +190,7 @@ export function ModelPicker({
           {/* Search + filters */}
           <div className="border-b border-white/[0.07] px-6 py-3 space-y-3 shrink-0">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/45" />
               <input
                 type="text"
                 value={search}
@@ -201,7 +201,7 @@ export function ModelPicker({
                 autoFocus
               />
               {search && (
-                <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/60">
                   <X size={14} />
                 </button>
               )}
@@ -213,7 +213,7 @@ export function ModelPicker({
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0
                   ${showFavoritesOnly
                     ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                    : "text-white/30 hover:text-white/50 border border-transparent"
+                    : "text-white/45 hover:text-white/50 border border-transparent"
                   }`}
               >
                 <Star size={10} fill={showFavoritesOnly ? "currentColor" : "none"} />
@@ -233,7 +233,7 @@ export function ModelPicker({
                       className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
                         ${provider === p
                           ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/30 hover:text-white/50 border border-transparent"
+                          : "text-white/45 hover:text-white/50 border border-transparent"
                         }`}
                     >
                       {p} {count > 0 && <span className="opacity-50">{count}</span>}
@@ -248,7 +248,7 @@ export function ModelPicker({
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="mx-auto max-w-5xl px-6 py-4">
               {filtered.length === 0 ? (
-                <div className="text-center text-white/30 text-sm py-16">
+                <div className="text-center text-white/45 text-sm py-16">
                   {showFavoritesOnly ? "还没有收藏的模型，点击 ⭐ 收藏常用模型" : "没有匹配的模型"}
                 </div>
               ) : (
@@ -273,7 +273,7 @@ export function ModelPicker({
 
           {/* Bottom status */}
           <div className="border-t border-white/[0.07] px-6 py-3 shrink-0">
-            <div className="flex items-center justify-between text-[11px] text-white/30">
+            <div className="flex items-center justify-between text-[11px] text-white/45">
               <span>共 {filtered.length} 个文本模型</span>
               {availableSet && (
                 <span className="text-emerald-400/70">
@@ -359,7 +359,7 @@ function PickerCard({
           {ACC_LABEL[m.accuracy] ?? m.accuracy}
         </span>
         {Number(avgCost) > 0 ? (
-          <span className="text-[10px] text-white/30">${avgCost}/1M</span>
+          <span className="text-[10px] text-white/45">${avgCost}/1M</span>
         ) : (
           <span className="text-[10px] text-green-400/70">免费</span>
         )}

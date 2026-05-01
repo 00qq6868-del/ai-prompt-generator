@@ -779,18 +779,67 @@ For models not yet in the registry, infer category from naming patterns:
 7. For image/video: include all technical parameters inline
 8. Match language to model strength (Chinese models → Chinese for Chinese tasks)`;
 
+function extractPromptSection(startHeading: string, endHeading?: string): string {
+  const start = SYSTEM_PROMPT.indexOf(startHeading);
+  if (start === -1) return "";
+
+  if (!endHeading) {
+    return SYSTEM_PROMPT.slice(start).trim();
+  }
+
+  const separatorBeforeEnd = `\n---\n\n${endHeading}`;
+  let end = SYSTEM_PROMPT.indexOf(separatorBeforeEnd, start);
+  if (end === -1) {
+    end = SYSTEM_PROMPT.indexOf(endHeading, start);
+  }
+
+  if (end === -1) return SYSTEM_PROMPT.slice(start).trim();
+  return SYSTEM_PROMPT.slice(start, end).trim();
+}
+
+const SHARED_PROMPT = extractPromptSection("# IDENTITY", "# TEXT MODULE");
+const TEXT_MODULE = extractPromptSection("# TEXT MODULE", "# IMAGE MODULE");
+const IMAGE_MODULE = extractPromptSection("# IMAGE MODULE", "# VIDEO MODULE");
+const VIDEO_MODULE = extractPromptSection("# VIDEO MODULE", "# AUDIO MODULE");
+const AUDIO_MODULE = extractPromptSection("# AUDIO MODULE", "# ADAPTIVE MODULE");
+const ADAPTIVE_MODULE = extractPromptSection("# ADAPTIVE MODULE", "# OUTPUT RULES");
+const OUTPUT_RULES = extractPromptSection("# OUTPUT RULES");
+
+function getCategoryModule(targetCategory?: string): string {
+  switch ((targetCategory ?? "text").toLowerCase()) {
+    case "image":
+      return IMAGE_MODULE;
+    case "video":
+      return VIDEO_MODULE;
+    case "tts":
+    case "audio":
+      return AUDIO_MODULE;
+    case "text":
+      return TEXT_MODULE;
+    default:
+      return "";
+  }
+}
+
 export function buildSystemPrompt(opts: PromptBuilderOptions): string {
   const langNote =
     opts.language === "zh"
       ? "\n\n# LANGUAGE\nWrite the optimized prompt in Chinese (中文). Exception: keep code, technical terms, model parameters (--ar, --v, etc.), and proper nouns in their original language."
       : "\n\n# LANGUAGE\nWrite the optimized prompt in English.";
 
+  const categoryModule = getCategoryModule(opts.targetCategory);
   const categoryNote = opts.targetCategory && opts.targetCategory !== "text"
     ? `\n\n# TARGET CATEGORY\nThis is a ${opts.targetCategory.toUpperCase()} generation model. Use the ${opts.targetCategory.toUpperCase()} MODULE for optimization.`
     : "";
+  const scopedPrompt = [
+    SHARED_PROMPT,
+    categoryModule,
+    ADAPTIVE_MODULE,
+    OUTPUT_RULES,
+  ].filter(Boolean).join("\n\n---\n\n");
 
   return (
-    SYSTEM_PROMPT +
+    scopedPrompt +
     `\n\n# TARGET MODEL\n${opts.targetModel} (${opts.targetProvider})` +
     categoryNote +
     langNote
@@ -818,6 +867,21 @@ export function buildUserPrompt(opts: PromptBuilderOptions): string {
       "Apply the AUDIO MODULE. Specify:\n" +
       "Voice characteristics (gender, age, pitch, timbre) → Emotion → Speed → Emphasis → Pauses → Pronunciation guidance.\n" +
       "For music generation (Suno/Udio): Genre → Structure tags [Verse]/[Chorus] → BPM → Instruments → Mood → Lyrics guidance.\n";
+  } else if (cat === "stt") {
+    hint =
+      "Apply the ADAPTIVE MODULE for speech-to-text. Keep the final prompt minimal and operational:\n" +
+      "Audio context → Speaker/language/accent hints → Transcription rules → Formatting requirements → Terms/names to preserve.\n" +
+      "Do not add creative writing frameworks or visual/audio generation instructions.\n";
+  } else if (cat === "embedding") {
+    hint =
+      "Apply the ADAPTIVE MODULE for embedding workflows. Embedding models do not generate prose.\n" +
+      "Rewrite the user's idea into compact retrieval/query/document preparation instructions: normalization rules, metadata fields, chunking guidance, and similarity goal.\n" +
+      "Avoid role-play, long reasoning frameworks, and output styles meant for chat models.\n";
+  } else if (cat === "ocr") {
+    hint =
+      "Apply the ADAPTIVE MODULE for OCR. Keep the final prompt concise and extraction-focused:\n" +
+      "Image/document type → Reading order → Fields to extract → Layout/table preservation → Ambiguity handling → Output format.\n" +
+      "Do not add unrelated creative or reasoning scaffolding.\n";
   } else {
     const tm = opts.targetModel.toLowerCase();
     if (tm.includes("claude")) {

@@ -84,6 +84,15 @@ async function mockAPIs(page: Page) {
       body: JSON.stringify({ models: [] }),
     })
   );
+
+  // /api/analytics — keep tests hermetic and avoid writing local JSONL files
+  await page.route("**/api/analytics", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    })
+  );
 }
 
 /** Build a SSE response body that streams chunks then sends a done event. */

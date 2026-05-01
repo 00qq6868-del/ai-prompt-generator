@@ -1,7 +1,7 @@
 # Task Progress Tracker
 
-> Last updated: 2026-05-01
-> Updated by: Codex (E2E repair)
+> Last updated: 2026-05-02
+> Updated by: Codex (completion pass)
 
 ## Codex Safety Setup — 2026-05-01
 
@@ -56,15 +56,43 @@ Codex fixed the failing GitHub E2E assertions in the Codex-safe worktree.
 
 ---
 
-## Current Status: COMPREHENSIVE UPGRADE — 9 MAJOR TASKS COMPLETE + E2E GREEN LOCALLY
+## Current Status: COMPREHENSIVE UPGRADE — COMPLETION PASS VERIFIED LOCALLY
 
-Previous Claude upgrade tasks were type-checked and pushed to GitHub. The Codex E2E repair is verified locally but not pushed/merged yet.
+Previous Claude upgrade tasks and Codex CI/E2E repair have been pushed to GitHub. The current Codex completion pass is verified locally and ready to push.
+
+## Codex Completion Pass — 2026-05-02
+
+Codex continued after user requested completing the whole current section before reporting back.
+
+- **Analytics integration completed**:
+  - `src/components/PromptGenerator.tsx` now calls `trackApiCall()` for `/api/generate` success/failure.
+  - Streaming generation now calls `trackTTFT()` on the first SSE `chunk`.
+  - Generation failures now call `trackError()`.
+  - E2E mocks `/api/analytics` to keep tests hermetic and avoid local `.analytics` JSONL writes.
+- **Prompt optimizer v5 audit/补强 completed**:
+  - Confirmed `src/lib/prompt-optimizer.ts` is already a multi-modal v5 implementation.
+  - `buildSystemPrompt()` now scopes the huge system prompt to the target category instead of always sending every module.
+  - Category routing includes text, image, video, audio/TTS, plus adaptive fallback.
+  - `buildUserPrompt()` now includes explicit STT, embedding, and OCR branches instead of treating them like generic text prompts.
+- **Model metadata/classification refresh completed**:
+  - Ran `node scripts/patch-models.cjs`.
+  - `public/models.json` now has improved Google image/TTS release dates and category classification.
+  - `context/SYSTEM_STATE.json` updated to match: 251 total models, categories `{ text: 240, video: 2, image: 4, tts: 5 }`, zero-cost remaining `6`.
+- **Contrast TODO completed**:
+  - Replaced remaining `text-white/30` usages in `src/` with `text-white/45`.
+- **Electron updater note resolved as intentional**:
+  - `electron-updater` remains in `optionalDependencies`; this is the intended setup so Vercel web deploys do not require desktop updater binaries.
+- **Verified locally**:
+  - `npx tsc --noEmit` passes
+  - `node scripts/patch-models.cjs` passes and reports `Patched: 249 / 251`
+  - `npm run build` passes
+  - `npx playwright test --project=chromium --repeat-each=3` passes: 24/24
 
 ---
 
 ## 🔄 Active Task
 
-Codex E2E repair completed locally. User approved continuing to completion on 2026-05-02; push to GitHub/main after final validation.
+Codex completion pass validated locally. Push to GitHub/main, then wait for GitHub Actions before closing.
 
 **重要对账提醒**：
 - `C:\Users\zero\.claude\plans\floating-conjuring-treasure.md` 里写的 Phase 2/3 是旧计划
@@ -150,10 +178,9 @@ Codex E2E repair completed locally. User approved continuing to completion on 20
 
 ## 🔧 Known TODOs / Tech Debt
 
-1. **trackApiCall/trackTTFT 尚未接入** — 需要在 `PromptGenerator.tsx` 的 fetch 和 SSE 解析处调用
-2. **prompt-optimizer.ts v5 审计/补强** — 文档旧计划说 Phase 2/3 未开始，但当前代码已包含全模态 v5 和 `targetCategory` 路由；继续前先对账实际质量与缺口
-3. **颜色对比度** — `text-white/30`(~3.3:1) 未达 WCAG AA 4.5:1，待用户确认是否改为 `text-white/45`
-4. **electron-updater** 是 optionalDependencies，Vercel 部署不会安装
+1. **真实线上生成链路仍需人工密钥验证** — E2E 使用 mock API；生产中转站 Key/余额/模型权限需要真实账号验证
+2. **商业化下一阶段** — 需要补用户账号/支付/额度/审计日志/隐私条款/滥用风控，这些不属于当前代码修复范围
+3. **Claude 原工作区仍未合并** — `E:\vscode Claude\ai-prompt-generator` 保持未触碰；继续协作前应以 GitHub `main` 为基准再比较 Claude 本地改动
 
 ---
 
@@ -183,7 +210,7 @@ src/
 ├── lib/
 │   ├── providers/index.ts  — 11 个 LLM provider 适配器
 │   ├── models-registry.ts  — BUNDLED_MODELS（45个）+ scoreModel + affinity
-│   ├── prompt-optimizer.ts — SYSTEM_PROMPT + buildUserPrompt（待 Phase 2 重写）
+│   ├── prompt-optimizer.ts — scoped multi-modal v5 SYSTEM_PROMPT + category-aware buildUserPrompt
 │   ├── analytics.ts        — 指标队列 + batch flush
 │   └── history.ts          — localStorage 历史管理
 electron/

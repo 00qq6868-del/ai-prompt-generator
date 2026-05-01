@@ -131,7 +131,7 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
         {showDiff && originalPrompt ? (
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
             <div className="p-4">
-              <div className="text-[10px] font-medium text-white/30 uppercase tracking-wider mb-2">
+              <div className="text-[10px] font-medium text-white/45 uppercase tracking-wider mb-2">
                 原始输入 Original
               </div>
               <pre className="whitespace-pre-wrap font-sans text-sm text-white/50 leading-relaxed max-h-72 overflow-y-auto">

@@ -69,7 +69,7 @@ export function NetworkStatus() {
             )}
 
             {status.lastChecked && (
-              <div className="mt-1 text-white/30 text-xs">
+              <div className="mt-1 text-white/45 text-xs">
                 更新于 {status.lastChecked.toLocaleTimeString()}
               </div>
             )}

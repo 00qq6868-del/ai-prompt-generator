@@ -262,13 +262,13 @@ export function KeysSettings({ open, onClose }: Props) {
                     <p>2. 在中转站后台找到「API Key」，复制下来</p>
                     <p>3. 把中转站的网址填到下面「Base URL」（通常是 xxx.com/v1）</p>
                     <p>4. 把 Key 填到「API Key」框里，保存即可</p>
-                    <p className="text-white/30">填完后，上面 230+ 个模型都能通过这个中转站调用</p>
+                    <p className="text-white/45">填完后，上面 230+ 个模型都能通过这个中转站调用</p>
                   </div>
 
                   <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[13px] font-semibold text-violet-400">Base URL</span>
-                      <span className="text-[10px] text-white/30">OpenAI 兼容格式</span>
+                      <span className="text-[10px] text-white/45">OpenAI 兼容格式</span>
                     </div>
                     <input
                       type="text"
@@ -278,7 +278,7 @@ export function KeysSettings({ open, onClose }: Props) {
                       aria-label="中转站 Base URL"
                       className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 text-[13px] text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
                     />
-                    <p className="mt-2 text-[10px] text-white/30">
+                    <p className="mt-2 text-[10px] text-white/45">
                       直接填网址即可，系统会自动补 /v1。常见：aihubmix.com/v1、openrouter.ai/api/v1、naapi.cc/v1
                     </p>
                   </div>
@@ -307,7 +307,7 @@ export function KeysSettings({ open, onClose }: Props) {
                   <p className="text-white/60 font-medium">📖 这些平台注册就送免费额度：</p>
                   <p>• <span className="text-blue-400">Google Gemini</span> — 去 aistudio.google.com 注册，点「Create API key」复制，粘贴到下面</p>
                   <p>• <span className="text-purple-400">Groq</span> — 去 console.groq.com 注册，点「Create API Key」复制，粘贴到下面</p>
-                  <p className="text-white/30">这两个直接填 Key 就行，不需要填 Base URL</p>
+                  <p className="text-white/45">这两个直接填 Key 就行，不需要填 Base URL</p>
                 </div>
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {freeProviders.map((p) => (
@@ -382,7 +382,7 @@ export function KeysSettings({ open, onClose }: Props) {
 function SectionDivider({ label, accent }: { label: string; accent: "green" | "white" | "violet" }) {
   const colorMap = {
     green:  "text-green-500/70 border-green-500/15",
-    white:  "text-white/30 border-white/[0.07]",
+    white:  "text-white/45 border-white/[0.07]",
     violet: "text-violet-400/70 border-violet-500/15",
   };
   const color = colorMap[accent];

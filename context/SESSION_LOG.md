@@ -5,6 +5,54 @@
 
 ---
 
+## Codex Completion Pass — 2026-05-02 (Codex)
+
+### What was done
+
+Continued the current stabilization/commercial-readiness section after the user asked Codex to finish the whole section before reporting back.
+
+### Files changed
+
+- `src/components/PromptGenerator.tsx`
+- `src/lib/prompt-optimizer.ts`
+- `public/models.json`
+- `context/SYSTEM_STATE.json`
+- `tests/e2e/prompt-generator.spec.ts`
+- Multiple UI files under `src/` for contrast-only `text-white/30` → `text-white/45`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+
+### Implementation details
+
+1. Integrated analytics tracking into the real generation path:
+   - `/api/generate` latency/success/failure is tracked with `trackApiCall()`.
+   - Streaming TTFT is tracked from the first SSE `chunk` with `trackTTFT()`.
+   - Generation failures are tracked with `trackError()`.
+2. Hardened E2E analytics isolation:
+   - `/api/analytics` is mocked in Playwright tests so tests do not write local `.analytics` JSONL files.
+3. Completed prompt optimizer v5 audit/补强:
+   - Confirmed the file is already a multi-modal v5 implementation.
+   - `buildSystemPrompt()` now builds a scoped system prompt by target category instead of sending every module every time.
+   - Added explicit `stt`, `embedding`, and `ocr` branches in `buildUserPrompt()`.
+4. Refreshed model metadata/classification:
+   - Ran `node scripts/patch-models.cjs`.
+   - `public/models.json` now has improved Google image/TTS release dates and classifications.
+   - `context/SYSTEM_STATE.json` now matches the refreshed model set: 251 total, 240 text, 4 image, 2 video, 5 tts, 6 zero-cost remaining.
+5. Completed the contrast TODO:
+   - Replaced `text-white/30` under `src/` with `text-white/45`.
+6. Confirmed `electron-updater` optional dependency is intentional:
+   - Keep it in `optionalDependencies` so desktop auto-update can work without forcing Vercel web deploys to install it.
+
+### Verification
+
+- `npx tsc --noEmit` passed.
+- `node scripts/patch-models.cjs` passed and reported `Patched: 249 / 251`.
+- `npm run build` passed.
+- `npx playwright test --project=chromium --repeat-each=3` passed: 24/24.
+- Build/test generated files were cleaned from the working tree before commit.
+
+---
+
 ## Codex E2E Repair — 2026-05-01 (Codex)
 
 ### What was done

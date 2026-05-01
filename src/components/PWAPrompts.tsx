@@ -102,7 +102,7 @@ export function PWAPrompts() {
               <button
                 onClick={handleDismissInstall}
                 aria-label="关闭 Dismiss"
-                className="shrink-0 p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/10 transition-all"
+                className="shrink-0 p-1.5 rounded-lg text-white/45 hover:text-white/60 hover:bg-white/10 transition-all"
               >
                 <X size={14} />
               </button>
@@ -142,7 +142,7 @@ export function PWAPrompts() {
               <button
                 onClick={() => setShowUpdate(false)}
                 aria-label="稍后 Later"
-                className="shrink-0 p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/10 transition-all"
+                className="shrink-0 p-1.5 rounded-lg text-white/45 hover:text-white/60 hover:bg-white/10 transition-all"
               >
                 <X size={14} />
               </button>

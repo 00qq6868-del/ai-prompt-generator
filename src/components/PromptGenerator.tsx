@@ -11,6 +11,7 @@ import { scoreModel, ModelInfo, OptimizationMode, GENERATOR_AFFINITY } from "@/l
 import { recommendModel } from "@/lib/model-recommender";
 import { saveHistory } from "@/lib/history";
 import { HistoryPanel } from "./HistoryPanel";
+import { trackApiCall, trackError, trackTTFT } from "@/lib/analytics";
 
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
@@ -214,6 +215,27 @@ export function PromptGenerator() {
     setResult(null);
     setStreamingText("");
     const tid = toast.loading("AI 正在生成优化提示词…");
+    const requestStartedAt = performance.now();
+    let responseStatus = 0;
+    let apiCallTracked = false;
+    let firstTokenTracked = false;
+
+    const trackGenerateCall = (success: boolean, status = responseStatus) => {
+      if (apiCallTracked) return;
+      apiCallTracked = true;
+      trackApiCall({
+        endpoint: "/api/generate",
+        latencyMs: Math.round(performance.now() - requestStartedAt),
+        success,
+        status,
+      });
+    };
+
+    const trackFirstToken = () => {
+      if (firstTokenTracked) return;
+      firstTokenTracked = true;
+      trackTTFT(performance.now() - requestStartedAt, generatorModelId);
+    };
 
     try {
       const userKeys = loadUserKeys();
@@ -230,8 +252,10 @@ export function PromptGenerator() {
           stream: true,
         }),
       });
+      responseStatus = res.status;
 
       if (!res.ok) {
+        trackGenerateCall(false, res.status);
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "生成失败，请重试 Generation failed, please retry");
       }
@@ -244,6 +268,7 @@ export function PromptGenerator() {
         let buffer = "";
         let accumulated = "";
         let scrolledOnce = false;
+        let receivedDoneEvent = false;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -261,6 +286,7 @@ export function PromptGenerator() {
             try {
               const event = JSON.parse(jsonStr);
               if (event.t === "chunk") {
+                trackFirstToken();
                 accumulated += event.c;
                 setStreamingText(accumulated);
                 if (!scrolledOnce) {
@@ -268,12 +294,15 @@ export function PromptGenerator() {
                   setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
                 }
               } else if (event.t === "done" && event.data) {
+                receivedDoneEvent = true;
+                trackGenerateCall(true, res.status);
                 setResult(event.data);
                 setStreamingText("");
                 toast.dismiss(tid);
                 toast.success("提示词生成成功！/ Prompt generated!");
                 saveHistory({ userIdea: idea, optimizedPrompt: event.data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelId, language });
               } else if (event.t === "error") {
+                trackGenerateCall(false, res.status);
                 throw new Error(event.error);
               }
             } catch (parseErr: any) {
@@ -284,7 +313,8 @@ export function PromptGenerator() {
           }
         }
 
-        if (!result && accumulated) {
+        if (!receivedDoneEvent && accumulated) {
+          trackGenerateCall(true, res.status);
           setResult({
             optimizedPrompt: accumulated,
             stats: { inputTokens: 0, outputTokens: 0, latencyMs: 0, tokensDelta: 0, changePercent: 0 },
@@ -299,6 +329,7 @@ export function PromptGenerator() {
       } else {
         const data = await res.json().catch(() => ({}));
         if (!data.optimizedPrompt) throw new Error("返回数据异常 Invalid response data");
+        trackGenerateCall(true, res.status);
         setResult(data);
         toast.dismiss(tid);
         toast.success("提示词生成成功！/ Prompt generated!");
@@ -306,6 +337,8 @@ export function PromptGenerator() {
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
     } catch (err: any) {
+      trackGenerateCall(false);
+      trackError(err.message ?? "生成失败 Generate failed");
       toast.dismiss(tid);
       toast.error(err.message ?? "生成失败，请检查 API Key / Generation failed, check your API Key");
     } finally {
@@ -341,7 +374,7 @@ export function PromptGenerator() {
               <Languages size={12} />
               {language === "zh" ? "中文输出" : "English output"}
             </button>
-            <span className="text-xs text-white/30">~{approxTokens} tokens</span>
+            <span className="text-xs text-white/45">~{approxTokens} tokens</span>
           </div>
         </div>
         <div className="relative">
@@ -394,7 +427,7 @@ export function PromptGenerator() {
         aria-label={loading ? "正在生成中 Generating..." : "生成优化提示词 Generate optimized prompt"}
         className={`relative w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-base font-semibold transition-all duration-300
           ${loading || !idea.trim()
-            ? "bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
+            ? "bg-white/5 border border-white/10 text-white/45 cursor-not-allowed"
             : "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.01]"
           }`}
       >
