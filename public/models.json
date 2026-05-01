@@ -4283,7 +4283,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4303,7 +4303,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4323,7 +4323,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4343,8 +4343,8 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
-    "category": "image"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-3-flash-preview",
@@ -4363,7 +4363,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4383,8 +4383,8 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-06-01",
-    "category": "image"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-image",
@@ -4404,8 +4404,8 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
-    "category": "image"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash",
@@ -4425,7 +4425,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4446,7 +4446,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4467,7 +4467,7 @@
       "reasoning",
       "long-context"
     ],
-    "releaseDate": "2025-03-25",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4488,7 +4488,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4508,7 +4508,7 @@
       "ultra-cheap",
       "fast"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4529,7 +4529,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4549,7 +4549,7 @@
       "ultra-cheap",
       "fast"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4570,8 +4570,8 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-04-17",
-    "category": "tts"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-pro-preview-tts",
@@ -4591,8 +4591,8 @@
       "reasoning",
       "long-context"
     ],
-    "releaseDate": "2025-03-25",
-    "category": "tts"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-flash-latest",
@@ -4612,7 +4612,7 @@
       "cheap",
       "vision"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4632,7 +4632,7 @@
       "ultra-cheap",
       "fast"
     ],
-    "releaseDate": "2025-02-05",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4652,7 +4652,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-03-25",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4672,7 +4672,7 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4692,8 +4692,8 @@
       "vision",
       "reasoning"
     ],
-    "releaseDate": "2025-08-01",
-    "category": "tts"
+    "releaseDate": "",
+    "category": "text"
   },
   {
     "id": "gemini-robotics-er-1.5-preview",
@@ -4712,7 +4712,7 @@
       "vision",
       "robotics"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4732,7 +4732,7 @@
       "vision",
       "robotics"
     ],
-    "releaseDate": "2025-06-01",
+    "releaseDate": "",
     "category": "text"
   },
   {
@@ -4752,7 +4752,7 @@
       "vision",
       "computer-use"
     ],
-    "releaseDate": "2025-10-01",
+    "releaseDate": "",
     "category": "text"
   },
   {

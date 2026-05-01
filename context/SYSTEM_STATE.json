@@ -1,11 +1,11 @@
 {
-  "updatedAt": "2026-05-01T17:34:46.041Z",
+  "updatedAt": "2026-05-01T19:42:49.236Z",
   "totalModels": 251,
   "byCategory": {
-    "text": 240,
+    "text": 246,
     "video": 2,
-    "image": 4,
-    "tts": 5
+    "image": 1,
+    "tts": 2
   },
   "byProvider": {
     "OpenAI": 48,
@@ -30,7 +30,7 @@
   "metaCoverage": 245,
   "lastUpdate": {
     "added": 0,
-    "updated": 240,
+    "updated": 239,
     "previousTotal": 251
   }
 }
