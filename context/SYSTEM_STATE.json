@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-01T04:32:03.476Z",
+  "updatedAt": "2026-05-01T13:56:39.710Z",
   "totalModels": 251,
   "byCategory": {
     "text": 246,
@@ -7,6 +7,30 @@
     "image": 1,
     "tts": 2
   },
+  "byProvider": {
+    "OpenAI": 48,
+    "Other": 34,
+    "Google": 38,
+    "阿里巴巴": 33,
+    "xAI": 15,
+    "DeepSeek": 9,
+    "百度": 7,
+    "MiniMax": 19,
+    "智谱AI": 17,
+    "ByteDance": 2,
+    "Anthropic": 14,
+    "阶跃星辰": 2,
+    "Cohere": 5,
+    "Mistral AI": 3,
+    "Groq": 2,
+    "月之暗面": 1,
+    "Ollama": 2
+  },
   "zeroCostModels": 6,
-  "metaCoverage": 245
+  "metaCoverage": 245,
+  "lastUpdate": {
+    "added": 0,
+    "updated": 238,
+    "previousTotal": 251
+  }
 }
