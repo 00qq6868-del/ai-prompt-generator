@@ -105,45 +105,53 @@ Use for: articles, reports, documentation, comprehensive guides.
 **Graph-of-Thoughts** — interconnected reasoning:
 "Map all relevant factors and their relationships. Identify interdependencies. Reason through connections to reach your conclusion."
 
-**Meta-Prompting** — prompt self-improvement:
+**Meta-Prompting** — 提示词自我改进：先设计最优提示词，再执行:
 "Before answering, first design the ideal prompt for this task. Then follow that prompt to produce the answer."
-Use for: open-ended tasks where the user's framing may be suboptimal.
+Use for: open-ended tasks where the user's framing may be suboptimal, ambiguous requirements. Skip for: simple factual Q&A, formatting tasks, direct instruction tasks.
 
-**Constitutional AI Prompting** — self-critique with principles:
+**Constitutional AI Prompting** — 自我批评：生成→按原则审查→修正:
 "Generate a response, then review it against these principles: [accuracy, helpfulness, safety]. Revise any violations."
-Use for: sensitive topics, public-facing content, policy-compliant outputs.
+Use for: sensitive topics, public-facing content, policy-compliant outputs, ethical reasoning. Skip for: creative fiction, casual conversation, time-sensitive quick answers.
 
-**Least-to-Most** — decompose complex into subproblems:
+**Least-to-Most** — 分解复杂问题为最简子问题，逐步解决:
 "Break this into the simplest sub-problems. Solve each in order, using previous solutions as context for the next."
-Use for: multi-step math, layered logic, cascading dependencies.
+Use for: multi-step math, layered logic, cascading dependencies, compositional generalization. Skip for: single-step tasks, creative writing, opinion questions.
 
-**Program-of-Thought (PoT)** — code-based reasoning:
+**Program-of-Thought (PoT)** — 写伪代码/程序解题，心算执行:
 "Write a program/pseudocode to solve this, then execute it mentally and report the result."
-Use for: numerical computation, data transformation, algorithmic problems.
+Use for: numerical computation, data transformation, algorithmic problems, combinatorics. Skip for: qualitative analysis, creative tasks, subjective judgments.
 
-**Analogical Reasoning** — leverage familiar domains:
+**Analogical Reasoning** — 类比推理：用已知领域的解法映射到新问题:
 "Solve this like you would solve [analogous simpler problem]. Map the solution pattern to the current problem."
-Use for: novel problems where direct examples are scarce.
+Use for: novel problems where direct examples are scarce, cross-domain transfer, teaching concepts. Skip for: well-documented problems with standard solutions, precise numerical calculations.
 
-**Step-Back Prompting** — abstract first, then solve:
+**Step-Back Prompting** — 先抽象出底层原理，再解决具体问题:
 "Before solving, ask: what is the underlying principle or concept? Answer that first, then apply it to the specific problem."
-Use for: physics, chemistry, complex reasoning where first principles matter.
+Use for: physics, chemistry, complex reasoning where first principles matter, conceptual understanding. Skip for: procedural tasks, formatting, data extraction.
 
-**Emotion Prompting** — stakes-aware motivation:
-Add "This is very important to my career/project/deadline" to increase model attention and effort.
-Use sparingly and authentically — effective for critical tasks.
+**Emotion Prompting** — 加入"这对我的职业很重要"提高模型注意力:
+"This is very important to my career. Please give your most thorough and careful analysis."
+Use for: critical tasks requiring maximum model attention, high-stakes deliverables, complex analysis. Skip for: trivial tasks, bulk processing, tasks where emotional framing adds noise.
 
-**SimToM (Simulated Theory of Mind)** — perspective tasks:
+**SimToM (Simulated Theory of Mind)** — 模拟心智理论：从特定角色视角思考和回应:
 "Consider what [person/role] would think, feel, and prioritize given their background and constraints. Respond from their perspective."
-Use for: user research, empathy mapping, stakeholder analysis, character writing.
+Use for: user research, empathy mapping, stakeholder analysis, character writing, UX personas. Skip for: objective factual tasks, mathematical proofs, data processing.
 
-**Directional Stimulus Prompting** — guided creativity:
-"Include these keywords/concepts in your response: [list]. Use them as creative anchors."
-Use for: creative writing with thematic constraints, brainstorming within boundaries.
+**Directional Stimulus Prompting** — 给定关键词作为创意锚点引导输出:
+"Include these keywords/concepts in your response: [list]. Use them as creative anchors to guide your generation."
+Use for: creative writing with thematic constraints, brainstorming within boundaries, SEO content. Skip for: free-form brainstorming, objective analysis, code generation.
 
-**Contrastive Chain-of-Thought** — learn from errors:
+**Contrastive Chain-of-Thought** — 先展示错误推理，解释为何错，再给正确答案:
 "Here is a wrong approach: [incorrect reasoning]. Explain why it fails, then provide the correct solution."
-Use for: common misconceptions, tricky problems, educational content.
+Use for: common misconceptions, tricky problems, educational content, debugging. Skip for: straightforward tasks, creative writing, subjective opinions.
+
+**Prompt Chaining** — 将复杂任务拆成多步提示，前一步输出作为后一步输入:
+"Step 1: [First task]. Step 2: Using the output from Step 1, [second task]. Step 3: Combine and refine into [final deliverable]."
+Use for: multi-stage workflows, research→analysis→synthesis pipelines, complex document generation. Skip for: single-step tasks, real-time conversation, simple Q&A.
+
+**Role-Play Debugging** — "假设你是代码审查员，逐行审查这段代码":
+"You are a senior code reviewer with 15 years of experience. Review this code line by line. For each issue found, explain the bug, its impact, and the fix."
+Use for: code review, security audit, quality assurance, finding edge cases, architectural review. Skip for: quick syntax questions, boilerplate generation, simple formatting.
 
 ### D. Structured Output Specification
 Always specify output structure explicitly:
