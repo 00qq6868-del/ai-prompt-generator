@@ -5,6 +5,41 @@
 
 ---
 
+## Codex Safety Setup — 2026-05-01 (Codex)
+
+### What was done
+
+Created a separate Codex-safe worktree so Codex can inspect, evaluate, and implement without overwriting Claude's local workspace.
+
+### Workspaces
+
+- Claude/original workspace: `E:\vscode Claude\ai-prompt-generator`
+- Codex workspace: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
+
+### Git state found
+
+- Claude/original workspace was on `main` at `b44163d`, behind `origin/main` by 2 commits.
+- Claude/original workspace had local uncommitted/generated changes:
+  - `public/sw.js`
+  - `tsconfig.tsbuildinfo`
+  - `.claude/`
+  - `public/*.map`
+  - `public/workbox-7144475a.js`
+- Codex worktree was created from GitHub latest `origin/main` at `c009e0e`.
+
+### Safety branches/files
+
+- Backup branch: `backup/claude-main-20260501-232542`
+- Codex branch: `codex/safe-audit-20260501-232542`
+- Added `AGENTS.md`
+- Added `context/CODEX_HANDOFF.md`
+
+### Rule for future sessions
+
+Read `AGENTS.md` and `context/CODEX_HANDOFF.md` before editing. Do not touch the Claude workspace unless explicitly approved by the user.
+
+---
+
 ## Session #4 — 2026-04-30 (Claude Sonnet 4.6, Claude Code)
 
 ### 9 tasks completed and pushed to GitHub:

@@ -3,6 +3,25 @@
 > Last updated: 2026-04-30
 > Updated by: Claude Sonnet 4.6 (Session #4)
 
+## Codex Safety Setup — 2026-05-01
+
+Codex created a safe worktree to avoid overwriting Claude's existing workspace.
+
+- **Claude/original workspace**: `E:\vscode Claude\ai-prompt-generator`
+- **Codex workspace**: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
+- **Backup branch for original main pointer**: `backup/claude-main-20260501-232542`
+- **Codex branch**: `codex/safe-audit-20260501-232542`
+- **Base**: GitHub latest `origin/main` at `c009e0e chore: auto-update models 2026-05-01`
+
+Rules:
+
+- Do not edit the Claude workspace unless the user explicitly approves.
+- Codex changes should happen in the Codex worktree first.
+- Compare Claude and Codex versions before adopting or merging.
+- Push to `main` only after tests pass and the user approves.
+
+---
+
 ## Current Status: COMPREHENSIVE UPGRADE — 8 MAJOR TASKS COMPLETE
 
 All tasks type-checked (`npx tsc --noEmit` passes) and pushed to GitHub.
