@@ -5,6 +5,49 @@
 
 ---
 
+## Codex E2E Repair — 2026-05-01 (Codex)
+
+### What was done
+
+Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touching the Claude/original workspace.
+
+### Workspace / branch
+
+- Workspace: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
+- Branch: `codex/safe-audit-20260501-232542`
+- Status before commit: branch was already ahead of `origin/main` by 1 safety commit
+
+### Files changed
+
+- `tests/e2e/prompt-generator.spec.ts`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+
+### E2E fixes
+
+1. Scoped the page title assertion to the `header` heading because the page currently has both header and hero `h1` elements.
+2. Corrected the character-count assertion for `Hello world 你好世界` from `14` to `16`.
+3. Reworked the model selector test to match the actual UI:
+   - Target model selection is an inline card grid.
+   - Generator model selection opens the full-screen `role="dialog"` picker.
+4. Expanded mocked model objects so they match the real `ModelInfo` shape used by the components.
+5. Updated input assertions to check the current `aria-label` and example-based placeholder.
+
+### Verification
+
+- `npm ci` initially failed on Electron binary download with `ECONNRESET`; reran successfully with command-local mirror env vars.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npx playwright test --project=chromium` passed: 8/8 tests.
+
+### Notes for next session
+
+- Build generated PWA/TypeScript artifacts were cleaned from the working tree and not included.
+- `src/lib/prompt-optimizer.ts` appears to already be a multi-modal v5 implementation, while older context text still described Phase 2/3 as not started. Before further prompt optimizer work, audit the actual code against the old Claude plan instead of blindly rewriting it.
+- User approved continuing to completion on 2026-05-02; pushing to `main` is authorized after final local validation.
+
+---
+
 ## Codex Safety Setup — 2026-05-01 (Codex)
 
 ### What was done

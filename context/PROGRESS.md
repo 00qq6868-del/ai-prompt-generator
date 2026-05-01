@@ -1,7 +1,7 @@
 # Task Progress Tracker
 
-> Last updated: 2026-04-30
-> Updated by: Claude Sonnet 4.6 (Session #4)
+> Last updated: 2026-05-01
+> Updated by: Codex (E2E repair)
 
 ## Codex Safety Setup — 2026-05-01
 
@@ -22,19 +22,47 @@ Rules:
 
 ---
 
-## Current Status: COMPREHENSIVE UPGRADE — 8 MAJOR TASKS COMPLETE
+## Codex E2E Repair — 2026-05-01
 
-All tasks type-checked (`npx tsc --noEmit` passes) and pushed to GitHub.
+Codex fixed the failing GitHub E2E assertions in the Codex-safe worktree.
+
+- **Workspace**: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
+- **Branch**: `codex/safe-audit-20260501-232542`
+- **File changed**: `tests/e2e/prompt-generator.spec.ts`
+- **Root cause**: E2E tests were written against older UI assumptions:
+  - `page.locator("h1")` became ambiguous after the header and hero both used `h1`
+  - Character count expected `14`, but the real JavaScript string length for `Hello world 你好世界` is `16`
+  - Target model selector is now an inline card grid, while the full-screen dialog belongs to the generator model picker
+  - Placeholder copy changed to example-based text while the input keeps the intended `aria-label`
+- **Fix**:
+  - Scoped heading assertion to `header`
+  - Updated character count expectation to `16`
+  - Reworked model selector test to select `DALL·E 3` from the image tab and then open the generator picker dialog
+  - Completed mock model objects with `contextWindow`, `maxOutput`, `speed`, `accuracy`, `supportsStreaming`, `tags`, and `releaseDate`
+  - Updated placeholder/aria assertions to match current accessible UI
+- **Verified locally**:
+  - `npx tsc --noEmit` passes
+  - `npm run build` passes
+  - `npx playwright test --project=chromium` passes: 8/8 tests
+- **Main push authorization**: user approved continuing to completion on 2026-05-02; push to `main` after local validation.
+
+---
+
+## Current Status: COMPREHENSIVE UPGRADE — 9 MAJOR TASKS COMPLETE + E2E GREEN LOCALLY
+
+Previous Claude upgrade tasks were type-checked and pushed to GitHub. The Codex E2E repair is verified locally but not pushed/merged yet.
 
 ---
 
 ## 🔄 Active Task
 
-无。等待用户下达新任务。
+Codex E2E repair completed locally. User approved continuing to completion on 2026-05-02; push to GitHub/main after final validation.
 
-**未完成的 Plan（可选继续）**：
-- `C:\Users\zero\.claude\plans\floating-conjuring-treasure.md` 中的 Phase 2（重写 prompt-optimizer.ts 核心 SYSTEM_PROMPT）和 Phase 3（模型数据更新）尚未开始
-- 这是把 prompt-optimizer 从纯文本优化升级为支持 image/video/audio 全模态的大改动
+**重要对账提醒**：
+- `C:\Users\zero\.claude\plans\floating-conjuring-treasure.md` 里写的 Phase 2/3 是旧计划
+- 当前代码中的 `src/lib/prompt-optimizer.ts` 已经是 `multi-modal meta-prompt engine v5`
+- 当前 `src/app/api/generate/route.ts` 已经把 `targetCategory` 传给 `buildSystemPrompt()` 和 `buildUserPrompt()`
+- 下一步做 prompt optimizer 前，先审计“代码实际完成度 vs 旧计划”，不要盲目重复重写
 
 ---
 
@@ -115,7 +143,7 @@ All tasks type-checked (`npx tsc --noEmit` passes) and pushed to GitHub.
 ## 🔧 Known TODOs / Tech Debt
 
 1. **trackApiCall/trackTTFT 尚未接入** — 需要在 `PromptGenerator.tsx` 的 fetch 和 SSE 解析处调用
-2. **prompt-optimizer.ts Phase 2/3** — 全模态 SYSTEM_PROMPT 重写（text/image/video/audio）
+2. **prompt-optimizer.ts v5 审计/补强** — 文档旧计划说 Phase 2/3 未开始，但当前代码已包含全模态 v5 和 `targetCategory` 路由；继续前先对账实际质量与缺口
 3. **颜色对比度** — `text-white/30`(~3.3:1) 未达 WCAG AA 4.5:1，待用户确认是否改为 `text-white/45`
 4. **electron-updater** 是 optionalDependencies，Vercel 部署不会安装
 

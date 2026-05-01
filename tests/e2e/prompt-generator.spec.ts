@@ -26,11 +26,16 @@ async function mockAPIs(page: Page) {
             provider: "OpenAI",
             apiProvider: "openai",
             category: "text",
-            inputCostPer1M: 2500,
-            outputCostPer1M: 10000,
-            speedLabel: "fast",
-            accuracyLabel: "high",
+            contextWindow: 128000,
+            maxOutput: 16384,
+            inputCostPer1M: 2.5,
+            outputCostPer1M: 10,
+            speed: "fast",
+            accuracy: "high",
+            supportsStreaming: true,
             isLatest: true,
+            tags: ["vision", "code"],
+            releaseDate: "2024-05-13",
           },
           {
             id: "gpt-4o-mini",
@@ -38,11 +43,16 @@ async function mockAPIs(page: Page) {
             provider: "OpenAI",
             apiProvider: "openai",
             category: "text",
-            inputCostPer1M: 150,
-            outputCostPer1M: 600,
-            speedLabel: "fast",
-            accuracyLabel: "medium",
+            contextWindow: 128000,
+            maxOutput: 16384,
+            inputCostPer1M: 0.15,
+            outputCostPer1M: 0.6,
+            speed: "ultrafast",
+            accuracy: "medium",
+            supportsStreaming: true,
             isLatest: false,
+            tags: ["fast", "cheap"],
+            releaseDate: "2024-07-18",
           },
           {
             id: "dall-e-3",
@@ -50,11 +60,16 @@ async function mockAPIs(page: Page) {
             provider: "OpenAI",
             apiProvider: "openai",
             category: "image",
+            contextWindow: 8192,
+            maxOutput: 4096,
             inputCostPer1M: 0,
             outputCostPer1M: 0,
-            speedLabel: "medium",
-            accuracyLabel: "high",
+            speed: "medium",
+            accuracy: "high",
+            supportsStreaming: false,
             isLatest: true,
+            tags: ["image-gen"],
+            releaseDate: "2023-10-01",
           },
         ],
       }),
@@ -109,10 +124,13 @@ test.describe("PromptGenerator E2E", () => {
   });
 
   test("1. page loads with hero and input area", async ({ page }) => {
-    await expect(page.locator("h1")).toContainText("AI 提示词生成器");
+    await expect(
+      page.locator("header").getByRole("heading", { name: "AI 提示词生成器" })
+    ).toBeVisible();
     const textarea = page.locator("textarea");
     await expect(textarea).toBeVisible();
-    await expect(textarea).toHaveAttribute("placeholder", /输入你的想法/);
+    await expect(textarea).toHaveAttribute("aria-label", /输入你的想法或需求/);
+    await expect(textarea).toHaveAttribute("placeholder", /写一首关于秋天的古风诗/);
   });
 
   test("2. typing shows character count", async ({ page }) => {
@@ -121,7 +139,7 @@ test.describe("PromptGenerator E2E", () => {
 
     const charCount = page.locator("textarea + span, textarea ~ span").first();
     await expect(charCount).toBeVisible();
-    await expect(charCount).toContainText("14");
+    await expect(charCount).toContainText("16");
   });
 
   test("3. language toggle switches zh ↔ en", async ({ page }) => {
@@ -147,11 +165,18 @@ test.describe("PromptGenerator E2E", () => {
     await expect(genBtn).toBeDisabled();
   });
 
-  test("5. model selector opens on click", async ({ page }) => {
-    const targetSection = page.locator("text=目标模型").first();
-    await targetSection.click();
+  test("5. target model cards select and generator picker opens", async ({ page }) => {
+    await page.getByRole("tab", { name: /文生图/ }).click();
+    const imageModel = page.getByRole("button", { name: /DALL·E 3/ });
+    await imageModel.click();
+    await expect(imageModel).toHaveAttribute("aria-pressed", "true");
 
-    const dialog = page.getByRole("dialog");
+    const generatorTrigger = page
+      .getByRole("button", { name: /GPT-4o Mini|点击选择生成器模型/ })
+      .first();
+    await generatorTrigger.click();
+
+    const dialog = page.getByRole("dialog", { name: "选择生成器模型" });
     await expect(dialog).toBeVisible({ timeout: 3000 });
   });
 
