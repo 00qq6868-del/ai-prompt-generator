@@ -12,7 +12,10 @@
     "lint": "next lint",
     "setup:icons": "node scripts/generate-icons.js",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && electron-builder --win --publish never"
+    "electron:build": "npm run build && electron-builder --win --publish never",
+    "electron:build:mac": "npm run build && electron-builder --mac --publish never",
+    "electron:build:all": "npm run build && electron-builder --win --mac --publish never",
+    "electron:publish": "npm run build && electron-builder --win --mac --publish always"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
@@ -28,6 +31,9 @@
     "react-dom": "^18.3.0",
     "react-hot-toast": "^2.6.0",
     "sharp": "^0.33.5"
+  },
+  "optionalDependencies": {
+    "electron-updater": "^6.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
@@ -46,8 +52,14 @@
     "appId": "com.ai-prompt-generator.app",
     "productName": "AI提示词生成器",
     "copyright": "Copyright © 2025",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist-electron"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "00qq6868-del",
+      "repo": "ai-prompt-generator"
     },
     "files": [
       "electron/**/*",
@@ -57,7 +69,7 @@
       {
         "from": ".next/standalone",
         "to": "app",
-        "filter": ["**/*"]
+        "filter": ["**/*", "!node_modules/.cache/**", "!node_modules/@swc/**", "!node_modules/typescript/**", "!node_modules/eslint/**"]
       },
       {
         "from": ".next/static",
@@ -67,8 +79,12 @@
       {
         "from": "public",
         "to": "app/public",
-        "filter": ["**/*"]
+        "filter": ["**/*", "!*.map"]
       }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "electron/preload.js"
     ],
     "win": {
       "target": [
@@ -78,10 +94,21 @@
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] }
+        { "target": "dmg", "arch": ["universal"] }
       ],
       "icon": "public/icons/icon-512.png",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "AI提示词生成器",
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
     },
     "nsis": {
       "oneClick": false,

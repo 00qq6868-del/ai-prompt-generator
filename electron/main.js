@@ -8,11 +8,11 @@ const fs    = require("fs");
 const http  = require("http");
 
 // ── 配置 ─────────────────────────────────────────────────────
-const PORT        = 3748;          // 避免与常见端口冲突
+const PORT        = 3748;
 const SERVER_URL  = `http://127.0.0.1:${PORT}`;
 const ENV_FILE    = path.join(app.getPath("userData"), ".env.local");
+const STATE_FILE  = path.join(app.getPath("userData"), "window-state.json");
 
-// 打包后资源在 process.resourcesPath/app，开发时在项目根目录
 const IS_PACKAGED  = app.isPackaged;
 const RESOURCES    = IS_PACKAGED ? path.join(process.resourcesPath, "app") : path.join(__dirname, "..");
 const ICON_PATH    = path.join(RESOURCES, "public", "icons", "icon-512.png");
@@ -21,10 +21,47 @@ const PROJECT_ENV  = path.join(RESOURCES, ".env.local");
 let mainWindow = null;
 let serverProcess = null;
 let tray = null;
+let isQuitting = false;
+
+// ── 窗口状态记忆 ──────────────────────────────────────────────
+function loadWindowState() {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(STATE_FILE, "utf-8"));
+    }
+  } catch {}
+  return { width: 1280, height: 820 };
+}
+
+function saveWindowState(win) {
+  if (!win || win.isDestroyed()) return;
+  const bounds = win.getNormalBounds();
+  const state = {
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    isMaximized: win.isMaximized(),
+  };
+  try {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state), "utf-8");
+  } catch {}
+}
+
+// ── 开机自启 ──────────────────────────────────────────────────
+function getAutoLaunch() {
+  return app.getLoginItemSettings().openAtLogin;
+}
+
+function setAutoLaunch(enabled) {
+  app.setLoginItemSettings({
+    openAtLogin: enabled,
+    path: process.execPath,
+  });
+}
 
 // ── 读取 .env.local ───────────────────────────────────────────
 function readEnv() {
-  // 优先读用户数据目录（App 保存的配置）
   const target = fs.existsSync(ENV_FILE) ? ENV_FILE : PROJECT_ENV;
   if (!fs.existsSync(target)) return {};
   const env = {};
@@ -39,7 +76,6 @@ function readEnv() {
   return env;
 }
 
-// 检查是否至少配置了一个 AI Provider Key
 function hasAnyKey(env) {
   const keys = [
     "OPENAI_API_KEY","ANTHROPIC_API_KEY","GOOGLE_API_KEY",
@@ -94,11 +130,53 @@ function waitForServer(maxMs = 30000) {
   });
 }
 
+// ── 自动更新 ──────────────────────────────────────────────────
+function setupAutoUpdater() {
+  if (!IS_PACKAGED) return;
+  try {
+    const { autoUpdater } = require("electron-updater");
+    autoUpdater.autoDownload = false;
+    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.on("update-available", (info) => {
+      const { dialog } = require("electron");
+      dialog.showMessageBox(mainWindow, {
+        type: "info",
+        title: "发现新版本 New version available",
+        message: `新版本 ${info.version} 可用，是否下载？\nVersion ${info.version} is available. Download now?`,
+        buttons: ["下载 Download", "稍后 Later"],
+      }).then(({ response }) => {
+        if (response === 0) autoUpdater.downloadUpdate();
+      });
+    });
+    autoUpdater.on("update-downloaded", () => {
+      const { dialog } = require("electron");
+      dialog.showMessageBox(mainWindow, {
+        type: "info",
+        title: "更新已就绪 Update ready",
+        message: "更新已下载，重启应用以安装。\nUpdate downloaded. Restart to install.",
+        buttons: ["重启 Restart", "稍后 Later"],
+      }).then(({ response }) => {
+        if (response === 0) {
+          isQuitting = true;
+          autoUpdater.quitAndInstall();
+        }
+      });
+    });
+    autoUpdater.on("error", (err) => {
+      console.error("[updater]", err.message);
+    });
+  } catch (err) {
+    console.error("[updater] electron-updater not available:", err.message);
+  }
+}
+
 // ── 创建主窗口 ────────────────────────────────────────────────
 function createMainWindow() {
-  const win = new BrowserWindow({
-    width:     1280,
-    height:    820,
+  const state = loadWindowState();
+
+  const winOpts = {
+    width:     state.width,
+    height:    state.height,
     minWidth:  900,
     minHeight: 600,
     backgroundColor: "#060610",
@@ -110,16 +188,22 @@ function createMainWindow() {
       preload: path.join(__dirname, "preload.js"),
     },
     show: false,
-  });
+  };
 
-  // 去掉默认菜单栏（更像 App）
+  if (state.x !== undefined && state.y !== undefined) {
+    winOpts.x = state.x;
+    winOpts.y = state.y;
+  }
+
+  const win = new BrowserWindow(winOpts);
+
+  if (state.isMaximized) win.maximize();
+
   Menu.setApplicationMenu(null);
 
-  // 先显示加载页
   win.loadFile(path.join(__dirname, "loading.html"));
   win.show();
 
-  // 等服务器就绪后切换到 App
   waitForServer()
     .then(() => {
       win.loadURL(SERVER_URL);
@@ -128,11 +212,24 @@ function createMainWindow() {
       win.loadFile(path.join(__dirname, "error.html"));
     });
 
-  // 外部链接在系统浏览器打开
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (!url.startsWith(SERVER_URL)) shell.openExternal(url);
     return { action: "deny" };
   });
+
+  // 最小化到托盘（而非关闭）
+  win.on("close", (e) => {
+    if (!isQuitting) {
+      e.preventDefault();
+      win.hide();
+      return;
+    }
+    saveWindowState(win);
+  });
+
+  // 持续保存窗口状态
+  win.on("resize", () => saveWindowState(win));
+  win.on("move", () => saveWindowState(win));
 
   win.on("closed", () => { mainWindow = null; });
   return win;
@@ -143,11 +240,38 @@ function createTray() {
   const img = nativeImage.createFromPath(ICON_PATH).resize({ width: 16, height: 16 });
   tray = new Tray(img);
   tray.setToolTip("AI 提示词生成器");
-  tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "打开",  click: () => { if (mainWindow) mainWindow.show(); else mainWindow = createMainWindow(); } },
-    { label: "退出",  click: () => app.quit() },
-  ]));
-  tray.on("click", () => { if (mainWindow) mainWindow.show(); });
+
+  const autoLaunchEnabled = getAutoLaunch();
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "显示窗口 Show",
+      click: () => {
+        if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
+        else mainWindow = createMainWindow();
+      },
+    },
+    { type: "separator" },
+    {
+      label: "开机自启 Auto Start",
+      type: "checkbox",
+      checked: autoLaunchEnabled,
+      click: (item) => setAutoLaunch(item.checked),
+    },
+    { type: "separator" },
+    {
+      label: "退出 Quit",
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      },
+    },
+  ]);
+
+  tray.setContextMenu(contextMenu);
+  tray.on("click", () => {
+    if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
+  });
 }
 
 // ── 设置窗口（首次运行） ──────────────────────────────────────
@@ -169,7 +293,6 @@ function createSettingsWindow(onSave) {
   win.loadFile(path.join(__dirname, "settings.html"));
 
   ipcMain.once("save-keys", (_evt, keys) => {
-    // 写入用户数据目录
     const lines = Object.entries(keys)
       .filter(([, v]) => v && v.trim())
       .map(([k, v]) => `${k}=${v.trim()}`)
@@ -194,10 +317,10 @@ app.whenReady().then(async () => {
     startServer(readEnv());
     createTray();
     mainWindow = createMainWindow();
+    setupAutoUpdater();
   };
 
   if (!hasAnyKey(env)) {
-    // 首次运行 → 先填 Key
     createSettingsWindow(launch);
   } else {
     launch();
@@ -205,23 +328,26 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
-  // 关窗不退出（系统托盘继续运行），macOS 惯例
-  if (process.platform !== "darwin") {
-    // Windows：缩到托盘
-  }
+  // 不退出 — 托盘继续运行
 });
 
 app.on("activate", () => {
   if (!mainWindow) mainWindow = createMainWindow();
+  else mainWindow.show();
 });
 
 app.on("before-quit", () => {
+  isQuitting = true;
+  if (mainWindow && !mainWindow.isDestroyed()) saveWindowState(mainWindow);
   if (serverProcess) { serverProcess.kill(); serverProcess = null; }
 });
 
-// IPC：渲染进程请求打开设置
+// IPC
 ipcMain.on("open-settings", () => {
   createSettingsWindow(() => {
     if (mainWindow) mainWindow.reload();
   });
 });
+
+ipcMain.handle("get-auto-launch", () => getAutoLaunch());
+ipcMain.handle("set-auto-launch", (_e, enabled) => setAutoLaunch(enabled));
