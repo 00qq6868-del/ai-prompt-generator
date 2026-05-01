@@ -1,24 +1,58 @@
 /** @type {import('next').NextConfig} */
-// [S5 FIX] Switched from next-pwa (incompatible with App Router) to @ducanh2912/next-pwa
+// @ducanh2912/next-pwa — compatible with App Router
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
   register: true,
   skipWaiting: true,
-  // Enable in dev too so phones can install PWA while testing on LAN
   disable: false,
+  fallbacks: {
+    document: "/offline",
+  },
   runtimeCaching: [
     {
-      // API routes: always network-first, never cache — responses depend on API keys
-      urlPattern: /^https?:\/\/[^/]+\/api\/.*/i,
+      // /api/generate — never cache (LLM responses are unique)
+      urlPattern: /\/api\/generate/i,
       handler: "NetworkOnly",
     },
     {
-      // Everything else: network-first with 10s timeout, then serve cache
+      // /api/models — stale-while-revalidate, 1 hour
+      urlPattern: /\/api\/models/i,
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "api-models-cache",
+        expiration: { maxEntries: 5, maxAgeSeconds: 3600 },
+      },
+    },
+    {
+      // Other API routes — network only
+      urlPattern: /\/api\//i,
+      handler: "NetworkOnly",
+    },
+    {
+      // JS/CSS static assets — cache first
+      urlPattern: /\/_next\/static\/.*/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "static-assets",
+        expiration: { maxEntries: 200, maxAgeSeconds: 30 * 86400 },
+      },
+    },
+    {
+      // Fonts + images
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|ico|webp|woff2?|ttf|eot)$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "media-cache",
+        expiration: { maxEntries: 100, maxAgeSeconds: 30 * 86400 },
+      },
+    },
+    {
+      // HTML pages — network first with 10s timeout
       urlPattern: /^https?.*/,
       handler: "NetworkFirst",
       options: {
-        cacheName: "ai-prompt-cache",
-        expiration: { maxEntries: 200, maxAgeSeconds: 86400 },
+        cacheName: "pages-cache",
+        expiration: { maxEntries: 50, maxAgeSeconds: 86400 },
         networkTimeoutSeconds: 10,
       },
     },
@@ -28,12 +62,9 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  // [S4 FIX] Next.js 14 uses experimental.serverComponentsExternalPackages
   experimental: {
     serverComponentsExternalPackages: ["@anthropic-ai/sdk", "sharp"],
   },
-  // [C4 FIX] Do NOT inject a placeholder MODELS_REGISTRY_URL here.
-  // When the env var is unset, model-cache.ts falls back to the bundled list automatically.
 };
 
 module.exports = withPWA(nextConfig);
