@@ -30,6 +30,7 @@ Codex fixed the failing GitHub E2E assertions in the Codex-safe worktree.
 - **Branch**: `codex/safe-audit-20260501-232542`
 - **File changed**: `tests/e2e/prompt-generator.spec.ts`
 - **Follow-up files changed**: `playwright.config.ts` to block service workers in E2E and generate CI HTML reports; `src/components/ModelSelector.tsx` to add an accessible generator-picker button label
+- **Workflow hardening**: `.github/workflows/test.yml` now uses Node 22 for project commands and opts GitHub JS actions into Node 24 execution; `.github/workflows/update-models.yml` also opts JS actions into Node 24 execution
 - **Root cause**: E2E tests were written against older UI assumptions:
   - `page.locator("h1")` became ambiguous after the header and hero both used `h1`
   - Character count expected `14`, but the real JavaScript string length for `Hello world 你好世界` is `16`

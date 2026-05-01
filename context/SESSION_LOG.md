@@ -22,6 +22,8 @@ Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touchin
 - `tests/e2e/prompt-generator.spec.ts`
 - `playwright.config.ts`
 - `src/components/ModelSelector.tsx`
+- `.github/workflows/test.yml`
+- `.github/workflows/update-models.yml`
 - `context/PROGRESS.md`
 - `context/SESSION_LOG.md`
 
@@ -38,6 +40,9 @@ Fixed the GitHub Actions E2E failures in the Codex-safe worktree without touchin
 7. Blocked service workers in Playwright E2E so PWA cache behavior cannot bypass route mocks.
 8. Added a stable accessible label to the generator model picker trigger.
 9. Updated the Playwright CI reporter to generate both GitHub annotations and the HTML report artifact.
+10. Updated workflow hardening:
+    - E2E workflow project commands now run on Node 22, avoiding dependency engine warnings.
+    - E2E and model-update workflows opt GitHub JavaScript actions into Node 24 execution via `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`.
 
 ### Verification
 
