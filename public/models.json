@@ -22,6 +22,29 @@
     "category": "text"
   },
   {
+    "id": "sophnet-deepseek-v4-pro",
+    "name": "DeepSeek V4 Pro (SophNet relay)",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.28,
+    "outputCostPer1M": 1.14,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "math",
+      "code",
+      "chinese",
+      "relay"
+    ],
+    "releaseDate": "2026-04-01",
+    "category": "text"
+  },
+  {
     "id": "gpt-5.4",
     "name": "GPT-5.4",
     "provider": "OpenAI",
@@ -107,6 +130,50 @@
       "pro"
     ],
     "releaseDate": "2026-03-01",
+    "category": "text"
+  },
+  {
+    "id": "claude-opus-4-7",
+    "name": "Claude Opus 4.7",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 1048576,
+    "maxOutput": 128000,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 25,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "vision",
+      "code",
+      "agentic",
+      "adaptive-thinking"
+    ],
+    "releaseDate": "2026-02-19",
+    "category": "text"
+  },
+  {
+    "id": "claude-sonnet-4-6",
+    "name": "Claude Sonnet 4.6",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 1048576,
+    "maxOutput": 64000,
+    "inputCostPer1M": 3,
+    "outputCostPer1M": 15,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "vision",
+      "code",
+      "thinking"
+    ],
+    "releaseDate": "2025-11-24",
     "category": "text"
   },
   {
@@ -629,29 +696,6 @@
       "code"
     ],
     "releaseDate": "2025-07-01",
-    "category": "text"
-  },
-  {
-    "id": "sophnet-deepseek-v4-pro",
-    "name": "DeepSeek V4 Pro (SophNet relay)",
-    "provider": "DeepSeek",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 32768,
-    "inputCostPer1M": 0.28,
-    "outputCostPer1M": 1.14,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "reasoning",
-      "math",
-      "code",
-      "chinese",
-      "relay"
-    ],
-    "releaseDate": "2026-04-01",
     "category": "text"
   },
   {
@@ -2148,29 +2192,6 @@
     "category": "text"
   },
   {
-    "id": "claude-opus-4-7",
-    "name": "Claude Opus 4.7",
-    "provider": "Anthropic",
-    "apiProvider": "aihubmix",
-    "contextWindow": 1048576,
-    "maxOutput": 128000,
-    "inputCostPer1M": 5,
-    "outputCostPer1M": 25,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "reasoning",
-      "vision",
-      "code",
-      "agentic",
-      "adaptive-thinking"
-    ],
-    "releaseDate": "2026-02-19",
-    "category": "text"
-  },
-  {
     "id": "qwen3-vl-plus",
     "name": "qwen3-vl-plus",
     "provider": "阿里巴巴",
@@ -2798,27 +2819,6 @@
       "fast"
     ],
     "releaseDate": "2025-04-14",
-    "category": "text"
-  },
-  {
-    "id": "claude-sonnet-4-6",
-    "name": "Claude Sonnet 4.6",
-    "provider": "Anthropic",
-    "apiProvider": "aihubmix",
-    "contextWindow": 1048576,
-    "maxOutput": 64000,
-    "inputCostPer1M": 3,
-    "outputCostPer1M": 15,
-    "speed": "fast",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "vision",
-      "code",
-      "thinking"
-    ],
-    "releaseDate": "2025-11-24",
     "category": "text"
   },
   {
@@ -4286,21 +4286,196 @@
     "category": "text"
   },
   {
-    "id": "gemini-2.5-computer-use-preview-10-2025",
-    "name": "Gemini 2.5 Computer Use Preview 10-2025",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 131072,
-    "maxOutput": 65536,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
+    "id": "gpt-5.5-pro",
+    "name": "GPT-5.5 Pro",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 1048576,
+    "maxOutput": 128000,
+    "inputCostPer1M": 30,
+    "outputCostPer1M": 180,
     "speed": "medium",
     "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision",
+      "agentic",
+      "pro"
+    ],
+    "releaseDate": "2026-04-24",
+    "category": "text"
+  },
+  {
+    "id": "gpt-image-2",
+    "name": "GPT Image 2",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 32768,
+    "maxOutput": 4096,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 30,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "image-gen",
+      "editing",
+      "transparent-background",
+      "text-rendering"
+    ],
+    "releaseDate": "2026-04-01",
+    "category": "image"
+  },
+  {
+    "id": "gpt-realtime-1.5",
+    "name": "GPT Realtime 1.5",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 128000,
+    "maxOutput": 4096,
+    "inputCostPer1M": 4,
+    "outputCostPer1M": 16,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "audio",
+      "realtime",
+      "voice",
+      "multimodal"
+    ],
+    "releaseDate": "2026-04-01",
+    "category": "tts"
+  },
+  {
+    "id": "gpt-image-1.5",
+    "name": "GPT Image 1.5",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 32768,
+    "maxOutput": 4096,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 32,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": false,
+    "tags": [
+      "image-gen",
+      "editing",
+      "text-rendering"
+    ],
+    "releaseDate": "2026-02-01",
+    "category": "image"
+  },
+  {
+    "id": "gpt-image-1-mini",
+    "name": "GPT Image 1 Mini",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 32768,
+    "maxOutput": 4096,
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 8,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": false,
+    "isLatest": false,
+    "tags": [
+      "image-gen",
+      "cheap",
+      "fast"
+    ],
+    "releaseDate": "2026-02-01",
+    "category": "image"
+  },
+  {
+    "id": "sora-2",
+    "name": "Sora 2",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": false,
+    "tags": [
+      "video-gen",
+      "audio-sync",
+      "priced-per-second"
+    ],
+    "releaseDate": "2026-02-01",
+    "category": "video"
+  },
+  {
+    "id": "sora-2-pro",
+    "name": "Sora 2 Pro",
+    "provider": "OpenAI",
+    "apiProvider": "openai",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "slow",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "video-gen",
+      "audio-sync",
+      "pro",
+      "priced-per-second"
+    ],
+    "releaseDate": "2026-02-01",
+    "category": "video"
+  },
+  {
+    "id": "claude-haiku-4-5",
+    "name": "Claude Haiku 4.5",
+    "provider": "Anthropic",
+    "apiProvider": "anthropic",
+    "contextWindow": 200000,
+    "maxOutput": 64000,
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "vision",
+      "fast",
+      "cheap"
+    ],
+    "releaseDate": "2025-10-01",
+    "category": "text"
+  },
+  {
+    "id": "claude-haiku-4-5-20251001",
+    "name": "Claude Haiku 4.5 Snapshot 20251001",
+    "provider": "Anthropic",
+    "apiProvider": "anthropic",
+    "contextWindow": 200000,
+    "maxOutput": 64000,
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "ultrafast",
+    "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
     "tags": [
       "vision",
-      "computer-use"
+      "fast",
+      "cheap",
+      "snapshot"
     ],
     "releaseDate": "2025-10-01",
     "category": "text"
@@ -4461,6 +4636,118 @@
     ],
     "releaseDate": "2026-04-30",
     "category": "image"
+  },
+  {
+    "id": "gemini-3.1-flash-live-preview",
+    "name": "Gemini 3.1 Flash Live Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0.75,
+    "outputCostPer1M": 4.5,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "audio",
+      "live",
+      "voice",
+      "multimodal",
+      "preview"
+    ],
+    "releaseDate": "2026-04-30",
+    "category": "tts"
+  },
+  {
+    "id": "veo-3.1-generate-preview",
+    "name": "Veo 3.1 Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "video-gen",
+      "audio-sync",
+      "cinematic",
+      "preview",
+      "priced-per-second"
+    ],
+    "releaseDate": "2026-04-30",
+    "category": "video"
+  },
+  {
+    "id": "veo-3.1-fast-generate-preview",
+    "name": "Veo 3.1 Fast Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "video-gen",
+      "audio-sync",
+      "fast",
+      "preview",
+      "priced-per-second"
+    ],
+    "releaseDate": "2026-04-30",
+    "category": "video"
+  },
+  {
+    "id": "veo-3.1-lite-generate-preview",
+    "name": "Veo 3.1 Lite Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 4096,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "video-gen",
+      "audio-sync",
+      "cheap",
+      "preview",
+      "priced-per-second"
+    ],
+    "releaseDate": "2026-04-30",
+    "category": "video"
+  },
+  {
+    "id": "gemini-2.5-computer-use-preview-10-2025",
+    "name": "Gemini 2.5 Computer Use Preview 10-2025",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "computer-use"
+    ],
+    "releaseDate": "2025-10-01",
+    "category": "text"
   },
   {
     "id": "gemini-3-pro-preview",
@@ -4912,6 +5199,51 @@
     "category": "text"
   },
   {
+    "id": "deepseek-v4-pro",
+    "name": "DeepSeek V4 Pro",
+    "provider": "DeepSeek",
+    "apiProvider": "deepseek",
+    "contextWindow": 128000,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.28,
+    "outputCostPer1M": 1.14,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "math",
+      "code",
+      "chinese"
+    ],
+    "releaseDate": "2026-04-01",
+    "category": "text"
+  },
+  {
+    "id": "deepseek-v4-flash",
+    "name": "DeepSeek V4 Flash",
+    "provider": "DeepSeek",
+    "apiProvider": "deepseek",
+    "contextWindow": 128000,
+    "maxOutput": 32768,
+    "inputCostPer1M": 0.04,
+    "outputCostPer1M": 0.14,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "fast",
+      "cheap",
+      "math",
+      "code",
+      "chinese"
+    ],
+    "releaseDate": "2026-04-01",
+    "category": "text"
+  },
+  {
     "id": "deepseek-reasoner",
     "name": "DeepSeek R1",
     "provider": "DeepSeek",
@@ -5072,338 +5404,6 @@
       "local"
     ],
     "releaseDate": "2024-09-19",
-    "category": "text"
-  },
-  {
-    "id": "gpt-5.5-pro",
-    "name": "GPT-5.5 Pro",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 1048576,
-    "maxOutput": 128000,
-    "inputCostPer1M": 30,
-    "outputCostPer1M": 180,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "reasoning",
-      "code",
-      "vision",
-      "agentic",
-      "pro"
-    ],
-    "releaseDate": "2026-04-24",
-    "category": "text"
-  },
-  {
-    "id": "gpt-image-2",
-    "name": "GPT Image 2",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 32768,
-    "maxOutput": 4096,
-    "inputCostPer1M": 5,
-    "outputCostPer1M": 30,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": false,
-    "isLatest": true,
-    "tags": [
-      "image-gen",
-      "editing",
-      "transparent-background",
-      "text-rendering"
-    ],
-    "releaseDate": "2026-04-01",
-    "category": "image"
-  },
-  {
-    "id": "gpt-image-1.5",
-    "name": "GPT Image 1.5",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 32768,
-    "maxOutput": 4096,
-    "inputCostPer1M": 5,
-    "outputCostPer1M": 32,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": false,
-    "isLatest": false,
-    "tags": [
-      "image-gen",
-      "editing",
-      "text-rendering"
-    ],
-    "releaseDate": "2026-02-01",
-    "category": "image"
-  },
-  {
-    "id": "gpt-image-1-mini",
-    "name": "GPT Image 1 Mini",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 32768,
-    "maxOutput": 4096,
-    "inputCostPer1M": 2,
-    "outputCostPer1M": 8,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": false,
-    "isLatest": false,
-    "tags": [
-      "image-gen",
-      "cheap",
-      "fast"
-    ],
-    "releaseDate": "2026-02-01",
-    "category": "image"
-  },
-  {
-    "id": "sora-2",
-    "name": "Sora 2",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 8192,
-    "maxOutput": 4096,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": false,
-    "isLatest": false,
-    "tags": [
-      "video-gen",
-      "audio-sync",
-      "priced-per-second"
-    ],
-    "releaseDate": "2026-02-01",
-    "category": "video"
-  },
-  {
-    "id": "sora-2-pro",
-    "name": "Sora 2 Pro",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 8192,
-    "maxOutput": 4096,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "slow",
-    "accuracy": "supreme",
-    "supportsStreaming": false,
-    "isLatest": true,
-    "tags": [
-      "video-gen",
-      "audio-sync",
-      "pro",
-      "priced-per-second"
-    ],
-    "releaseDate": "2026-02-01",
-    "category": "video"
-  },
-  {
-    "id": "gpt-realtime-1.5",
-    "name": "GPT Realtime 1.5",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 128000,
-    "maxOutput": 4096,
-    "inputCostPer1M": 4,
-    "outputCostPer1M": 16,
-    "speed": "ultrafast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "audio",
-      "realtime",
-      "voice",
-      "multimodal"
-    ],
-    "releaseDate": "2026-04-01",
-    "category": "tts"
-  },
-  {
-    "id": "deepseek-v4-pro",
-    "name": "DeepSeek V4 Pro",
-    "provider": "DeepSeek",
-    "apiProvider": "deepseek",
-    "contextWindow": 128000,
-    "maxOutput": 32768,
-    "inputCostPer1M": 0.28,
-    "outputCostPer1M": 1.14,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "reasoning",
-      "math",
-      "code",
-      "chinese"
-    ],
-    "releaseDate": "2026-04-01",
-    "category": "text"
-  },
-  {
-    "id": "deepseek-v4-flash",
-    "name": "DeepSeek V4 Flash",
-    "provider": "DeepSeek",
-    "apiProvider": "deepseek",
-    "contextWindow": 128000,
-    "maxOutput": 32768,
-    "inputCostPer1M": 0.04,
-    "outputCostPer1M": 0.14,
-    "speed": "ultrafast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "fast",
-      "cheap",
-      "math",
-      "code",
-      "chinese"
-    ],
-    "releaseDate": "2026-04-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3.1-flash-live-preview",
-    "name": "Gemini 3.1 Flash Live Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 1048576,
-    "maxOutput": 65536,
-    "inputCostPer1M": 0.75,
-    "outputCostPer1M": 4.5,
-    "speed": "ultrafast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "audio",
-      "live",
-      "voice",
-      "multimodal",
-      "preview"
-    ],
-    "releaseDate": "2026-04-30",
-    "category": "tts"
-  },
-  {
-    "id": "veo-3.1-generate-preview",
-    "name": "Veo 3.1 Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 8192,
-    "maxOutput": 4096,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": false,
-    "isLatest": true,
-    "tags": [
-      "video-gen",
-      "audio-sync",
-      "cinematic",
-      "preview",
-      "priced-per-second"
-    ],
-    "releaseDate": "2026-04-30",
-    "category": "video"
-  },
-  {
-    "id": "veo-3.1-fast-generate-preview",
-    "name": "Veo 3.1 Fast Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 8192,
-    "maxOutput": 4096,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": false,
-    "isLatest": true,
-    "tags": [
-      "video-gen",
-      "audio-sync",
-      "fast",
-      "preview",
-      "priced-per-second"
-    ],
-    "releaseDate": "2026-04-30",
-    "category": "video"
-  },
-  {
-    "id": "veo-3.1-lite-generate-preview",
-    "name": "Veo 3.1 Lite Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 8192,
-    "maxOutput": 4096,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": false,
-    "isLatest": true,
-    "tags": [
-      "video-gen",
-      "audio-sync",
-      "cheap",
-      "preview",
-      "priced-per-second"
-    ],
-    "releaseDate": "2026-04-30",
-    "category": "video"
-  },
-  {
-    "id": "claude-haiku-4-5",
-    "name": "Claude Haiku 4.5",
-    "provider": "Anthropic",
-    "apiProvider": "anthropic",
-    "contextWindow": 200000,
-    "maxOutput": 64000,
-    "inputCostPer1M": 1,
-    "outputCostPer1M": 5,
-    "speed": "ultrafast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "vision",
-      "fast",
-      "cheap"
-    ],
-    "releaseDate": "2025-10-01",
-    "category": "text"
-  },
-  {
-    "id": "claude-haiku-4-5-20251001",
-    "name": "Claude Haiku 4.5 Snapshot 20251001",
-    "provider": "Anthropic",
-    "apiProvider": "anthropic",
-    "contextWindow": 200000,
-    "maxOutput": 64000,
-    "inputCostPer1M": 1,
-    "outputCostPer1M": 5,
-    "speed": "ultrafast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "fast",
-      "cheap",
-      "snapshot"
-    ],
-    "releaseDate": "2025-10-01",
     "category": "text"
   }
 ]

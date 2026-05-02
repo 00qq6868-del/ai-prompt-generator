@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-02T08:37:27.893Z",
+  "updatedAt": "2026-05-02T08:46:28.281Z",
   "totalModels": 266,
   "byCategory": {
     "text": 245,
@@ -9,16 +9,16 @@
   },
   "byProvider": {
     "OpenAI": 55,
+    "DeepSeek": 12,
+    "Anthropic": 16,
     "Other": 33,
     "Google": 42,
     "阿里巴巴": 33,
-    "DeepSeek": 12,
     "xAI": 15,
     "百度": 7,
     "MiniMax": 19,
     "智谱AI": 17,
     "ByteDance": 2,
-    "Anthropic": 16,
     "阶跃星辰": 2,
     "Cohere": 5,
     "Mistral AI": 3,
@@ -28,15 +28,15 @@
   },
   "zeroCostModels": 9,
   "metaCoverage": 257,
-  "lastUpdate": {
-    "added": 0,
-    "updated": 239,
-    "previousTotal": 251
-  },
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
-    "added": 15,
-    "updated": 15,
+    "added": 0,
+    "updated": 14,
     "verifiedAt": "2026-05-02"
+  },
+  "lastUpdate": {
+    "added": 0,
+    "updated": 253,
+    "previousTotal": 266
   }
 }
