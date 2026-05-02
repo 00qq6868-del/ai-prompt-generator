@@ -779,3 +779,16 @@ User asked Codex to continue the original free AI workbench setup, verify all fr
 - `E:\AI工作台\AI-CHAIN.cmd docker` passed.
 - `E:\AI工作台\AI-CHAIN.cmd ollama` passed and showed `bge-m3:latest`.
 - Local `smoke-prod` passed homepage/models/analytics and stopped at real generation because no local generation API key env var is configured. GitHub Production Smoke Test should be used after push because repo secrets exist there.
+
+### GitHub verification after push
+
+- Pushed commit `9b3abb9 test: add visual accessibility quality audit` to `main`.
+- GitHub E2E run `25254262203` passed:
+  - build ok
+  - Playwright tests: 10/10
+- GitHub Production Smoke Test run `25254319276` passed on `9b3abb9`:
+  - homepage ok
+  - models ok: `266` total, `{ text: 245, video: 7, image: 7, tts: 7 }`
+  - analytics ok
+  - relay probe ok: `224` models
+  - real generation ok through Groq fallback after Google failed
