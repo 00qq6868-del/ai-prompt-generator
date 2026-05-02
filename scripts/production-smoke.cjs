@@ -49,7 +49,7 @@ function categoryCounts(models) {
   return counts;
 }
 
-function pickGenerateConfig(models) {
+function getGenerateCandidates(models) {
   const byId = new Map(models.map((m) => [m.id, m]));
   const candidates = [
     {
@@ -75,7 +75,40 @@ function pickGenerateConfig(models) {
     },
   ];
 
-  return candidates.find((candidate) => candidate.key && byId.has(candidate.modelId));
+  return candidates.filter((candidate) => candidate.key && byId.has(candidate.modelId));
+}
+
+function summarizeError(error) {
+  return String(error?.message || error)
+    .replace(/\s+/g, " ")
+    .slice(0, 220);
+}
+
+async function smokeGenerate(models, generateConfig) {
+  log(`real generation using ${generateConfig.name} (${generateConfig.modelId}); key is present but never printed`);
+  const res = await fetchWithTimeout(`${BASE_URL}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userIdea: "把这句话优化成一个清晰的产品卖点提示词：AI 提示词生成器可以帮新手写出更好的 prompt。",
+      targetModelId: models.some((m) => m.id === "gpt-4o") ? "gpt-4o" : generateConfig.modelId,
+      generatorModelId: generateConfig.modelId,
+      language: "zh",
+      maxTokens: 512,
+      userKeys: generateConfig.userKeys(),
+      stream: true,
+    }),
+  }, 90_000);
+
+  const text = await res.clone().text().catch(() => "");
+  assert(res.ok, `/api/generate returned ${res.status}: ${text.slice(0, 300)}`);
+  assert((res.headers.get("content-type") || "").includes("text/event-stream"), "/api/generate did not return SSE");
+
+  const { chunks, donePayload } = await parseSSE(res);
+  const finalText = donePayload?.optimizedPrompt || chunks;
+  assert(typeof finalText === "string" && finalText.trim().length >= 30, "generation returned an empty/short prompt");
+  assert(donePayload?.stats, "generation did not return final stats");
+  log(`generation ok: provider=${generateConfig.name}, chars=${finalText.trim().length}, latencyMs=${donePayload.stats.latencyMs}`);
 }
 
 async function parseSSE(res) {
@@ -181,36 +214,24 @@ async function main() {
     return;
   }
 
-  const generateConfig = pickGenerateConfig(models);
+  const generateCandidates = getGenerateCandidates(models);
   assert(
-    generateConfig,
+    generateCandidates.length > 0,
     "No usable generation secret found. Configure GOOGLE_API_KEY, GROQ_API_KEY/GROQ, or AIHUBMIX_API_KEY.",
   );
 
-  log(`real generation using ${generateConfig.name} (${generateConfig.modelId}); key is present but never printed`);
-  const res = await fetchWithTimeout(`${BASE_URL}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userIdea: "把这句话优化成一个清晰的产品卖点提示词：AI 提示词生成器可以帮新手写出更好的 prompt。",
-      targetModelId: models.some((m) => m.id === "gpt-4o") ? "gpt-4o" : generateConfig.modelId,
-      generatorModelId: generateConfig.modelId,
-      language: "zh",
-      maxTokens: 512,
-      userKeys: generateConfig.userKeys(),
-      stream: true,
-    }),
-  }, 90_000);
+  const failures = [];
+  for (const candidate of generateCandidates) {
+    try {
+      await smokeGenerate(models, candidate);
+      return;
+    } catch (error) {
+      failures.push(`${candidate.name}: ${summarizeError(error)}`);
+      log(`generation failed with ${candidate.name}; trying next candidate`);
+    }
+  }
 
-  const text = await res.clone().text().catch(() => "");
-  assert(res.ok, `/api/generate returned ${res.status}: ${text.slice(0, 300)}`);
-  assert((res.headers.get("content-type") || "").includes("text/event-stream"), "/api/generate did not return SSE");
-
-  const { chunks, donePayload } = await parseSSE(res);
-  const finalText = donePayload?.optimizedPrompt || chunks;
-  assert(typeof finalText === "string" && finalText.trim().length >= 30, "generation returned an empty/short prompt");
-  assert(donePayload?.stats, "generation did not return final stats");
-  log(`generation ok: chars=${finalText.trim().length}, latencyMs=${donePayload.stats.latencyMs}`);
+  throw new Error(`All generation candidates failed: ${failures.join(" | ")}`);
 }
 
 main().catch((err) => {
