@@ -174,18 +174,35 @@ Observed before deployment:
 
 - Current production `/api/analytics` returned 500 with the old code path, confirming the Vercel analytics file-write issue. The new route fixes this by avoiding deployment-directory writes on Vercel.
 
+Verified after push/deploy:
+
+- GitHub E2E run `25244046888` for `e9dce5a` passed: 8/8.
+- Follow-up smoke fallback commit `2fefac6` was pushed after the first production smoke found Google free-tier quota exhausted.
+- GitHub E2E run `25244119954` for `2fefac6` passed: 8/8.
+- Production `/api/analytics` returned HTTP 200 with `{ ok: true, sink: "stdout" }`.
+- Manual GitHub Actions `Production Smoke Test` run `25244163971` succeeded.
+- Production smoke results:
+  - homepage ok
+  - `/api/models`: 251 models, `{ text: 240, video: 2, image: 4, tts: 5 }`
+  - `/api/analytics`: ok, sink `stdout`
+  - `/api/probe`: ok, 227 models discovered via relay secret
+  - real `/api/generate` SSE: Google Gemini failed due free-tier quota 429, smoke script automatically retried Groq, Groq succeeded with 752 generated characters and `latencyMs=1051`
+
 ---
 
 No active code-fix task remains after the model auto-update classification fix and production chain hardening pass.
 
-Next practical task is a real production generation test with the user's relay/API key configured:
+The real production generation chain has now been tested through GitHub Secrets and the live domain.
 
-- verify key save/probe
-- verify generator model selection
-- verify real `/api/generate` streaming, not mocked Playwright output
-- verify analytics behavior in production/Vercel-compatible storage
+Remaining product-stage work:
 
-After that, the next product stage is commercial-readiness work: auth, payment/subscription, usage quotas, abuse/rate limiting, privacy/terms, admin/audit logs, and production analytics storage.
+- full user accounts/auth
+- payment/subscription
+- usage quotas/credits tied to accounts
+- admin dashboard
+- audit logs
+- privacy policy / terms
+- durable production analytics storage by configuring `ANALYTICS_WEBHOOK_URL` or adding a database/KV backend
 
 **重要对账提醒**：
 - `C:\Users\zero\.claude\plans\floating-conjuring-treasure.md` 里写的 Phase 2/3 是旧计划

@@ -58,6 +58,14 @@ Production chain hardening added locally on 2026-05-02:
 - `/api/analytics` now sanitizes metrics and avoids Vercel deployment-directory file writes; optional durable forwarding is `ANALYTICS_WEBHOOK_URL`.
 - `scripts/production-smoke.cjs` plus `.github/workflows/production-smoke.yml` provide a real production smoke test using GitHub Secrets.
 - Before deploy, current production `/api/analytics` returned 500, confirming the old analytics persistence issue.
+- Final pushed commits: `e9dce5a feat: add production smoke checks and safeguards`, then `2fefac6 fix: try fallback providers in production smoke`.
+- GitHub E2E passed for both commits; latest E2E run `25244119954` passed 8/8.
+- Production Smoke Test run `25244163971` succeeded:
+  - homepage ok
+  - models ok: 251 total, `{ text: 240, video: 2, image: 4, tts: 5 }`
+  - analytics ok, sink `stdout`
+  - relay probe ok, 227 models
+  - real generation ok through Groq after Google quota 429 fallback
 
 ## Recommended Workflow
 

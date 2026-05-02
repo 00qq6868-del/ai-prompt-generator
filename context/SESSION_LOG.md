@@ -59,12 +59,27 @@ Running the smoke script with `SMOKE_SKIP_GENERATE=1` against current production
 
 ### Next verification
 
-After pushing this pass:
+Completed after pushing:
 
-1. Wait for GitHub E2E.
-2. Wait for Vercel production deployment.
-3. Run the manual `Production Smoke Test` GitHub Actions workflow.
-4. Verify live `/api/analytics` returns 200 and real `/api/generate` succeeds with a GitHub Secret key.
+1. GitHub E2E run `25244046888` passed for commit `e9dce5a`: 8/8.
+2. Production `/api/analytics` returned HTTP 200 with `{ ok: true, sink: "stdout" }`, confirming the Vercel file-write issue was fixed after deploy.
+3. First `Production Smoke Test` run `25244090217` failed because Google Gemini free-tier quota returned 429.
+4. Added fallback-provider logic in `scripts/production-smoke.cjs` and pushed `2fefac6 fix: try fallback providers in production smoke`.
+5. GitHub E2E run `25244119954` passed for commit `2fefac6`: 8/8.
+6. Second `Production Smoke Test` run `25244163971` succeeded.
+
+Final production smoke facts:
+
+- homepage ok
+- `/api/models` ok: 251 models with `{ text: 240, video: 2, image: 4, tts: 5 }`
+- `/api/analytics` ok: sink `stdout`
+- `/api/probe` ok: 227 models discovered
+- real `/api/generate` SSE ok through Groq after Google quota 429; generated 752 chars with `latencyMs=1051`
+
+### Remaining risks
+
+- Google Secret exists but currently has free-tier quota exhausted for `gemini-2.0-flash`; smoke falls back to Groq successfully.
+- Analytics is Vercel-compatible now, but without `ANALYTICS_WEBHOOK_URL` it is not durable storage. Add a free/cheap webhook, KV, or database for long-term commercial analytics.
 
 ---
 
