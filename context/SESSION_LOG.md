@@ -624,9 +624,25 @@ User reported that the site was missing current market models such as DeepSeek V
   - zero-cost `9`
   - no duplicate IDs
 
-### Still to do
+### Final verification
 
-- Run project typecheck/build.
-- Commit and push to GitHub `main`.
-- Watch GitHub Actions.
-- Verify production `/api/models` after Vercel deploy.
+- Local `E:\AI工作台\AI-CHAIN.cmd typecheck` passed.
+- Local `npm run build` passed.
+- Pushed commit `e4382cf chore: auto-ensure latest model registry`.
+- GitHub E2E run `25248153146` passed with `8/8` tests.
+- Manually triggered `Auto Update Models`; run `25248197746` passed.
+  - It fetched `226` AihubMix models and `50` Google models.
+  - It wrote `266` models and created bot commit `f14da68 chore: auto-update models 2026-05-02`.
+- Synced local worktree to `f14da68`.
+- Production `/api/models` returned:
+  - `266` total
+  - categories `{ text: 245, video: 7, image: 7, tts: 7 }`
+  - zero-cost `9`
+  - latest IDs present: `gpt-5.5`, `gpt-5.5-pro`, `gpt-image-2`, `deepseek-v4-pro`, `deepseek-v4-flash`, `gemini-3.1-pro-preview`, `claude-opus-4-7`, `claude-haiku-4-5`.
+- Local production smoke passed homepage/models/analytics, then stopped because local environment has no generation API key.
+- GitHub `Production Smoke Test` run `25248233632` passed using repository secrets:
+  - homepage ok
+  - models ok
+  - analytics ok
+  - probe ok: `226`
+  - real generation ok through Groq fallback

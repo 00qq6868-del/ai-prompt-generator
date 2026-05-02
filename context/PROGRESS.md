@@ -470,7 +470,13 @@ Verification so far:
 - `node scripts/patch-models.cjs` patched `266 / 266`.
 - Current local model totals: `266` total, categories `{ text: 245, video: 7, image: 7, tts: 7 }`, zero-cost `9`, no duplicate IDs.
 
-Pending:
+Final verification:
 
-- Run typecheck/build.
-- Commit, push to GitHub `main`, wait for CI, then verify production `/api/models`.
+- Committed and pushed:
+  - `e4382cf chore: auto-ensure latest model registry`
+  - `f14da68 chore: auto-update models 2026-05-02` (bot follow-up from manual Auto Update Models run)
+- GitHub E2E for `e4382cf` passed: `8/8`.
+- Manual `Auto Update Models` workflow passed and wrote `266` models.
+- Production `/api/models` now returns `266` models with `{ text: 245, video: 7, image: 7, tts: 7 }`.
+- Production includes `gpt-5.5`, `gpt-5.5-pro`, `gpt-image-2`, `deepseek-v4-pro`, `deepseek-v4-flash`, `gemini-3.1-pro-preview`, `claude-opus-4-7`, and `claude-haiku-4-5`.
+- GitHub `Production Smoke Test` passed on run `25248233632`; homepage, models, analytics, probe, and real generation all passed.
