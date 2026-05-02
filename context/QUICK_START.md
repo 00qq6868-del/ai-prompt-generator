@@ -32,6 +32,7 @@ AI prompt optimizer web app. User inputs rough idea → system generates optimiz
 | `src/lib/providers/index.ts` | 13 LLM provider adapters |
 | `src/lib/prompt-optimizer.ts` | System prompt templates for prompt generation |
 | `scripts/patch-models.cjs` | Post-process models.json (apply META + classify) |
+| `scripts/latest-model-ensures.cjs` | Verified latest-model fallback list for OpenAI/DeepSeek/Gemini/Claude |
 
 ## Dev Commands
 
@@ -50,6 +51,7 @@ node scripts/patch-models.cjs  # Re-apply META data to models.json
 - **Bilingual errors**: All user-facing messages in `中文 / English` format
 - **Category-aware routing**: Generator uses `accurate` mode for image/video targets, `token` for text
 - **Generator = text only, Target = all categories** (image, video, tts, etc.)
+- **Model auto-update**: GitHub Actions polls provider APIs every 30 minutes, then applies `latest-model-ensures.cjs`
 
 ## Before You End Your Session
 

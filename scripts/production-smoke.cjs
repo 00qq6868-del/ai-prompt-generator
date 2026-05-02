@@ -169,6 +169,10 @@ async function main() {
   assert(Array.isArray(models), "/api/models did not return a model array");
   assert(models.length >= 200, `/api/models returned too few models: ${models.length}`);
   assert(models.some((m) => m.id === "gpt-5.5"), "/api/models missing gpt-5.5");
+  assert(models.some((m) => m.id === "gpt-image-2"), "/api/models missing gpt-image-2");
+  assert(models.some((m) => m.id === "deepseek-v4-pro"), "/api/models missing deepseek-v4-pro");
+  assert(models.some((m) => m.id === "gemini-3.1-pro-preview"), "/api/models missing gemini-3.1-pro-preview");
+  assert(models.some((m) => m.id === "claude-opus-4-7"), "/api/models missing claude-opus-4-7");
 
   const counts = categoryCounts(models);
   assert((counts.text || 0) >= 1, "/api/models missing text models");

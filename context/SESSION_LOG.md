@@ -556,3 +556,77 @@ Added and ran a Node.js script to ensure important image/video models are presen
 - `node --check scripts/add-missing-media-models.cjs` passed.
 - `node scripts/add-missing-media-models.cjs` reported `251` total, categories `{ text: 240, video: 2, image: 4, tts: 5 }`, zero-cost `4`.
 - `node scripts/patch-models.cjs` passed and patched `251 / 251`.
+
+---
+
+## Latest Model Auto-Update Upgrade — 2026-05-02 (Codex)
+
+### User request
+
+User reported that the site was missing current market models such as DeepSeek V4 and GPT Image 2.0, and requested automatic updates for the latest GPT/OpenAI, DeepSeek, Gemini, and Claude models as of 2026-05-02 and going forward.
+
+### What was done
+
+- Used official/API-backed model references before editing:
+  - OpenAI model/pricing docs for GPT-5.5 and GPT Image 2.
+  - DeepSeek pricing docs for `deepseek-v4-pro` and `deepseek-v4-flash`.
+  - Google Gemini model/pricing docs for Gemini 3.1 and Veo 3.1 preview models.
+  - Anthropic model overview for Claude Opus 4.7, Sonnet 4.6, and Haiku 4.5.
+- Added `scripts/latest-model-ensures.cjs`, shared by:
+  - `.github/scripts/fetch-models.mjs`
+  - `scripts/patch-models.cjs`
+- The shared latest-model list keeps official latest models present even when a provider API/relay omits them, while API fetching remains the primary source.
+- Changed model update workflow cadence from every 2 hours to every 30 minutes.
+- Changed latest marking from provider-only to provider + category, so OpenAI can mark text/image/video latest models at the same time.
+- Added/updated model data in `public/models.json`:
+  - `gpt-5.5-pro`
+  - `gpt-image-2`
+  - `gpt-image-1.5`
+  - `gpt-image-1-mini`
+  - `sora-2`
+  - `sora-2-pro`
+  - `gpt-realtime-1.5`
+  - `deepseek-v4-pro`
+  - `deepseek-v4-flash`
+  - `gemini-3.1-flash-live-preview`
+  - `veo-3.1-generate-preview`
+  - `veo-3.1-fast-generate-preview`
+  - `veo-3.1-lite-generate-preview`
+  - `claude-haiku-4-5`
+  - `claude-haiku-4-5-20251001`
+- Corrected metadata for existing latest entries:
+  - `gpt-5.5`
+  - `gpt-5.4*`
+  - `sophnet-deepseek-v4-pro`
+  - `gemini-3.1*`
+  - `gemini-3-pro-image-preview`
+  - `claude-opus-4-7`
+  - `claude-sonnet-4-6`
+- Updated recommendation rules:
+  - image -> `gpt-image-2`
+  - video -> `sora-2-pro`
+  - code -> `deepseek-v4-pro`
+- Updated production smoke checks to require:
+  - `gpt-5.5`
+  - `gpt-image-2`
+  - `deepseek-v4-pro`
+  - `gemini-3.1-pro-preview`
+  - `claude-opus-4-7`
+
+### Verification
+
+- `node --check scripts/latest-model-ensures.cjs` passed.
+- `node --check scripts/patch-models.cjs` passed.
+- `node --check .github/scripts/fetch-models.mjs` passed.
+- `node scripts/patch-models.cjs` passed and reported:
+  - `266` total models
+  - categories `{ text: 245, video: 7, image: 7, tts: 7 }`
+  - zero-cost `9`
+  - no duplicate IDs
+
+### Still to do
+
+- Run project typecheck/build.
+- Commit and push to GitHub `main`.
+- Watch GitHub Actions.
+- Verify production `/api/models` after Vercel deploy.

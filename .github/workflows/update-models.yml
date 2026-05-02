@@ -1,12 +1,12 @@
 # .github/workflows/update-models.yml
 # 自动更新 public/models.json
-# 每2小时自动运行，检测最新模型并提交
+# 每30分钟自动运行，检测最新模型并提交
 
 name: Auto Update Models
 
 on:
   schedule:
-    - cron: "17 */2 * * *"
+    - cron: "17,47 * * * *"
   workflow_dispatch:
 
 jobs:

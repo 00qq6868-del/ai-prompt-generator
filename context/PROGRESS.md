@@ -437,3 +437,40 @@ Verification:
 - `node --check scripts/add-missing-media-models.cjs` passed.
 - `node scripts/patch-models.cjs` patched `251 / 251`.
 - Current model totals: `251` total, categories `{ text: 240, video: 2, image: 4, tts: 5 }`, zero-cost `4`.
+
+---
+
+## Latest Model Auto-Update Upgrade — 2026-05-02
+
+Codex upgraded the model refresh pipeline so the site keeps up with the latest OpenAI/GPT, DeepSeek, Google Gemini, and Anthropic Claude model families.
+
+Completed:
+
+- Added `scripts/latest-model-ensures.cjs`, a shared verified latest-model fallback list used by both the GitHub updater and the local patch script.
+- Updated `.github/scripts/fetch-models.mjs` to:
+  - apply the verified fallback list after API fetch/merge,
+  - mark latest models per provider + category instead of only one model per provider,
+  - classify `sora`, `veo`, realtime, and live-preview models correctly,
+  - preserve relay routing for already-fetched AihubMix models.
+- Updated `scripts/patch-models.cjs` to use the same fallback list and latest marking.
+- Changed `.github/workflows/update-models.yml` schedule from every 2 hours to every 30 minutes.
+- Added verified latest/missing models including:
+  - OpenAI: `gpt-5.5-pro`, `gpt-image-2`, `gpt-image-1.5`, `gpt-image-1-mini`, `sora-2`, `sora-2-pro`, `gpt-realtime-1.5`
+  - DeepSeek: `deepseek-v4-pro`, `deepseek-v4-flash`, corrected `sophnet-deepseek-v4-pro`
+  - Gemini/Google: `gemini-3.1-flash-live-preview`, `veo-3.1-*` and corrected Gemini 3.1 pricing/category metadata
+  - Claude: `claude-haiku-4-5`, `claude-haiku-4-5-20251001`, corrected Opus/Sonnet/Haiku pricing metadata
+- Updated `src/lib/model-recommender.ts` recommendations to prefer `gpt-image-2`, `sora-2-pro`, and `deepseek-v4-pro`.
+- Updated production smoke checks to assert the latest core model IDs are visible.
+
+Verification so far:
+
+- `node --check scripts/latest-model-ensures.cjs` passed.
+- `node --check scripts/patch-models.cjs` passed.
+- `node --check .github/scripts/fetch-models.mjs` passed.
+- `node scripts/patch-models.cjs` patched `266 / 266`.
+- Current local model totals: `266` total, categories `{ text: 245, video: 7, image: 7, tts: 7 }`, zero-cost `9`, no duplicate IDs.
+
+Pending:
+
+- Run typecheck/build.
+- Commit, push to GitHub `main`, wait for CI, then verify production `/api/models`.

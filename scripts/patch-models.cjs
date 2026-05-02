@@ -1,6 +1,12 @@
 // Post-process models.json — apply META + reclassify
 const fs = require("fs");
 const path = require("path");
+const {
+  lookupLatestMeta,
+  mergeKnownLatestModels,
+  markLatestModels,
+  LAST_VERIFIED_DATE,
+} = require("./latest-model-ensures.cjs");
 
 const META = {
   "gpt-4o":                     { i: 2.5,  o: 10,   s: "fast",      a: "supreme", t: ["vision","code"],              d: "2024-05-13" },
@@ -169,6 +175,8 @@ const META = {
 };
 
 function lookupMeta(id) {
+  const latest = lookupLatestMeta(id);
+  if (latest) return latest;
   if (META[id]) return META[id];
   const lower = id.toLowerCase();
   const keys = Object.keys(META).sort((a, b) => b.length - a.length);
@@ -181,8 +189,8 @@ function lookupMeta(id) {
 function classifyModel(id) {
   const lower = id.toLowerCase();
   if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo/.test(lower)) return "image";
-  if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse|pika|minimax-video|jimeng-video/.test(lower)) return "video";
-  if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs/.test(lower)) return "tts";
+  if (/sora|veo|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse|pika|minimax-video|jimeng-video/.test(lower)) return "video";
+  if (/tts|realtime|live-preview|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs/.test(lower)) return "tts";
   if (/whisper|stt|audio-transcri|speech-to|paraformer/.test(lower)) return "stt";
   if (/embed|bge-|text-embedding|e5-|jina-embed/.test(lower)) return "embedding";
   if (/ocr|document-ai|vision-extract|doc-parse/.test(lower)) return "ocr";
@@ -192,7 +200,9 @@ function classifyModel(id) {
 
 const modelsPath = path.join("public", "models.json");
 const statePath = path.join("context", "SYSTEM_STATE.json");
-const models = JSON.parse(fs.readFileSync(modelsPath, "utf8"));
+let models = JSON.parse(fs.readFileSync(modelsPath, "utf8"));
+const ensured = mergeKnownLatestModels(models);
+models = ensured.models;
 
 let patched = 0;
 for (const m of models) {
@@ -210,6 +220,8 @@ for (const m of models) {
   m.category = classifyModel(m.id);
   if (m.provider === "深度求索") m.provider = "DeepSeek";
 }
+
+markLatestModels(models);
 
 fs.writeFileSync(modelsPath, JSON.stringify(models, null, 2) + "\n");
 
@@ -235,9 +247,12 @@ fs.writeFileSync(statePath, JSON.stringify({
   byProvider: providers,
   zeroCostModels: zeroCost,
   metaCoverage: models.length - zeroCost,
+  latestVerifiedAt: LAST_VERIFIED_DATE,
+  latestEnsures: ensured.stats,
 }, null, 2) + "\n");
 
 console.log("Patched:", patched, "/", models.length);
+console.log("Latest-model ensures:", JSON.stringify(ensured.stats));
 console.log("Zero-cost remaining:", zeroCost);
 console.log("Categories:", JSON.stringify(cats));
 console.log("Non-text models:");

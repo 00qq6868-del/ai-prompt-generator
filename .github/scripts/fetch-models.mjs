@@ -5,11 +5,18 @@
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import latestModelTools from "../../scripts/latest-model-ensures.cjs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, "../..");
 const MODELS_PATH = join(ROOT, "public/models.json");
 const STATE_PATH = join(ROOT, "context/SYSTEM_STATE.json");
+const {
+  lookupLatestMeta,
+  mergeKnownLatestModels,
+  markLatestModels,
+  LAST_VERIFIED_DATE,
+} = latestModelTools;
 
 // ── Retry wrapper ────────────────────────────────────────────────────────
 async function withRetry(fn, label, retries = 2, delayMs = 5000) {
@@ -202,6 +209,8 @@ const META = {
 
 // 前缀匹配回退：精确 ID 优先，否则匹配最长前缀
 function lookupMeta(id) {
+  const latest = lookupLatestMeta(id);
+  if (latest) return latest;
   if (META[id]) return META[id];
   const lower = id.toLowerCase();
   const keys = Object.keys(META).sort((a, b) => b.length - a.length);
@@ -216,8 +225,8 @@ function lookupMeta(id) {
 function classifyModel(id) {
   const lower = id.toLowerCase();
   if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo|kandinsky|omnigen|omnihuman|sana-|aura-flow|seeart/.test(lower)) return "image";
-  if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse(?!-image)|pika|minimax-video|jimeng-video|genmo|animatediff|cog-video|hunyuan-video|vchitect|pyramid-flow/.test(lower)) return "video";
-  if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs|parler-tts|bark|mars5|f5-tts|kokoro/.test(lower)) return "tts";
+  if (/sora|veo|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse(?!-image)|pika|minimax-video|jimeng-video|genmo|animatediff|cog-video|hunyuan-video|vchitect|pyramid-flow/.test(lower)) return "video";
+  if (/tts|realtime|live-preview|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs|parler-tts|bark|mars5|f5-tts|kokoro/.test(lower)) return "tts";
   if (/whisper|stt|audio-transcri|speech-to|paraformer|sensevoice|funasr/.test(lower)) return "stt";
   if (/embed|bge-|text-embedding|e5-|jina-embed|gte-|nomic-embed|voyage-/.test(lower)) return "embedding";
   if (/ocr|document-ai|vision-extract|doc-parse|got-ocr|surya/.test(lower)) return "ocr";
@@ -285,6 +294,7 @@ async function fetchAihubmix() {
     "coding-minimax":"MiniMax",
     "DeepSeek":  "DeepSeek",
     "deepseek":  "DeepSeek",
+    "sophnet-deepseek": "DeepSeek",
   };
 
   return data
@@ -680,19 +690,9 @@ function mergeWithExisting(fetched) {
   return { models: merged, stats: { added, updated, total: merged.length, existingCount: existing.length } };
 }
 
-// ── 标记每个 provider 最新发布的模型 ────────────────────────────────────
+// ── 标记每个 provider/category 最新发布的模型 ────────────────────────────
 function markLatest(models) {
-  const byProvider = {};
-  for (const m of models) {
-    m.isLatest = false; // reset
-    if (!byProvider[m.provider]) byProvider[m.provider] = [];
-    byProvider[m.provider].push(m);
-  }
-  for (const list of Object.values(byProvider)) {
-    const sorted = list.filter((m) => m.releaseDate).sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
-    if (sorted[0]) sorted[0].isLatest = true;
-  }
-  return models;
+  return markLatestModels(models);
 }
 
 // ── Write SYSTEM_STATE.json ──────────────────────────────────────────────
@@ -715,6 +715,8 @@ function writeSystemState(models, stats) {
     byProvider: providers,
     zeroCostModels: zeroCost,
     metaCoverage: models.length - zeroCost,
+    latestVerifiedAt: LAST_VERIFIED_DATE,
+    latestEnsures: stats.latestEnsures ?? null,
     lastUpdate: {
       added: stats.added,
       updated: stats.updated,
@@ -770,7 +772,13 @@ async function main() {
     return;
   }
 
-  const final = markLatest(merged);
+  const ensured = mergeKnownLatestModels(merged);
+  stats.added += ensured.stats.added;
+  stats.updated += ensured.stats.updated;
+  stats.latestEnsures = ensured.stats;
+  console.log(`🧭 Latest-model ensures: +${ensured.stats.added} new, ${ensured.stats.updated} updated (verified ${ensured.stats.verifiedAt})`);
+
+  const final = markLatest(ensured.models);
 
   // 按 provider 排序
   const ORDER = ["aihubmix","openai","anthropic","google","groq","xai","mistral","deepseek","zhipu","moonshot","qwen","baidu","ollama"];
