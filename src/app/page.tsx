@@ -34,7 +34,7 @@ export default function Home() {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-white/45 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+          <p className="text-white/70 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
             输入你的想法，AI 自动应用业界最佳提示词框架，生成{" "}
             <span className="text-white/70 font-medium">更准确 · 更省 Token · 更自然</span>{" "}
             的专属提示词
@@ -69,7 +69,7 @@ export default function Home() {
                 {icon}
                 <div className="text-left">
                   <div className="text-[11px] font-semibold text-white/80">{label}</div>
-                  <div className="text-[10px] text-white/35">{desc}</div>
+                  <div className="text-[10px] text-white/65">{desc}</div>
                 </div>
               </div>
             ))}
@@ -83,14 +83,14 @@ export default function Home() {
 
         {/* Provider logos row */}
         <div className="mt-8 text-center">
-          <p className="text-xs text-white/20 mb-3">支持的模型提供商</p>
+          <p className="text-xs text-white/60 mb-3">支持的模型提供商</p>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
             {[
               "OpenAI", "Anthropic", "Google", "Meta",
               "xAI", "Mistral", "DeepSeek", "智谱AI",
               "月之暗面 Kimi", "阿里 Qwen", "百度 ERNIE",
             ].map((name) => (
-              <span key={name} className="text-[11px] text-white/25 font-medium">
+              <span key={name} className="text-[11px] text-white/60 font-medium">
                 {name}
               </span>
             ))}

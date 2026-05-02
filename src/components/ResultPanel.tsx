@@ -131,7 +131,7 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
         {showDiff && originalPrompt ? (
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
             <div className="p-4">
-              <div className="text-[10px] font-medium text-white/45 uppercase tracking-wider mb-2">
+              <div className="text-[10px] font-medium text-white/70 uppercase tracking-wider mb-2">
                 原始输入 Original
               </div>
               <pre className="whitespace-pre-wrap font-sans text-sm text-white/50 leading-relaxed max-h-72 overflow-y-auto">
@@ -166,7 +166,7 @@ function StatCard({
     <div className="flex items-center gap-2.5 rounded-xl bg-white/5 border border-white/[0.08] px-3 py-2.5">
       {icon}
       <div>
-        <div className="text-[10px] text-white/40">{label}</div>
+        <div className="text-[10px] text-white/65">{label}</div>
         <div className={`text-sm font-semibold ${valueClass}`}>{value}</div>
       </div>
     </div>

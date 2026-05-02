@@ -4,6 +4,14 @@ node_modules/
 # 构建产物
 .next/
 dist-electron/
+tsconfig.tsbuildinfo
+
+# PWA 生成产物（next-pwa 在构建时自动生成）
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/fallback-*.js
 
 # 环境变量（含 API Key，绝对不能上传）
 .env.local

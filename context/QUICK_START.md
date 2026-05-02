@@ -39,6 +39,7 @@ AI prompt optimizer web app. User inputs rough idea → system generates optimiz
 ```bash
 npm run dev      # Start dev server (port 3000)
 npm run build    # Production build
+npm run test:quality # Visual-health + accessibility audit
 npx tsc --noEmit # Type check only
 node scripts/patch-models.cjs  # Re-apply META data to models.json
 ```

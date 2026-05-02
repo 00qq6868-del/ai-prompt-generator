@@ -374,7 +374,7 @@ export function PromptGenerator() {
               <Languages size={12} />
               {language === "zh" ? "中文输出" : "English output"}
             </button>
-            <span className="text-xs text-white/45">~{approxTokens} tokens</span>
+            <span className="text-xs text-white/70">~{approxTokens} tokens</span>
           </div>
         </div>
         <div className="relative">
@@ -387,7 +387,7 @@ export function PromptGenerator() {
             className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/25 focus:border-indigo-500/50 focus:outline-none transition-all leading-relaxed"
           />
           {charCount > 0 && (
-            <span className="absolute bottom-3 right-4 text-xs text-white/20">{charCount}</span>
+            <span className="absolute bottom-3 right-4 text-xs text-white/60">{charCount}</span>
           )}
         </div>
       </div>
@@ -399,7 +399,7 @@ export function PromptGenerator() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2"
         >
-          <span className="text-xs text-white/40">推荐模型 Suggested:</span>
+          <span className="text-xs text-white/65">推荐模型 Suggested:</span>
           <button
             onClick={() => setTargetModelId(recommendation.modelId)}
             className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/25 transition-all"
@@ -427,7 +427,7 @@ export function PromptGenerator() {
         aria-label={loading ? "正在生成中 Generating..." : "生成优化提示词 Generate optimized prompt"}
         className={`relative w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-base font-semibold transition-all duration-300
           ${loading || !idea.trim()
-            ? "bg-white/5 border border-white/10 text-white/45 cursor-not-allowed"
+            ? "bg-white/5 border border-white/10 text-white/70 cursor-not-allowed"
             : "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.01]"
           }`}
       >

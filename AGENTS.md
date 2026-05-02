@@ -47,6 +47,7 @@ Common commands:
 
 - `doctor`: installed tool check.
 - `status`: Git/project/GitHub status.
+- `quality`: visual-health + accessibility audit.
 - `test-all`: TypeScript + build + Playwright E2E.
 - `smoke-prod`: real production smoke test.
 - `memory`: print handoff/context files.

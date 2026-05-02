@@ -176,12 +176,12 @@ export function ModelPicker({
           <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 shrink-0">
             <div>
               <h2 className="text-base font-bold text-white">{title}</h2>
-              {subtitle && <p className="text-[11px] text-white/40 mt-0.5">{subtitle}</p>}
+              {subtitle && <p className="text-[11px] text-white/65 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
               aria-label="关闭 Close"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/8 hover:text-white transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/65 hover:bg-white/8 hover:text-white transition-all"
             >
               <X size={17} />
             </button>
@@ -190,18 +190,18 @@ export function ModelPicker({
           {/* Search + filters */}
           <div className="border-b border-white/[0.07] px-6 py-3 space-y-3 shrink-0">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/45" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="搜索模型名称、提供商、标签..."
                 aria-label="搜索模型 Search models"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 outline-none focus:border-indigo-500/50 transition-all"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/60 outline-none focus:border-indigo-500/50 transition-all"
                 autoFocus
               />
               {search && (
-                <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/60">
+                <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white/60">
                   <X size={14} />
                 </button>
               )}
@@ -213,7 +213,7 @@ export function ModelPicker({
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0
                   ${showFavoritesOnly
                     ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                    : "text-white/45 hover:text-white/50 border border-transparent"
+                    : "text-white/70 hover:text-white/50 border border-transparent"
                   }`}
               >
                 <Star size={10} fill={showFavoritesOnly ? "currentColor" : "none"} />
@@ -233,7 +233,7 @@ export function ModelPicker({
                       className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
                         ${provider === p
                           ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/45 hover:text-white/50 border border-transparent"
+                          : "text-white/70 hover:text-white/50 border border-transparent"
                         }`}
                     >
                       {p} {count > 0 && <span className="opacity-50">{count}</span>}
@@ -248,7 +248,7 @@ export function ModelPicker({
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="mx-auto max-w-5xl px-6 py-4">
               {filtered.length === 0 ? (
-                <div className="text-center text-white/45 text-sm py-16">
+                <div className="text-center text-white/70 text-sm py-16">
                   {showFavoritesOnly ? "还没有收藏的模型，点击 ⭐ 收藏常用模型" : "没有匹配的模型"}
                 </div>
               ) : (
@@ -273,7 +273,7 @@ export function ModelPicker({
 
           {/* Bottom status */}
           <div className="border-t border-white/[0.07] px-6 py-3 shrink-0">
-            <div className="flex items-center justify-between text-[11px] text-white/45">
+            <div className="flex items-center justify-between text-[11px] text-white/70">
               <span>共 {filtered.length} 个文本模型</span>
               {availableSet && (
                 <span className="text-emerald-400/70">
@@ -338,28 +338,28 @@ function PickerCard({
         <button
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           aria-label={isFavorite ? "取消收藏 Unfavorite" : "收藏 Favorite"}
-          className="text-white/20 hover:text-amber-400 transition-colors"
+          className="text-white/60 hover:text-amber-400 transition-colors"
         >
           <Star size={12} fill={isFavorite ? "currentColor" : "none"} className={isFavorite ? "text-amber-400" : ""} />
         </button>
       </div>
 
       {/* Provider */}
-      <div className="text-[11px] text-white/40 mb-0.5">{m.provider}</div>
+      <div className="text-[11px] text-white/65 mb-0.5">{m.provider}</div>
 
       {/* Name */}
       <div className="font-semibold text-sm text-white leading-tight mb-2 pr-20">{m.name}</div>
 
       {/* Stats */}
       <div className="flex flex-wrap gap-1.5 mb-2">
-        <span className={`text-[10px] font-medium ${SPEED_COLOR[m.speed] ?? "text-white/40"}`}>
+        <span className={`text-[10px] font-medium ${SPEED_COLOR[m.speed] ?? "text-white/65"}`}>
           ⚡ {SPEED_LABEL[m.speed] ?? m.speed}
         </span>
         <span className={`text-[10px] px-1.5 rounded-full ${ACC_BADGE[m.accuracy] ?? "bg-gray-500/20 text-gray-300"}`}>
           {ACC_LABEL[m.accuracy] ?? m.accuracy}
         </span>
         {Number(avgCost) > 0 ? (
-          <span className="text-[10px] text-white/45">${avgCost}/1M</span>
+          <span className="text-[10px] text-white/70">${avgCost}/1M</span>
         ) : (
           <span className="text-[10px] text-green-400/70">免费</span>
         )}
@@ -378,14 +378,14 @@ function PickerCard({
             style={{ width: `${Math.round(score * 100)}%` }}
           />
         </div>
-        <span className="text-[9px] text-white/25 font-mono">{Math.round(score * 100)}</span>
+        <span className="text-[9px] text-white/60 font-mono">{Math.round(score * 100)}</span>
       </div>
 
       {/* Tags */}
       {m.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {m.tags.slice(0, 4).map(tag => (
-            <span key={tag} className="text-[9px] text-white/20 bg-white/[0.04] px-1.5 py-0.5 rounded">
+            <span key={tag} className="text-[9px] text-white/60 bg-white/[0.04] px-1.5 py-0.5 rounded">
               {tag}
             </span>
           ))}

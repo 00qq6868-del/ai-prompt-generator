@@ -89,7 +89,7 @@ export function PWAPrompts() {
                 <p className="text-sm font-semibold text-white">
                   安装到桌面 Install App
                 </p>
-                <p className="text-[11px] text-white/40 truncate">
+                <p className="text-[11px] text-white/65 truncate">
                   添加到主屏幕，像原生应用一样使用
                 </p>
               </div>
@@ -102,7 +102,7 @@ export function PWAPrompts() {
               <button
                 onClick={handleDismissInstall}
                 aria-label="关闭 Dismiss"
-                className="shrink-0 p-1.5 rounded-lg text-white/45 hover:text-white/60 hover:bg-white/10 transition-all"
+                className="shrink-0 p-1.5 rounded-lg text-white/70 hover:text-white/60 hover:bg-white/10 transition-all"
               >
                 <X size={14} />
               </button>
@@ -129,7 +129,7 @@ export function PWAPrompts() {
                 <p className="text-sm font-semibold text-white">
                   有新版本可用 Update Available
                 </p>
-                <p className="text-[11px] text-white/40">
+                <p className="text-[11px] text-white/65">
                   刷新页面以加载最新版本
                 </p>
               </div>
@@ -142,7 +142,7 @@ export function PWAPrompts() {
               <button
                 onClick={() => setShowUpdate(false)}
                 aria-label="稍后 Later"
-                className="shrink-0 p-1.5 rounded-lg text-white/45 hover:text-white/60 hover:bg-white/10 transition-all"
+                className="shrink-0 p-1.5 rounded-lg text-white/70 hover:text-white/60 hover:bg-white/10 transition-all"
               >
                 <X size={14} />
               </button>

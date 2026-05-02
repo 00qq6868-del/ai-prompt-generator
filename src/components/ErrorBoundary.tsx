@@ -43,10 +43,10 @@ export class ErrorBoundary extends Component<Props, State> {
           <h2 className="text-xl font-bold text-white mb-2">
             页面出现了问题
           </h2>
-          <p className="text-white/40 text-sm mb-1">
+          <p className="text-white/65 text-sm mb-1">
             Something went wrong
           </p>
-          <p className="text-white/25 text-xs mb-6 break-all">
+          <p className="text-white/60 text-xs mb-6 break-all">
             {this.state.error}
           </p>
 

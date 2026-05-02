@@ -22,6 +22,7 @@ Important commands:
 - `typecheck` — `npx tsc --noEmit`.
 - `build` — `npm run build`.
 - `e2e` — `npx playwright test --project=chromium`.
+- `quality` — visual-health + accessibility audit with Playwright screenshots and axe.
 - `test-all` — typecheck + build + E2E.
 - `smoke-prod` — real production smoke test for `https://www.myprompt.asia`.
 - `ci` — recent GitHub Actions.
@@ -48,3 +49,5 @@ Human-readable full guide:
 ```text
 E:\AI工作台\AI工具链说明.md
 ```
+
+Free VS Code quality extensions installed in the shared IDE include Tailwind CSS IntelliSense, axe Accessibility Linter, SonarQube/SonarLint, Vitest Explorer, Code Spell Checker, Pretty TypeScript Errors, TODO Tree, Path Intellisense, and Edge DevTools.

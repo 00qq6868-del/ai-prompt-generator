@@ -87,6 +87,24 @@ Shared AI toolchain launcher added on 2026-05-02:
 - Use `E:\AI工作台\AI-CHAIN.cmd smoke-prod` for real production validation.
 - The launcher logs every run and locks Git-mutating operations to reduce multi-AI collisions.
 
+Shared toolchain audit and visual QA upgrade on 2026-05-02:
+
+- `AI-CHAIN doctor` confirms the free chain is installed: Git, gh, Node/npm/npx, Python/py, uv, VS Code, Docker/Rancher, Ollama, Claude Code, Codex CLI, PowerShell 7, curl, and Gitleaks.
+- `AI-CHAIN` now resolves VS Code to `E:\vscode\Microsoft VS Code\bin\code.cmd`, fixing extension install/list commands.
+- Additional free VS Code quality extensions installed: Tailwind CSS IntelliSense, axe Accessibility Linter, SonarQube/SonarLint, Vitest Explorer, Code Spell Checker, Pretty TypeScript Errors, TODO Tree, Path Intellisense, and Edge DevTools.
+- New project QA command: `E:\AI工作台\AI-CHAIN.cmd quality`.
+- New project script: `npm run test:quality`.
+- New Playwright audit: `tests/e2e/quality.spec.ts`.
+- The quality audit checks desktop/mobile visual health, horizontal overflow, key controls, console errors, and axe WCAG results.
+- PWA generation is disabled in development mode and still enabled in production builds, preventing dev/E2E runs from creating temporary service-worker files under `public/`.
+- Generated PWA files and `tsconfig.tsbuildinfo` are now ignored and removed from Git tracking. Production `next build` still generates the service worker.
+- Latest local verification passed:
+  - `AI-CHAIN quality`: 2/2
+  - `AI-CHAIN test-all`: typecheck + build + Chromium E2E 10/10
+  - `AI-CHAIN security`: no leaks
+- Local `smoke-prod` can only run public homepage/models/analytics without local API key env vars. Use GitHub Production Smoke Test after push for real generation because repository secrets are configured there.
+- Cleanup removed only ignored/generated validation junk. Do not delete `E:\vscode Claude\ai-prompt-generator`, `node_modules`, `.next`, caches, logs, Ollama models, or IDE folders unless the user explicitly approves.
+
 ## Recommended Workflow
 
 1. Codex makes changes in the Codex worktree only.

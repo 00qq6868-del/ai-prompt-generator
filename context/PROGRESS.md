@@ -517,3 +517,63 @@ Verification:
 Notes:
 
 - The user-provided old recommended IDs `dall-e-3`, `sora`, `elevenlabs-tts`, and `suno` are not present in the current 266-model registry, so the live recommender intentionally keeps available IDs such as `gpt-image-2`, `sora-2-pro`, and `deepseek-v4-pro`.
+
+---
+
+## Shared Toolchain Audit + Visual QA Upgrade — 2026-05-02
+
+Codex continued the free E-drive AI workbench setup and verified the shared chain for future large projects.
+
+Completed:
+
+- Ran `E:\AI工作台\AI-CHAIN.cmd doctor`.
+  - Confirmed Git, GitHub CLI, Node/npm/npx, Python/py, uv, VS Code, Docker/Rancher, Ollama, Claude Code, Codex CLI, PowerShell 7, curl, and Gitleaks are installed.
+  - Fixed the launcher so `code` resolves to `E:\vscode\Microsoft VS Code\bin\code.cmd` instead of `Code.exe`.
+- Installed additional free VS Code quality extensions:
+  - Tailwind CSS IntelliSense
+  - axe Accessibility Linter
+  - SonarQube/SonarLint
+  - Vitest Explorer
+  - Code Spell Checker
+  - Pretty TypeScript Errors
+  - TODO Tree
+  - Path Intellisense
+  - Edge DevTools
+- Added project visual/accessibility QA:
+  - New dependency: `@axe-core/playwright`
+  - New script: `npm run test:quality`
+  - New test: `tests/e2e/quality.spec.ts`
+  - New launcher command: `E:\AI工作台\AI-CHAIN.cmd quality`
+- Disabled PWA generation in development mode while keeping it enabled for production builds, preventing Next dev/test runs from writing temporary service-worker files into `public/`.
+- Added generated build/cache files to `.gitignore` and removed them from Git tracking:
+  - `public/sw.js`
+  - `public/workbox-*.js`
+  - `public/fallback-*.js`
+  - `public/*.map` for PWA outputs
+  - `tsconfig.tsbuildinfo`
+- Fixed accessibility findings from the new quality test:
+  - Removed `maximumScale: 1` so mobile users can zoom.
+  - Added accessible names to header icon controls/links.
+  - Increased low-contrast dark-theme secondary text from `text-white/20-45` to readable `text-white/60-70`.
+- Cleaned only generated validation junk:
+  - Removed Playwright `test-results/` and `playwright-report/`.
+  - Removed build-generated PWA files after verification.
+  - Removed local `tsconfig.tsbuildinfo` after verification.
+
+Verification:
+
+- `E:\AI工作台\AI-CHAIN.cmd quality` passed: 2/2.
+- `E:\AI工作台\AI-CHAIN.cmd test-all` passed:
+  - TypeScript check passed.
+  - `next build` passed.
+  - Chromium Playwright E2E passed: 10/10.
+- `E:\AI工作台\AI-CHAIN.cmd security` passed: Gitleaks scanned 116 commits, no leaks found.
+- `E:\AI工作台\AI-CHAIN.cmd docker` passed: Rancher/Docker engine available, no running containers.
+- `E:\AI工作台\AI-CHAIN.cmd ollama` passed: Ollama 0.22.0 installed, `bge-m3:latest` present.
+- Local `smoke-prod` passed homepage/models/analytics but could not test real generation because this shell has no generation API key env var. Use GitHub `Production Smoke Test` after push because repository secrets are configured there.
+
+Notes:
+
+- Do not delete `E:\vscode Claude\ai-prompt-generator`; it remains the Claude/original workspace.
+- Do not delete `node_modules`, `.next`, caches, logs, Ollama models, or IDE folders by default. They are useful for future work.
+- The old `E:\免费神器控制台` folder is tiny and harmless; keep it unless the user explicitly approves consolidation/removal.

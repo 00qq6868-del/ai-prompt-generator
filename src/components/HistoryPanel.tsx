@@ -93,7 +93,7 @@ export function HistoryPanel({ onReuse }: Props) {
                       aria-selected={filter === "all"}
                       onClick={() => setFilter("all")}
                       className={`px-3 py-1 text-xs transition-all ${
-                        filter === "all" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                        filter === "all" ? "bg-white/10 text-white" : "text-white/65 hover:text-white/60"
                       }`}
                     >
                       全部 All ({items.length})
@@ -103,7 +103,7 @@ export function HistoryPanel({ onReuse }: Props) {
                       aria-selected={filter === "favorites"}
                       onClick={() => setFilter("favorites")}
                       className={`px-3 py-1 text-xs transition-all ${
-                        filter === "favorites" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                        filter === "favorites" ? "bg-white/10 text-white" : "text-white/65 hover:text-white/60"
                       }`}
                     >
                       <Star size={10} className="inline mr-1" />
@@ -123,7 +123,7 @@ export function HistoryPanel({ onReuse }: Props) {
                   )}
                   <button
                     onClick={() => setOpen(false)}
-                    className="p-1 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-all"
+                    className="p-1 rounded-lg hover:bg-white/10 text-white/65 hover:text-white transition-all"
                     aria-label="关闭 Close"
                   >
                     <X size={16} />
@@ -134,7 +134,7 @@ export function HistoryPanel({ onReuse }: Props) {
               {/* List */}
               <div className="overflow-y-auto flex-1 p-3 space-y-2">
                 {filtered.length === 0 ? (
-                  <div className="text-center text-white/45 text-sm py-12">
+                  <div className="text-center text-white/70 text-sm py-12">
                     {filter === "favorites" ? "暂无收藏 No favorites yet" : "暂无历史 No history yet"}
                   </div>
                 ) : (
@@ -155,7 +155,7 @@ export function HistoryPanel({ onReuse }: Props) {
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
                               {item.targetModel}
                             </span>
-                            <span className="flex items-center gap-1 text-[10px] text-white/45">
+                            <span className="flex items-center gap-1 text-[10px] text-white/70">
                               <Clock size={10} />
                               {formatTime(item.timestamp)}
                             </span>
@@ -169,12 +169,12 @@ export function HistoryPanel({ onReuse }: Props) {
                           >
                             <Star
                               size={14}
-                              className={item.isFavorite ? "text-amber-400 fill-amber-400" : "text-white/45"}
+                              className={item.isFavorite ? "text-amber-400 fill-amber-400" : "text-white/70"}
                             />
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/45 hover:text-red-400 transition-all"
+                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/70 hover:text-red-400 transition-all"
                             aria-label="删除 Delete"
                           >
                             <Trash2 size={14} />

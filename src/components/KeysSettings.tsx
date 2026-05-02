@@ -222,7 +222,7 @@ export function KeysSettings({ open, onClose }: Props) {
               </div>
               <div>
                 <h2 className="text-base font-bold text-white">API Key 设置</h2>
-                <p className="text-[11px] text-white/40">
+                <p className="text-[11px] text-white/65">
                   {configured > 0
                     ? `已配置 ${configured} 个 · 至少 1 个即可使用`
                     : "填入后保存在此设备，不会发送给任何第三方"}
@@ -232,7 +232,7 @@ export function KeysSettings({ open, onClose }: Props) {
             <button
               onClick={onClose}
               aria-label="关闭设置 Close settings"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/8 hover:text-white transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/65 hover:bg-white/8 hover:text-white transition-all"
             >
               <X size={17} />
             </button>
@@ -256,19 +256,19 @@ export function KeysSettings({ open, onClose }: Props) {
                 <SectionDivider label="自定义中转站（一个Key用所有模型）" accent="violet" />
                 <div className="mt-4 space-y-3">
                   {/* Tutorial */}
-                  <div className="rounded-xl bg-white/[0.03] border border-white/8 px-4 py-3 text-[11px] text-white/40 leading-relaxed space-y-1.5">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/8 px-4 py-3 text-[11px] text-white/65 leading-relaxed space-y-1.5">
                     <p className="text-white/60 font-medium">📖 使用说明（小白也能看懂）：</p>
                     <p>1. 去中转站网站注册账号（如 <span className="text-violet-400">aihubmix.com</span>）</p>
                     <p>2. 在中转站后台找到「API Key」，复制下来</p>
                     <p>3. 把中转站的网址填到下面「Base URL」（通常是 xxx.com/v1）</p>
                     <p>4. 把 Key 填到「API Key」框里，保存即可</p>
-                    <p className="text-white/45">填完后，上面 230+ 个模型都能通过这个中转站调用</p>
+                    <p className="text-white/70">填完后，上面 230+ 个模型都能通过这个中转站调用</p>
                   </div>
 
                   <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[13px] font-semibold text-violet-400">Base URL</span>
-                      <span className="text-[10px] text-white/45">OpenAI 兼容格式</span>
+                      <span className="text-[10px] text-white/70">OpenAI 兼容格式</span>
                     </div>
                     <input
                       type="text"
@@ -276,9 +276,9 @@ export function KeysSettings({ open, onClose }: Props) {
                       onChange={(e) => set("CUSTOM_BASE_URL", e.target.value)}
                       placeholder="https://aihubmix.com/v1"
                       aria-label="中转站 Base URL"
-                      className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 text-[13px] text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
+                      className="w-full rounded-xl border border-white/8 bg-black/30 px-4 py-2.5 text-[13px] text-white placeholder:text-white/60 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/15 transition-all"
                     />
-                    <p className="mt-2 text-[10px] text-white/45">
+                    <p className="mt-2 text-[10px] text-white/70">
                       直接填网址即可，系统会自动补 /v1。常见：aihubmix.com/v1、openrouter.ai/api/v1、naapi.cc/v1
                     </p>
                   </div>
@@ -303,11 +303,11 @@ export function KeysSettings({ open, onClose }: Props) {
               {/* ── Free providers ── 2 col grid */}
               <section>
                 <SectionDivider label="免费平台（推荐先填）" accent="green" />
-                <div className="mt-3 rounded-xl bg-white/[0.03] border border-white/8 px-4 py-3 text-[11px] text-white/40 leading-relaxed space-y-1">
+                <div className="mt-3 rounded-xl bg-white/[0.03] border border-white/8 px-4 py-3 text-[11px] text-white/65 leading-relaxed space-y-1">
                   <p className="text-white/60 font-medium">📖 这些平台注册就送免费额度：</p>
                   <p>• <span className="text-blue-400">Google Gemini</span> — 去 aistudio.google.com 注册，点「Create API key」复制，粘贴到下面</p>
                   <p>• <span className="text-purple-400">Groq</span> — 去 console.groq.com 注册，点「Create API Key」复制，粘贴到下面</p>
-                  <p className="text-white/45">这两个直接填 Key 就行，不需要填 Base URL</p>
+                  <p className="text-white/70">这两个直接填 Key 就行，不需要填 Base URL</p>
                 </div>
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {freeProviders.map((p) => (
@@ -367,7 +367,7 @@ export function KeysSettings({ open, onClose }: Props) {
                   </span>
                 ) : "保存并关闭"}
               </motion.button>
-              <p className="text-[11px] text-white/25 whitespace-nowrap">
+              <p className="text-[11px] text-white/60 whitespace-nowrap">
                 保存后重新选择模型即可生效
               </p>
             </div>
@@ -382,7 +382,7 @@ export function KeysSettings({ open, onClose }: Props) {
 function SectionDivider({ label, accent }: { label: string; accent: "green" | "white" | "violet" }) {
   const colorMap = {
     green:  "text-green-500/70 border-green-500/15",
-    white:  "text-white/45 border-white/[0.07]",
+    white:  "text-white/70 border-white/[0.07]",
     violet: "text-violet-400/70 border-violet-500/15",
   };
   const color = colorMap[accent];
@@ -445,7 +445,7 @@ function ProviderCard({ provider: p, value, show, onChange, onToggleVisible }: P
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[11px] text-white/25 hover:text-violet-400 transition-colors"
+          className="flex items-center gap-1 text-[11px] text-white/60 hover:text-violet-400 transition-colors"
         >
           获取 Key <ArrowRight size={10} />
         </a>
@@ -466,7 +466,7 @@ function ProviderCard({ provider: p, value, show, onChange, onToggleVisible }: P
           type="button"
           onClick={onToggleVisible}
           aria-label={show ? "隐藏密钥 Hide key" : "显示密钥 Show key"}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
         >
           {show ? <EyeOff size={13} /> : <Eye size={13} />}
         </button>

@@ -699,3 +699,83 @@ User asked whether the previous feature/code-review tasks had really been pushed
 
 - `context/PROGRESS.md` and `context/SESSION_LOG.md` were missing this follow-up verification.
 - Added this entry and a matching progress summary so the next Codex/Claude session knows which tasks were pushed and which were no-op verifications.
+
+---
+
+## Shared Toolchain Audit + Visual QA Upgrade — 2026-05-02 (Codex)
+
+### User request
+
+User asked Codex to continue the original free AI workbench setup, verify all free tools/plugins/software are ready for large projects, ensure any AI in VS Code can call the shared toolchain, test website functionality/visual quality, and remove only useless generated junk from E drive.
+
+### Local toolchain checks
+
+- `E:\AI工作台\AI-CHAIN.cmd doctor` confirmed:
+  - Git `2.53.0`
+  - GitHub CLI `2.92.0`
+  - Node `24.14.1`
+  - npm/npx `11.11.0`
+  - Python `3.13.1`
+  - uv `0.11.8`
+  - VS Code `1.118.1`
+  - Docker/Rancher `29.1.4-rd`
+  - Ollama `0.22.0`
+  - Claude Code `2.1.100`
+  - Codex CLI `0.120.0`
+  - PowerShell `7.6.1`
+  - curl `8.18.0`
+  - Gitleaks `8.30.1`
+- Fixed `E:\AI工作台\工具 Tools\ai-chain.ps1` so VS Code CLI resolves to `E:\vscode\Microsoft VS Code\bin\code.cmd`.
+- Installed free VS Code extensions:
+  - `bradlc.vscode-tailwindcss`
+  - `sonarsource.sonarlint-vscode`
+  - `deque-systems.vscode-axe-linter`
+  - `vitest.explorer`
+  - `streetsidesoftware.code-spell-checker`
+  - `yoavbls.pretty-ts-errors`
+  - `gruntfuggly.todo-tree`
+  - `christian-kohler.path-intellisense`
+  - `ms-edgedevtools.vscode-edge-devtools`
+
+### Project changes
+
+- Added `@axe-core/playwright`.
+- Added `npm run test:quality`.
+- Added `tests/e2e/quality.spec.ts` for desktop/mobile visual-health screenshots, no-horizontal-overflow checks, console-error checks, and axe WCAG scanning.
+- Added `quality` command to `AI-CHAIN`.
+- Disabled PWA generation in development mode while keeping production PWA builds enabled, so dev/E2E runs no longer write temporary service-worker files into `public/`.
+- Added generated build/cache outputs to `.gitignore` and removed them from Git tracking:
+  - `public/sw.js`
+  - `public/workbox-*.js`
+  - `public/fallback-*.js`
+  - PWA source maps
+  - `tsconfig.tsbuildinfo`
+- Fixed the first quality-test findings:
+  - Removed mobile zoom lock from `src/app/layout.tsx`.
+  - Added aria labels to header icon controls and GitHub link.
+  - Raised low-contrast dark-theme text from `text-white/20-45` to `text-white/60-70`.
+- Updated toolchain docs:
+  - `E:\AI工作台\AI_TOOLCHAIN.md`
+  - `E:\AI工作台\AI工具链说明.md`
+  - `context/AI_TOOLCHAIN.md`
+  - `AGENTS.md`
+  - `context/QUICK_START.md`
+
+### Cleanup
+
+- Removed ignored Playwright output folders: `test-results/`, `playwright-report/`.
+- Removed build-generated PWA junk after verification.
+- Removed local `tsconfig.tsbuildinfo` after verification.
+- Kept useful folders/tools: `node_modules`, `.next`, caches, logs, Ollama `bge-m3`, VS Code/Cursor/Trae/opencode folders, and the tiny old `E:\免费神器控制台`.
+
+### Verification
+
+- `E:\AI工作台\AI-CHAIN.cmd quality` passed: 2/2.
+- `E:\AI工作台\AI-CHAIN.cmd test-all` passed:
+  - `npx tsc --noEmit`
+  - `npm run build`
+  - Playwright Chromium E2E: 10/10
+- `E:\AI工作台\AI-CHAIN.cmd security` passed: no leaks found across 116 commits.
+- `E:\AI工作台\AI-CHAIN.cmd docker` passed.
+- `E:\AI工作台\AI-CHAIN.cmd ollama` passed and showed `bge-m3:latest`.
+- Local `smoke-prod` passed homepage/models/analytics and stopped at real generation because no local generation API key env var is configured. GitHub Production Smoke Test should be used after push because repo secrets exist there.

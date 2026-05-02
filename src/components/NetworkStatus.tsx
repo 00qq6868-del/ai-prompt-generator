@@ -35,7 +35,7 @@ export function NetworkStatus() {
         <span className={`w-2 h-2 rounded-full ${dot}`} />
         <span>{label}</span>
         {status.effectiveType && (
-          <span className="text-white/40 text-xs">{status.effectiveType.toUpperCase()}</span>
+          <span className="text-white/65 text-xs">{status.effectiveType.toUpperCase()}</span>
         )}
         <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -63,13 +63,13 @@ export function NetworkStatus() {
             <Row label="国内访问 (百度 / 国产模型)" ok={status.chinaAccess} />
 
             {status.downlink !== undefined && (
-              <div className="mt-2 text-white/40 text-xs">
+              <div className="mt-2 text-white/65 text-xs">
                 网速：{status.downlink} Mbps
               </div>
             )}
 
             {status.lastChecked && (
-              <div className="mt-1 text-white/45 text-xs">
+              <div className="mt-1 text-white/70 text-xs">
                 更新于 {status.lastChecked.toLocaleTimeString()}
               </div>
             )}
