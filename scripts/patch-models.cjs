@@ -156,6 +156,9 @@ const META = {
   // ── Qwen misc ────────────────────────────────────────────────
   "Qwen/Qwen2.5-VL":           { i: 0.15, o: 0.6,  s: "fast",      a: "high",    t: ["vision","chinese"],            d: "2025-01-01" },
   "Qwen/QwQ":                   { i: 0.1,  o: 0.3,  s: "fast",      a: "high",    t: ["reasoning","chinese"],         d: "2025-03-01" },
+  "bai-qwen3-vl-235b":          { i: 0.4,  o: 1.2,  s: "fast",      a: "supreme", t: ["chinese","vision","reasoning"],d: "2025-05-01" },
+  // ── DeepInfra / Gemma mirrors ────────────────────────────────
+  "deepinfra-gemma-4":          { i: 0.07, o: 0.34, s: "fast",      a: "high",    t: ["open-source","multilingual"],  d: "2025-06-01" },
   // ── gpt-oss (OpenAI open source) ─────────────────────────────
   "gpt-oss":                    { i: 0.15, o: 0.6,  s: "fast",      a: "high",    t: ["open-source"],                 d: "2025-06-01" },
   // ── Ollama local models ──────────────────────────────────────

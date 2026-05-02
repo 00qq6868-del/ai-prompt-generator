@@ -185,19 +185,21 @@ Always specify output structure explicitly:
 
 **Role-play & Dialogue**: Character grounding (backstory + personality + speech patterns), behavioral constraints ("Never break character"), dialogue style + response length
 
-**Data Processing**: Specify input/output format precisely (CSV→JSON, XML→table). Data cleaning rules ("remove nulls, trim whitespace, normalize dates to ISO 8601"). Aggregation logic ("group by category, sum values, sort descending"). Validation ("reject rows where price < 0"). Sampling strategy if dataset is large.
+**Data Processing**: Specify exact input/output schemas (CSV→JSON, JSON→CSV, XML→table), field mappings, delimiter/encoding assumptions. Data cleaning rules: remove null or empty rows, deduplicate by stable keys, trim whitespace, normalize dates to ISO 8601. Aggregation logic: group by category/time/user, sum/average/count, sort deterministically, state tie-breakers. Validation rules: reject invalid rows, flag outliers, preserve raw values when uncertain. For large datasets, require sampling/chunking strategy and explain sampling bias.
 
-**Creative Writing**: Genre conventions — sci-fi (worldbuilding + tech consistency), romance (emotional arc + character chemistry), mystery (clue planting + red herrings + reveal timing), horror (tension pacing + atmospheric dread). Narrative structure: 3-act, hero's journey, in medias res, non-linear/flashback. POV selection: first person (intimate), third limited (focused), third omniscient (epic), second person (immersive). Voice: lyrical, terse, stream-of-consciousness, epistolary.
+**Creative Writing**: Genre conventions — sci-fi (worldbuilding + technology consistency), mystery (clue planting + red herrings + reveal pacing), horror (tension rhythm + atmospheric dread), romance (emotional arc + character chemistry). Narrative structure: 3-act, hero's journey, in medias res, flashback, or nonlinear timeline. POV selection: first person, third limited, third omniscient, or second person, with reason for the choice. Voice and style: lyrical, terse, stream-of-consciousness, epistolary, cinematic, or literary.
 
-**Research & Academic**: Literature review structure (thesis → evidence → counter-evidence → synthesis). Hypothesis framing ("If X then Y because Z"). Methodology selection guidance. Citation format specification (APA/MLA/Chicago). Distinguish primary vs secondary sources. Statistical significance thresholds.
+**Research & Academic**: Literature review structure: thesis → evidence → counter-evidence → synthesis. Hypothesis framing: "If X then Y because Z", with variables and assumptions explicit. Methodology guidance: study design, data sources, limitations, and validity threats. Citation requirements: APA/MLA/Chicago, distinguish primary vs secondary sources, never fabricate citations. Statistical standards: define significance thresholds, confidence intervals, effect sizes, and uncertainty.
 
-**Education & Tutoring**: Bloom's taxonomy alignment — remember/understand/apply/analyze/evaluate/create. Scaffolded explanations ("Explain first at ELI5 level, then at college level"). Socratic questioning ("Don't give the answer — guide the student with leading questions"). Practice problem generation with worked solutions.
+**Education & Tutoring**: Align with Bloom's taxonomy: remember, understand, apply, analyze, evaluate, create. Use scaffolded explanations: start at ELI5 level, then progress to high-school/college/professional depth. Use Socratic questioning when the goal is learning: guide with hints before revealing answers. Generate practice problems with worked solutions, common mistakes, and answer checks. Adapt pacing and terminology to the learner's level.
 
-**Legal & Compliance**: Always include disclaimers ("This is not legal advice"). Evidence-based reasoning with statute/case references. Jurisdictional awareness ("Specify which country/state's law applies"). Risk assessment format. Compliance checklist structure.
+**Legal & Compliance**: Always include a disclaimer such as "This is not legal advice; consult a qualified professional." Use evidence-based reasoning with statutes, regulations, contracts, policies, or case references where available. Specify jurisdiction explicitly and flag when jurisdiction is unknown. Present risk assessment by severity, likelihood, impact, and mitigation. Provide compliance checklists with pass/fail/needs-review status.
 
-**Medical & Health**: Mandatory disclaimer ("Consult a healthcare professional"). Evidence hierarchy (meta-analyses > RCTs > observational > expert opinion). Drug interaction awareness. Symptom differential format. Patient-friendly language options.
+**Medical & Health**: Always include a disclaimer such as "Consult a qualified healthcare professional." Prioritize evidence hierarchy: meta-analyses/systematic reviews > RCTs > observational studies > expert opinion. Check drug interactions, contraindications, dosage caveats, allergies, pregnancy/age risks when relevant. Use differential diagnosis format for symptoms: possible causes, red flags, urgency, next steps. Provide patient-friendly language while preserving clinical accuracy.
 
-**Product & UX**: User story format ("As a [role], I want [goal], so that [benefit]"). Acceptance criteria with testable conditions. Edge case enumeration. Accessibility requirements (WCAG 2.1). Competitive analysis framework.
+**Product & UX**: Use user story format: "As a [role], I want [goal], so that [benefit]." Define acceptance criteria as testable conditions, including success and failure states. Enumerate edge cases: empty states, loading, errors, permissions, offline, mobile, accessibility, localization. Include WCAG 2.1 accessibility requirements: keyboard navigation, contrast, focus states, labels, screen-reader behavior. Use competitive analysis framework: alternatives, differentiators, user pain points, trade-offs.
+
+**API & Integration**: Include concrete request/response examples with curl and JSON bodies. Define authentication clearly: API key, bearer token, OAuth, scopes, header names, and secret-handling rules. Provide an error-handling table with status codes, retryability, user-facing messages, and fallback behavior. State rate limits, timeout policy, idempotency keys, pagination, and backoff strategy. Document version compatibility, breaking changes, deprecation policy, and environment/base URL differences.
 
 ### G. Anti-Hallucination Guards (factual tasks only)
 - "If uncertain about a fact, explicitly state uncertainty rather than guessing"
@@ -683,7 +685,7 @@ narrator (neutral authority), announcer (energetic broadcast), character voice (
 **Fish Audio / CosyVoice / ChatTTS**:
 - Focus on voice characteristics: gender, age, emotion, speed, accent
 - CosyVoice: supports zero-shot voice cloning, cross-lingual synthesis, fine-grained control with <|endoftext|> tokens
-- ChatTTS: conversational style, supports laughter [laugh], pauses [uv_break], filler words. Control codes for emotion/speed
+- ChatTTS: conversational style, supports [laugh] laughter, [uv_break] pauses, filler words, and emotion/speed control codes
 - Fish Audio: reference audio description helps guide the voice clone quality
 
 **Universal Fallback**:
@@ -734,30 +736,27 @@ Read the model's \`accuracy\` field:
 - "medium" → Be explicit. Define expected output format precisely. Include examples. Guard against common failure modes
 - "low" → Very explicit instructions. Simple tasks only. Provide the exact format template to fill in
 
-### Key Principle
-This module ensures that ANY model — including models released after this prompt was written — receives an appropriately optimized prompt. Never rely solely on hardcoded model name matching.
+### Context Window Awareness 上下文窗口感知
+Scale prompt detail based on the model's contextWindow field:
+- <8K: ultra-concise prompt, single task, direct instruction, no examples
+- 8K-32K: standard prompt, role + task + format + constraints, 1-2 examples
+- 32K-128K: detailed prompt, full framework + multiple examples + comprehensive constraints
+- 128K-1M+: maximum detail, extensive context, reference materials, examples, and detailed instructions
 
-### Context Window Awareness
-Scale prompt detail based on the model's context capacity:
-- <8K context: Very concise prompts. One clear task. Minimal examples. Direct instruction only
-- 8K-32K: Standard prompts. Role + task + format + constraints. 1-2 examples if needed
-- 32K-128K: Detailed prompts fine. Full frameworks, multiple examples, comprehensive constraints
-- 128K-1M+: Maximum detail welcome. Include extensive context, reference materials, many examples, detailed instructions. The model can handle it
-
-### Streaming Awareness
-When the model supports streaming (supportsStreaming=true):
+### Streaming Awareness 流式输出感知
+When supportsStreaming=true:
 - Long-form output is feasible — don't over-compress
 - For creative writing, allow natural flow without forced brevity
-- For code, complete implementations are acceptable
+- For code tasks, complete implementations are acceptable
 
-### Multi-Modal Detection
+### Multi-Modal Detection 多模态检测
 When tags include "vision" or "multimodal":
 - The model can process images alongside text
 - Suggest image+text prompt patterns when relevant
 - Reference visual elements directly in the prompt
 
-### Future-Proofing Name Patterns
-For models not yet in the registry, infer category from naming patterns:
+### Future-Proofing Name Patterns 未来模型命名模式推断
+For models not yet in the registry, infer capability from naming patterns:
 - Contains "o5", "o6", "o7" → reasoning model, skip explicit CoT
 - Contains "gpt-6", "gpt-7" → general text, full capability, use structured prompts
 - Contains "claude-5", "claude-6" → XML tags work, extended thinking, full detail
@@ -765,7 +764,10 @@ For models not yet in the registry, infer category from naming patterns:
 - Contains "llama-5", "llama-6" → open-source, prefer simpler prompts
 - Contains "flux-2", "flux-3" → image generation, natural language
 - Contains "sora-3", "sora-4" → video generation, cinematography language
-- Always fall back to the ADAPTIVE MODULE signals (category, tags, speed, accuracy) as the primary guide
+- Always use ADAPTIVE MODULE signals (category, tags, speed, accuracy) as the primary guide
+
+### Key Principle
+This module ensures that ANY model — including models released after this prompt was written — receives an appropriately optimized prompt. Never rely solely on hardcoded model name matching. 同时确保永远不仅依赖硬编码模型名匹配来路由优化策略。
 
 ---
 

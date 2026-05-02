@@ -4239,14 +4239,17 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.34,
+    "speed": "fast",
     "accuracy": "high",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "open-source",
+      "multilingual"
+    ],
+    "releaseDate": "2025-06-01",
     "category": "text"
   },
   {
@@ -4256,14 +4259,18 @@
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
-    "inputCostPer1M": 0,
-    "outputCostPer1M": 0,
-    "speed": "medium",
-    "accuracy": "high",
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "supreme",
     "supportsStreaming": true,
     "isLatest": false,
-    "tags": [],
-    "releaseDate": "",
+    "tags": [
+      "chinese",
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-05-01",
     "category": "text"
   },
   {

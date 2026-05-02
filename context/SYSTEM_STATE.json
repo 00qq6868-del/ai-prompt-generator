@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-02T04:28:42.312Z",
+  "updatedAt": "2026-05-02T06:10:25.621Z",
   "totalModels": 251,
   "byCategory": {
     "text": 240,
@@ -26,8 +26,8 @@
     "月之暗面": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 6,
-  "metaCoverage": 245,
+  "zeroCostModels": 4,
+  "metaCoverage": 247,
   "lastUpdate": {
     "added": 0,
     "updated": 240,

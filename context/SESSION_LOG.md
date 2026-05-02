@@ -490,3 +490,38 @@ Read `AGENTS.md` and `context/CODEX_HANDOFF.md` before editing. Do not touch the
 - `da7163e` feat: 全面改造模型系统
 - `ef3810a` fix: 修复自动更新模型无效的根本原因
 - `1b89bd1` chore: re-patch models.json after merge
+
+---
+
+## Model META Coverage Repair — 2026-05-02 (Codex)
+
+### What was done
+
+Improved model pricing metadata coverage in the Codex-safe workspace.
+
+### Files changed
+
+- `scripts/patch-models.cjs`
+- `.github/scripts/fetch-models.mjs`
+- `public/models.json`
+- `context/SYSTEM_STATE.json`
+
+### Details
+
+- Confirmed `lookupMeta()` already performs case-insensitive longest-prefix matching after exact lookup.
+- Confirmed the requested META groups were already present in both scripts except for fetch-side Ollama local aliases.
+- Added active uncovered aliases:
+  - `bai-qwen3-vl-235b`
+  - `deepinfra-gemma-4`
+- Added fetch-side Ollama entries:
+  - `llama3.2`
+  - `qwen2.5:7b`
+- Re-ran `node scripts/patch-models.cjs`.
+
+### Verification
+
+- `node --check scripts/patch-models.cjs` passed.
+- `node --check .github/scripts/fetch-models.mjs` passed.
+- `node scripts/patch-models.cjs` patched `251 / 251`.
+- Coverage is now `247 / 251`, or `98.41%`.
+- Zero-cost remaining models are intentional/non-token-priced local or video entries: `seedance-1.0`, `seedance-2.0`, `llama3.2`, `qwen2.5:7b`.

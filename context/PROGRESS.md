@@ -393,3 +393,27 @@ electron/
 - @anthropic-ai/sdk 0.91, openai 4.104, @google/generative-ai 0.24
 - web-vitals 5.2, electron 31.7, electron-builder 26.8
 - electron-updater 6.6 (optional)
+
+---
+
+## Model META Coverage Repair — 2026-05-02
+
+Codex improved model pricing metadata coverage after the user requested a 97%+ coverage pass.
+
+Completed:
+
+- Confirmed `lookupMeta()` in both `scripts/patch-models.cjs` and `.github/scripts/fetch-models.mjs` uses longest-prefix matching with case-insensitive fallback.
+- Confirmed the requested Qwen3, MiniMax, GLM, ERNIE, Cohere, AihubMix mirror, Claude, Google alias, InclusionAI, Phi, ByteDance, Xiaomi, Qwen misc, gpt-oss, Ollama, and router META groups were already present.
+- Added missing active aliases:
+  - `bai-qwen3-vl-235b` for `bai-qwen3-vl-235b-a22b-instruct`
+  - `deepinfra-gemma-4` for `deepinfra-gemma-4-26b-a4b-it`
+- Added missing Ollama local META entries to `.github/scripts/fetch-models.mjs` so it matches `scripts/patch-models.cjs`.
+- Ran `node scripts/patch-models.cjs`.
+
+Verification:
+
+- `node --check scripts/patch-models.cjs` passed.
+- `node --check .github/scripts/fetch-models.mjs` passed.
+- `node scripts/patch-models.cjs` patched `251 / 251`.
+- `public/models.json` now has `247 / 251` non-zero-cost covered models, `98.41%` nominal coverage.
+- Zero-cost remaining: `seedance-1.0`, `seedance-2.0`, `llama3.2`, `qwen2.5:7b`.
