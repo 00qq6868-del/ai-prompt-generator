@@ -337,7 +337,7 @@
     "speed": "medium",
     "accuracy": "supreme",
     "supportsStreaming": true,
-    "isLatest": true,
+    "isLatest": false,
     "tags": [
       "vision",
       "reasoning"
@@ -2081,6 +2081,26 @@
     "category": "text"
   },
   {
+    "id": "deepinfra-gemma-4-26b-a4b-it",
+    "name": "deepinfra-gemma-4-26b-a4b-it",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.07,
+    "outputCostPer1M": 0.34,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "open-source",
+      "multilingual"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
@@ -2298,6 +2318,27 @@
     "isLatest": false,
     "tags": [
       "code"
+    ],
+    "releaseDate": "2025-05-01",
+    "category": "text"
+  },
+  {
+    "id": "bai-qwen3-vl-235b-a22b-instruct",
+    "name": "bai-qwen3-vl-235b-a22b-instruct",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.4,
+    "outputCostPer1M": 1.2,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "vision",
+      "reasoning"
     ],
     "releaseDate": "2025-05-01",
     "category": "text"
@@ -4233,44 +4274,23 @@
     "category": "text"
   },
   {
-    "id": "deepinfra-gemma-4-26b-a4b-it",
-    "name": "deepinfra-gemma-4-26b-a4b-it",
-    "provider": "Other",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.07,
-    "outputCostPer1M": 0.34,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "open-source",
-      "multilingual"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
-    "id": "bai-qwen3-vl-235b-a22b-instruct",
-    "name": "bai-qwen3-vl-235b-a22b-instruct",
-    "provider": "Other",
-    "apiProvider": "aihubmix",
-    "contextWindow": 128000,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.4,
-    "outputCostPer1M": 1.2,
-    "speed": "fast",
+    "id": "gemini-2.5-computer-use-preview-10-2025",
+    "name": "Gemini 2.5 Computer Use Preview 10-2025",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
     "accuracy": "supreme",
     "supportsStreaming": true,
-    "isLatest": false,
+    "isLatest": true,
     "tags": [
-      "chinese",
       "vision",
-      "reasoning"
+      "computer-use"
     ],
-    "releaseDate": "2025-05-01",
+    "releaseDate": "2025-10-01",
     "category": "text"
   },
   {
@@ -4354,6 +4374,26 @@
     "category": "image"
   },
   {
+    "id": "gemini-3.1-flash-tts-preview",
+    "name": "Gemini 3.1 Flash TTS Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "tts"
+  },
+  {
     "id": "gemini-3-flash-preview",
     "name": "Gemini 3 Flash Preview",
     "provider": "Google",
@@ -4392,6 +4432,66 @@
     ],
     "releaseDate": "2025-06-01",
     "category": "image"
+  },
+  {
+    "id": "gemini-3-pro-preview",
+    "name": "Gemini 3 Pro Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-robotics-er-1.5-preview",
+    "name": "Gemini Robotics-ER 1.5 Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "robotics"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-robotics-er-1.6-preview",
+    "name": "Gemini Robotics-ER 1.6 Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "robotics"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
   },
   {
     "id": "gemini-2.5-flash-image",
@@ -4457,6 +4557,27 @@
     "category": "text"
   },
   {
+    "id": "gemini-2.5-flash-preview-tts",
+    "name": "Gemini 2.5 Flash Preview TTS",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.15,
+    "outputCostPer1M": 0.6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
+    ],
+    "releaseDate": "2025-04-17",
+    "category": "tts"
+  },
+  {
     "id": "gemini-2.5-pro",
     "name": "Gemini 2.5 Pro",
     "provider": "Google",
@@ -4473,6 +4594,47 @@
       "vision",
       "reasoning",
       "long-context"
+    ],
+    "releaseDate": "2025-03-25",
+    "category": "text"
+  },
+  {
+    "id": "gemini-2.5-pro-preview-tts",
+    "name": "Gemini 2.5 Pro Preview TTS",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning",
+      "long-context"
+    ],
+    "releaseDate": "2025-03-25",
+    "category": "tts"
+  },
+  {
+    "id": "gemini-pro-latest",
+    "name": "Gemini Pro Latest",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
     ],
     "releaseDate": "2025-03-25",
     "category": "text"
@@ -4560,48 +4722,6 @@
     "category": "text"
   },
   {
-    "id": "gemini-2.5-flash-preview-tts",
-    "name": "Gemini 2.5 Flash Preview TTS",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 8192,
-    "maxOutput": 16384,
-    "inputCostPer1M": 0.15,
-    "outputCostPer1M": 0.6,
-    "speed": "fast",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "fast",
-      "cheap",
-      "vision"
-    ],
-    "releaseDate": "2025-04-17",
-    "category": "tts"
-  },
-  {
-    "id": "gemini-2.5-pro-preview-tts",
-    "name": "Gemini 2.5 Pro Preview TTS",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 8192,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning",
-      "long-context"
-    ],
-    "releaseDate": "2025-03-25",
-    "category": "tts"
-  },
-  {
     "id": "gemini-flash-latest",
     "name": "Gemini Flash Latest",
     "provider": "Google",
@@ -4640,126 +4760,6 @@
       "fast"
     ],
     "releaseDate": "2025-02-05",
-    "category": "text"
-  },
-  {
-    "id": "gemini-pro-latest",
-    "name": "Gemini Pro Latest",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 1048576,
-    "maxOutput": 65536,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-03-25",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3-pro-preview",
-    "name": "Gemini 3 Pro Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 1048576,
-    "maxOutput": 65536,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-3.1-flash-tts-preview",
-    "name": "Gemini 3.1 Flash TTS Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 8192,
-    "maxOutput": 16384,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "reasoning"
-    ],
-    "releaseDate": "2025-08-01",
-    "category": "tts"
-  },
-  {
-    "id": "gemini-robotics-er-1.5-preview",
-    "name": "Gemini Robotics-ER 1.5 Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 1048576,
-    "maxOutput": 65536,
-    "inputCostPer1M": 1,
-    "outputCostPer1M": 5,
-    "speed": "medium",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "robotics"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-robotics-er-1.6-preview",
-    "name": "Gemini Robotics-ER 1.6 Preview",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 131072,
-    "maxOutput": 65536,
-    "inputCostPer1M": 1,
-    "outputCostPer1M": 5,
-    "speed": "medium",
-    "accuracy": "high",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "robotics"
-    ],
-    "releaseDate": "2025-06-01",
-    "category": "text"
-  },
-  {
-    "id": "gemini-2.5-computer-use-preview-10-2025",
-    "name": "Gemini 2.5 Computer Use Preview 10-2025",
-    "provider": "Google",
-    "apiProvider": "google",
-    "contextWindow": 131072,
-    "maxOutput": 65536,
-    "inputCostPer1M": 1.25,
-    "outputCostPer1M": 10,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": false,
-    "tags": [
-      "vision",
-      "computer-use"
-    ],
-    "releaseDate": "2025-10-01",
     "category": "text"
   },
   {

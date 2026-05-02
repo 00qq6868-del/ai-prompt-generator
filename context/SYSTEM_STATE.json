@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-02T06:10:25.621Z",
+  "updatedAt": "2026-05-02T06:21:35.041Z",
   "totalModels": 251,
   "byCategory": {
     "text": 240,
@@ -30,7 +30,7 @@
   "metaCoverage": 247,
   "lastUpdate": {
     "added": 0,
-    "updated": 240,
+    "updated": 239,
     "previousTotal": 251
   }
 }
