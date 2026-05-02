@@ -132,7 +132,51 @@ Verified before push:
 
 ---
 
-No active code-fix task remains after this model auto-update classification fix.
+## Production Generation Chain Hardening — 2026-05-02
+
+Codex added a real production smoke-test path and free baseline protections for the live generation chain.
+
+Implemented:
+
+- Added per-IP in-memory rate limiting helper in `src/lib/rate-limit.ts`.
+- Added `/api/generate` safeguards:
+  - default 20 requests/IP/minute
+  - `GENERATE_MAX_INPUT_CHARS` default 12000
+  - `GENERATE_MAX_TOKENS` default 4096
+  - bilingual `429` and `413` errors
+- Added `/api/probe` safeguards:
+  - default 30 requests/IP/10 minutes
+  - shared public URL validation to block localhost/private/internal relay probe targets
+- Hardened `/api/analytics`:
+  - validates/sanitizes metric batches
+  - default 120 requests/IP/minute
+  - supports `ANALYTICS_WEBHOOK_URL` for a durable free/cheap sink
+  - on Vercel without a webhook, accepts metrics and logs counts instead of failing by writing to read-only deployment files
+- Added production smoke script:
+  - `scripts/production-smoke.cjs`
+  - `npm run smoke:prod`
+  - checks homepage, `/api/models`, `/api/analytics`, optional `/api/probe`, and real `/api/generate` SSE when a secret key is available
+- Added manual GitHub Actions workflow:
+  - `.github/workflows/production-smoke.yml`
+  - uses GitHub Secrets without printing keys
+  - prefers free `GOOGLE_API_KEY`, then `GROQ_API_KEY`/`GROQ`, then `AIHUBMIX_API_KEY`
+- Updated `.env.example` with free safeguard and smoke-test env variables.
+
+Verified locally before push:
+
+- `node --check scripts/production-smoke.cjs` passes
+- `npx tsc --noEmit` passes
+- `npm run build` passes
+- `npx playwright test --project=chromium` passes: 8/8
+- `git diff --check` passes
+
+Observed before deployment:
+
+- Current production `/api/analytics` returned 500 with the old code path, confirming the Vercel analytics file-write issue. The new route fixes this by avoiding deployment-directory writes on Vercel.
+
+---
+
+No active code-fix task remains after the model auto-update classification fix and production chain hardening pass.
 
 Next practical task is a real production generation test with the user's relay/API key configured:
 

@@ -5,6 +5,69 @@
 
 ---
 
+## Production Generation Chain Hardening — 2026-05-02 (Codex)
+
+### What was done
+
+Added a real production smoke-test workflow and free baseline protections around the live generation chain.
+
+### Files changed
+
+- `src/lib/rate-limit.ts`
+- `src/lib/safe-url.ts`
+- `src/app/api/generate/route.ts`
+- `src/app/api/probe/route.ts`
+- `src/app/api/analytics/route.ts`
+- `scripts/production-smoke.cjs`
+- `.github/workflows/production-smoke.yml`
+- `package.json`
+- `.env.example`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+
+### Implementation details
+
+1. Added per-IP in-memory rate limiting with configurable env values.
+2. Added `/api/generate` limits:
+   - 20 requests per IP per minute by default.
+   - 12000 input characters by default.
+   - 4096 max output tokens by default.
+3. Added `/api/probe` limits and public URL validation to block localhost/private/internal network probe targets.
+4. Hardened `/api/analytics`:
+   - metric allowlist and sanitization.
+   - optional `ANALYTICS_WEBHOOK_URL` forwarding.
+   - Vercel-compatible fallback that accepts metrics and logs counts instead of trying to write `.analytics` into the deployment directory.
+5. Added `scripts/production-smoke.cjs`:
+   - checks homepage.
+   - checks `/api/models` total/category/gpt-5.5.
+   - checks `/api/analytics`.
+   - checks `/api/probe` when `AIHUBMIX_API_KEY` is available.
+   - checks real `/api/generate` SSE with `GOOGLE_API_KEY`, then `GROQ_API_KEY`/`GROQ`, then `AIHUBMIX_API_KEY`.
+6. Added `.github/workflows/production-smoke.yml` as a manual workflow using GitHub Secrets without printing key values.
+
+### Verification before push
+
+- `node --check scripts/production-smoke.cjs` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npx playwright test --project=chromium` passed: 8/8.
+- `git diff --check` passed.
+
+### Production observation before deploy
+
+Running the smoke script with `SMOKE_SKIP_GENERATE=1` against current production passed homepage and model checks, then failed `/api/analytics` with HTTP 500. This confirms the old production analytics route had a Vercel file-write problem; the new analytics route is expected to fix it after deployment.
+
+### Next verification
+
+After pushing this pass:
+
+1. Wait for GitHub E2E.
+2. Wait for Vercel production deployment.
+3. Run the manual `Production Smoke Test` GitHub Actions workflow.
+4. Verify live `/api/analytics` returns 200 and real `/api/generate` succeeds with a GitHub Secret key.
+
+---
+
 ## Model Auto-Update Classification Fix — 2026-05-02 (Codex)
 
 ### What was done

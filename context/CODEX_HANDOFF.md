@@ -50,6 +50,15 @@ Follow-up fix in progress/completed locally on 2026-05-02:
 - `scripts/patch-models.cjs` now also writes `context/SYSTEM_STATE.json`.
 - Local patched state is 251 models with `{ text: 240, video: 2, image: 4, tts: 5 }`.
 
+Production chain hardening added locally on 2026-05-02:
+
+- `src/lib/rate-limit.ts` adds free per-IP in-memory rate limiting.
+- `/api/generate` now has request rate, input length, and max-token limits.
+- `/api/probe` now rate-limits and validates public relay URLs before fetching `/models`.
+- `/api/analytics` now sanitizes metrics and avoids Vercel deployment-directory file writes; optional durable forwarding is `ANALYTICS_WEBHOOK_URL`.
+- `scripts/production-smoke.cjs` plus `.github/workflows/production-smoke.yml` provide a real production smoke test using GitHub Secrets.
+- Before deploy, current production `/api/analytics` returned 500, confirming the old analytics persistence issue.
+
 ## Recommended Workflow
 
 1. Codex makes changes in the Codex worktree only.

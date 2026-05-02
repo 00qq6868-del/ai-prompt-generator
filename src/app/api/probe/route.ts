@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
+import { normalizeOpenAIBaseUrl } from "@/lib/safe-url";
 
 export async function POST(req: NextRequest) {
   try {
+    const rate = checkRateLimit(req, {
+      keyPrefix: "probe",
+      limit: readPositiveIntEnv("PROBE_RATE_LIMIT_MAX", 30),
+      windowMs: readPositiveIntEnv("PROBE_RATE_LIMIT_WINDOW_MS", 10 * 60_000),
+    });
+    if (!rate.ok) return rateLimitResponse(rate);
+
     const { baseUrl, apiKey } = await req.json();
 
     if (!baseUrl?.trim() || !apiKey?.trim()) {
@@ -11,10 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let url = baseUrl.trim().replace(/\/+$/, "");
-    if (!url.endsWith("/v1")) {
-      url += "/v1";
-    }
+    const url = normalizeOpenAIBaseUrl(baseUrl);
 
     const res = await fetch(`${url}/models`, {
       headers: { Authorization: `Bearer ${apiKey.trim()}` },

@@ -16,6 +16,7 @@
     "electron:build:mac": "npm run build && electron-builder --mac --publish never",
     "electron:build:all": "npm run build && electron-builder --win --mac --publish never",
     "electron:publish": "npm run build && electron-builder --win --mac --publish always",
+    "smoke:prod": "node scripts/production-smoke.cjs",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui"
   },
