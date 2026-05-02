@@ -6,10 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This project uses a persistent context system. **Before starting any work, read these files:**
 
-1. `context/QUICK_START.md` — 30-second project overview
-2. `context/PROGRESS.md` — Current task status (what's done, what's pending)
-3. `context/MEMORIES.md` — All decisions, user preferences, technical gotchas
-4. `context/SESSION_LOG.md` — What previous sessions did (read latest entry)
+1. `context/AI_TOOLCHAIN.md` — shared launcher for Codex/Claude/other AI windows
+2. `context/QUICK_START.md` — 30-second project overview
+3. `context/PROGRESS.md` — Current task status (what's done, what's pending)
+4. `context/MEMORIES.md` — All decisions, user preferences, technical gotchas
+5. `context/SESSION_LOG.md` — What previous sessions did (read latest entry)
 
 **Before ending your session or if context is getting long:**
 
@@ -33,7 +34,22 @@ node scripts/patch-models.cjs          # Re-apply META data to models.json
 node .github/scripts/fetch-models.mjs  # Manually run the model auto-updater (needs AIHUBMIX_API_KEY)
 ```
 
-No test framework is configured. There are no test files.
+Shared AI toolchain launcher:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status
+powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" test-all
+powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" smoke-prod
+```
+
+Short wrapper:
+
+```cmd
+E:\AI工作台\AI-CHAIN.cmd status
+E:\AI工作台\AI-CHAIN.cmd test-all
+```
+
+Use the shared launcher for repeatable work across Codex, Claude, VS Code terminals, and other AI windows. It logs each run under `E:\AI工作台\日志 Logs\ai-chain` and locks Git-mutating operations.
 
 ## User Preferences
 

@@ -67,6 +67,19 @@ Production chain hardening added locally on 2026-05-02:
   - relay probe ok, 227 models
   - real generation ok through Groq after Google quota 429 fallback
 
+Shared AI toolchain launcher added on 2026-05-02:
+
+- Global script: `E:\AI工作台\工具 Tools\ai-chain.ps1`
+- Short wrapper: `E:\AI工作台\AI-CHAIN.cmd`
+- Double-click console: `E:\AI工作台\打开AI工具链控制台.cmd`
+- Human guide: `E:\AI工作台\AI工具链说明.md`
+- ASCII guide: `E:\AI工作台\AI_TOOLCHAIN.md`
+- Project guide: `context/AI_TOOLCHAIN.md`
+- Use `E:\AI工作台\AI-CHAIN.cmd status` at the start of any AI window.
+- Use `E:\AI工作台\AI-CHAIN.cmd test-all` before claiming a full local validation.
+- Use `E:\AI工作台\AI-CHAIN.cmd smoke-prod` for real production validation.
+- The launcher logs every run and locks Git-mutating operations to reduce multi-AI collisions.
+
 ## Recommended Workflow
 
 1. Codex makes changes in the Codex worktree only.
@@ -80,16 +93,15 @@ Production chain hardening added locally on 2026-05-02:
 If the chat context is compressed or lost, the next AI should read:
 
 1. `AGENTS.md`
-2. `context/QUICK_START.md`
-3. `context/PROJECT_CONTEXT.md`
-4. `context/PROGRESS.md`
-5. `context/SESSION_LOG.md`
-6. `context/CODEX_HANDOFF.md`
+2. `context/AI_TOOLCHAIN.md`
+3. `context/QUICK_START.md`
+4. `context/PROJECT_CONTEXT.md`
+5. `context/PROGRESS.md`
+6. `context/SESSION_LOG.md`
+7. `context/CODEX_HANDOFF.md`
 
 Then run:
 
 ```powershell
-git status -sb
-git branch -vv
-git log -5 --oneline --decorate
+powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status
 ```

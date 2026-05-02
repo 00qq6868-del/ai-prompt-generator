@@ -69,6 +69,61 @@ Latest verified state on 2026-05-02:
 - Production site `https://www.myprompt.asia` returned HTTP 200
 - Production `/api/models` returned 251 models from bundled data and includes `gpt-5.5`
 
+## Shared AI Toolchain Launcher — 2026-05-02
+
+Codex created a shared E-drive launcher so Codex, Claude, VS Code terminals, and other AI windows can use the same local toolchain instead of inventing separate commands.
+
+Global files:
+
+- `E:\AI工作台\工具 Tools\ai-chain.ps1`
+- `E:\AI工作台\AI-CHAIN.cmd`
+- `E:\AI工作台\打开AI工具链控制台.cmd`
+- `E:\AI工作台\AI工具链说明.md`
+- `E:\AI工作台\AI_TOOLCHAIN.md`
+
+Project files:
+
+- `context/AI_TOOLCHAIN.md`
+- `AGENTS.md`
+- `CLAUDE.md`
+
+Main commands:
+
+- `doctor`: check installed tools
+- `explain`: explain each tool
+- `status`: Git/project/GitHub status
+- `sync`: locked fetch/rebase from `origin/main`
+- `typecheck`: `npx tsc --noEmit`
+- `build`: `npm run build`
+- `e2e`: Playwright Chromium E2E
+- `test-all`: typecheck + build + E2E
+- `smoke-prod`: real production smoke test
+- `ci` / `watch-ci`: GitHub Actions
+- `memory`: print context files
+- `compare-claude`: read-only comparison with Claude workspace
+- `docker`: Docker/Rancher status
+- `ollama`: Ollama status
+- `security`: Gitleaks scan
+- `new-session`: prompt for a new AI window
+
+Concurrency/safety:
+
+- Every run writes a separate log under `E:\AI工作台\日志 Logs\ai-chain`.
+- Git-mutating operations use a lock under `E:\AI工作台\日志 Logs\ai-chain\locks`.
+- The `.ps1` and `.cmd` launchers were made ASCII-safe so Windows PowerShell 5 and cmd can call them even though parent folders have Chinese names.
+
+Verified:
+
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" doctor -NoPause`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" explain -NoPause`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status -NoPause`
+- `cmd /c "E:\AI工作台\AI-CHAIN.cmd status"`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" memory -NoPause`
+
+Detected installed tools:
+
+- Git, GitHub CLI, Node.js, npm, npx, Python, py, uv, VS Code, Docker/Rancher, Ollama, Claude CLI, Codex CLI, Windows PowerShell, PowerShell 7, curl.exe, Gitleaks.
+
 ## Codex Completion Pass — 2026-05-02
 
 Codex continued after user requested completing the whole current section before reporting back.

@@ -5,6 +5,84 @@
 
 ---
 
+## Shared AI Toolchain Launcher — 2026-05-02 (Codex)
+
+### What was done
+
+Created a universal local launcher for all AI windows and IDE terminals. The goal is that Codex, Claude, VS Code, Cursor/Trae-style tools, and future AI windows can call the same toolchain commands and read the same instructions.
+
+### Global files created
+
+- `E:\AI工作台\工具 Tools\ai-chain.ps1`
+- `E:\AI工作台\AI-CHAIN.cmd`
+- `E:\AI工作台\打开AI工具链控制台.cmd`
+- `E:\AI工作台\AI工具链说明.md`
+- `E:\AI工作台\AI_TOOLCHAIN.md`
+
+### Project files changed
+
+- `context/AI_TOOLCHAIN.md`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+
+### Important implementation notes
+
+- The launcher computes the E-drive workbench path from its own location instead of hardcoding Chinese paths in the PowerShell source.
+- The `.cmd` wrapper uses `*Tools` wildcard discovery instead of hardcoding the Chinese `工具 Tools` folder name.
+- This avoids Windows PowerShell 5/cmd encoding failures with UTF-8 Chinese path literals.
+- Git-mutating commands use a lock directory so multiple AI windows do not run `sync` at the same time.
+- Every launcher run writes an independent transcript under `E:\AI工作台\日志 Logs\ai-chain`.
+
+### Verified commands
+
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" doctor -NoPause`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" explain -NoPause`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status -NoPause`
+- `cmd /c "E:\AI工作台\AI-CHAIN.cmd status"`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" memory -NoPause`
+
+### Installed tools detected
+
+- Git
+- GitHub CLI
+- Node.js
+- npm / npx
+- Python / py
+- uv
+- VS Code
+- Docker via Rancher Desktop
+- Ollama
+- Claude CLI
+- Codex CLI
+- Windows PowerShell
+- PowerShell 7
+- curl.exe
+- Gitleaks
+
+### Use in future sessions
+
+Ask any AI window to start with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status
+```
+
+For a full local validation:
+
+```cmd
+E:\AI工作台\AI-CHAIN.cmd test-all
+```
+
+For real production validation:
+
+```cmd
+E:\AI工作台\AI-CHAIN.cmd smoke-prod
+```
+
+---
+
 ## Production Generation Chain Hardening — 2026-05-02 (Codex)
 
 ### What was done
