@@ -188,6 +188,7 @@ function classifyModel(id) {
 }
 
 const modelsPath = path.join("public", "models.json");
+const statePath = path.join("context", "SYSTEM_STATE.json");
 const models = JSON.parse(fs.readFileSync(modelsPath, "utf8"));
 
 let patched = 0;
@@ -212,6 +213,27 @@ fs.writeFileSync(modelsPath, JSON.stringify(models, null, 2) + "\n");
 const cats = {};
 models.forEach(x => { const c = x.category || "text"; cats[c] = (cats[c] || 0) + 1; });
 const zeroCost = models.filter(x => x.inputCostPer1M === 0 && x.outputCostPer1M === 0).length;
+const providers = {};
+models.forEach(x => { providers[x.provider] = (providers[x.provider] || 0) + 1; });
+
+let previousState = {};
+try {
+  previousState = JSON.parse(fs.readFileSync(statePath, "utf8"));
+} catch {
+  previousState = {};
+}
+
+fs.mkdirSync(path.dirname(statePath), { recursive: true });
+fs.writeFileSync(statePath, JSON.stringify({
+  ...previousState,
+  updatedAt: new Date().toISOString(),
+  totalModels: models.length,
+  byCategory: cats,
+  byProvider: providers,
+  zeroCostModels: zeroCost,
+  metaCoverage: models.length - zeroCost,
+}, null, 2) + "\n");
+
 console.log("Patched:", patched, "/", models.length);
 console.log("Zero-cost remaining:", zeroCost);
 console.log("Categories:", JSON.stringify(cats));

@@ -105,7 +105,34 @@ Codex continued after user requested completing the whole current section before
 
 ## 🔄 Active Task
 
-No active code-fix task is open from the Codex completion pass.
+Codex found and fixed a follow-up model auto-update regression before closing this session.
+
+## Model Auto-Update Classification Fix — 2026-05-02
+
+After syncing the Codex completion pass, production `/api/models` showed the scheduled GitHub model updater had reduced non-text categories from the intended `image=4, tts=5` to `image=1, tts=2`.
+
+Root cause:
+
+- `.github/scripts/fetch-models.mjs` had a good classifier inside `fetchAihubmix()`, but that function was local to the AihubMix fetch.
+- Later official provider fetches, especially Google/OpenAI, overwrote matching model IDs with `category: "text"` and blank Google release dates during merge.
+
+Fix:
+
+- Moved `classifyModel()` to shared top-level scope in `.github/scripts/fetch-models.mjs`.
+- Google/OpenAI/Anthropic/DeepSeek/xAI/Mistral/Groq fetchers now classify fetched model IDs instead of forcing `text`.
+- Google fetches now preserve `meta.d` release dates.
+- `scripts/patch-models.cjs` now updates `context/SYSTEM_STATE.json` after patching `public/models.json`.
+- Re-ran `node scripts/patch-models.cjs`, restoring local categories to `{ text: 240, video: 2, image: 4, tts: 5 }`.
+
+Verified before push:
+
+- `node --check .github/scripts/fetch-models.mjs` passes
+- `node --check scripts/patch-models.cjs` passes
+- `node scripts/patch-models.cjs` passes and reports `Patched: 249 / 251`
+
+---
+
+No active code-fix task remains after this model auto-update classification fix.
 
 Next practical task is a real production generation test with the user's relay/API key configured:
 

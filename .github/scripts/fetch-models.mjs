@@ -205,6 +205,20 @@ function lookupMeta(id) {
   return null;
 }
 
+// Classify model by category based on ID. Keep this shared across all sources
+// so a later provider fetch cannot overwrite a non-text model back to text.
+function classifyModel(id) {
+  const lower = id.toLowerCase();
+  if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo|kandinsky|omnigen|omnihuman|sana-|aura-flow|seeart/.test(lower)) return "image";
+  if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse(?!-image)|pika|minimax-video|jimeng-video|genmo|animatediff|cog-video|hunyuan-video|vchitect|pyramid-flow/.test(lower)) return "video";
+  if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs|parler-tts|bark|mars5|f5-tts|kokoro/.test(lower)) return "tts";
+  if (/whisper|stt|audio-transcri|speech-to|paraformer|sensevoice|funasr/.test(lower)) return "stt";
+  if (/embed|bge-|text-embedding|e5-|jina-embed|gte-|nomic-embed|voyage-/.test(lower)) return "embedding";
+  if (/ocr|document-ai|vision-extract|doc-parse|got-ocr|surya/.test(lower)) return "ocr";
+  if (/rerank|reranker/.test(lower)) return "other";
+  return "text";
+}
+
 // ── AihubMix（聚合平台，一个Key拉取所有模型）─────────────────────────────
 async function fetchAihubmix() {
   const key = process.env.AIHUBMIX_API_KEY;
@@ -242,19 +256,6 @@ async function fetchAihubmix() {
 
   // Skip only truly useless models (old deprecated ones, internal tools)
   const SKIP = /moderation|text-davinci|babbage-002|ada-002|curie|search|edit|insert|similarity|code-davinci|chatgpt-4o-latest|auto|rerank$/i;
-
-  // Classify model by category based on ID
-  function classifyModel(id) {
-    const lower = id.toLowerCase();
-    if (/dall-e|flux|sd-|stable-diffusion|image-gen|midjourney|cogview|wanx|-image-|-image$|gpt-image|imagen|ideogram|playground-v|recraft|kolors|hidream|hunyuan-image|image-preview|jimeng|即梦|pixverse-image|leonardo|kandinsky|omnigen|omnihuman|sana-|aura-flow|seeart/.test(lower)) return "image";
-    if (/sora|wan2|video|luma|runway|vidu|kling|t2v|i2v|hailuo|mochi|ltx-video|seedance|pixverse(?!-image)|pika|minimax-video|jimeng-video|genmo|animatediff|cog-video|hunyuan-video|vchitect|pyramid-flow/.test(lower)) return "video";
-    if (/tts|audio-gen|speech-gen|voice-gen|fish-audio|cosyvoice|chattts|tts-preview|audio-preview|suno|udio|elevenlabs|parler-tts|bark|mars5|f5-tts|kokoro/.test(lower)) return "tts";
-    if (/whisper|stt|audio-transcri|speech-to|paraformer|sensevoice|funasr/.test(lower)) return "stt";
-    if (/embed|bge-|text-embedding|e5-|jina-embed|gte-|nomic-embed|voyage-/.test(lower)) return "embedding";
-    if (/ocr|document-ai|vision-extract|doc-parse|got-ocr|surya/.test(lower)) return "ocr";
-    if (/rerank|reranker/.test(lower)) return "other";
-    return "text";
-  }
 
   // Expand provider map to cover more prefixes
   const EXTRA_PROVIDERS = {
@@ -359,8 +360,8 @@ async function fetchGoogle() {
         supportsStreaming: true,
         isLatest:      false,
         tags:          meta?.t ?? [],
-        releaseDate:   "",
-        category:      "text",
+        releaseDate:   meta?.d ?? "",
+        category:      classifyModel(id),
       };
     });
 }
@@ -402,8 +403,8 @@ async function fetchOpenAI() {
         supportsStreaming: true,
         isLatest:      false,
         tags:          meta?.t ?? [],
-        releaseDate:   new Date(m.created * 1000).toISOString().slice(0, 10),
-        category:      "text",
+        releaseDate:   meta?.d ?? (m.created ? new Date(m.created * 1000).toISOString().slice(0, 10) : ""),
+        category:      classifyModel(m.id),
       };
     });
 }
@@ -441,8 +442,8 @@ async function fetchAnthropic() {
       supportsStreaming: true,
       isLatest:      false,
       tags:          meta?.t ?? [],
-      releaseDate:   m.created_at?.slice(0, 10) ?? "",
-      category:      "text",
+      releaseDate:   meta?.d ?? m.created_at?.slice(0, 10) ?? "",
+      category:      classifyModel(m.id),
     };
   });
 }
@@ -485,7 +486,7 @@ async function fetchDeepSeek() {
       isLatest:      false,
       tags:          meta?.t ?? [],
       releaseDate:   meta?.d ?? "",
-      category:      "text",
+      category:      classifyModel(m.id),
     };
   });
 }
@@ -528,7 +529,7 @@ async function fetchXAI() {
       isLatest:      false,
       tags:          meta?.t ?? [],
       releaseDate:   meta?.d ?? "",
-      category:      "text",
+      category:      classifyModel(m.id),
     };
   });
 }
@@ -572,7 +573,7 @@ async function fetchMistral() {
         isLatest:      false,
         tags:          meta?.t ?? [],
         releaseDate:   meta?.d ?? "",
-        category:      "text",
+        category:      classifyModel(m.id),
       };
     });
 }
@@ -627,7 +628,7 @@ async function fetchGroq() {
         isLatest:      false,
         tags:          meta?.t ?? ["fast"],
         releaseDate:   meta?.d ?? "",
-        category:      "text",
+        category:      classifyModel(m.id),
       };
     });
 }

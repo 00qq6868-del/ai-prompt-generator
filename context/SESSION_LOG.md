@@ -5,6 +5,48 @@
 
 ---
 
+## Model Auto-Update Classification Fix — 2026-05-02 (Codex)
+
+### What was done
+
+Found a follow-up regression caused by scheduled model auto-updates after the Codex completion pass. Production `/api/models` was live and included `gpt-5.5`, but the latest scheduled update had downgraded category counts to `image=1, tts=2` instead of the intended `image=4, tts=5`.
+
+### Root cause
+
+- `.github/scripts/fetch-models.mjs` had `classifyModel()` scoped only inside `fetchAihubmix()`.
+- Later official provider fetches, especially Google/OpenAI, wrote duplicate model IDs with `category: "text"`.
+- The merge step lets later fetched records update existing IDs, so Google/OpenAI official records overwrote correct AihubMix category metadata.
+
+### Files changed
+
+- `.github/scripts/fetch-models.mjs`
+- `scripts/patch-models.cjs`
+- `public/models.json`
+- `context/SYSTEM_STATE.json`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+
+### Fix
+
+- Promoted `classifyModel()` to shared top-level scope in `.github/scripts/fetch-models.mjs`.
+- Updated Google/OpenAI/Anthropic/DeepSeek/xAI/Mistral/Groq fetchers to call `classifyModel()` instead of forcing `category: "text"`.
+- Updated Google fetches to use `meta?.d` release dates when available.
+- Updated `scripts/patch-models.cjs` so manual post-processing also writes `context/SYSTEM_STATE.json`.
+- Re-ran `node scripts/patch-models.cjs`.
+
+### Verification
+
+- `node --check .github/scripts/fetch-models.mjs` passed.
+- `node --check scripts/patch-models.cjs` passed.
+- `node scripts/patch-models.cjs` passed and restored categories to `{ text: 240, video: 2, image: 4, tts: 5 }`.
+
+### Notes for next session
+
+- After this is pushed, wait for GitHub E2E and verify production `/api/models` again.
+- If the scheduled model updater runs later, it should preserve image/TTS classification instead of reverting those models to text.
+
+---
+
 ## Deployment Sync Check — 2026-05-02 (Codex)
 
 ### What was done

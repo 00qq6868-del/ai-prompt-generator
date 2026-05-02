@@ -43,6 +43,13 @@ Latest verified GitHub/production state on 2026-05-02:
 - `https://www.myprompt.asia` returned HTTP 200
 - Production `/api/models` returned 251 bundled models and includes `gpt-5.5`
 
+Follow-up fix in progress/completed locally on 2026-05-02:
+
+- The scheduled model updater had overwritten some image/TTS categories back to text.
+- `.github/scripts/fetch-models.mjs` now shares `classifyModel()` across provider fetchers so Google/OpenAI official records do not downgrade categories during merge.
+- `scripts/patch-models.cjs` now also writes `context/SYSTEM_STATE.json`.
+- Local patched state is 251 models with `{ text: 240, video: 2, image: 4, tts: 5 }`.
+
 ## Recommended Workflow
 
 1. Codex makes changes in the Codex worktree only.
