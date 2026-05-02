@@ -646,3 +646,56 @@ User reported that the site was missing current market models such as DeepSeek V
   - analytics ok
   - probe ok: `226`
   - real generation ok through Groq fallback
+
+---
+
+## Follow-up Feature/QA Checks — 2026-05-02 (Codex)
+
+### User concern
+
+User asked whether the previous feature/code-review tasks had really been pushed to GitHub and whether project memory/context had been interrupted.
+
+### GitHub status checked
+
+- Local branch `codex/safe-audit-20260501-232542` was aligned with `origin/main`.
+- Latest commit before this memory update:
+  - `b38b2ff fix: export recommendation type`
+- GitHub Actions:
+  - `25248567893` for `b38b2ff` passed with `8/8`.
+  - Previous latest-model rollout E2E, Auto Update Models, and Production Smoke Test were also successful.
+
+### Follow-up requests checked
+
+- **ResultPanel comparison UI**
+  - Already implemented in `src/components/ResultPanel.tsx`.
+  - `PromptGenerator.tsx` already passes `originalPrompt={idea}`.
+  - No code change needed.
+
+- **Smart model recommender**
+  - `src/lib/model-recommender.ts` already existed and `PromptGenerator.tsx` already displayed the recommendation chip between the textarea and `ModelSelector`.
+  - One real gap was fixed: `Recommendation` is now exported.
+  - Commit pushed: `b38b2ff fix: export recommendation type`.
+  - Kept live model IDs (`gpt-image-2`, `sora-2-pro`, `deepseek-v4-pro`) because the older requested IDs (`dall-e-3`, `sora`, `elevenlabs-tts`, `suno`) are not present in the 266-model registry.
+
+- **History/favorites**
+  - `src/lib/history.ts` and `src/components/HistoryPanel.tsx` already exist.
+  - `PromptGenerator.tsx` already imports `HistoryPanel` and `saveHistory`.
+  - All three successful generation paths already call `saveHistory`.
+  - No code change needed.
+
+- **`/api/generate` type cleanup**
+  - `src/app/api/generate/route.ts` already imports `ModelInfo`.
+  - `models.find()` callbacks are typed as `(m: ModelInfo)`.
+  - `targetCategory` uses `targetModel.category ?? "text"`.
+  - No `targetModel as any` remains.
+  - Local typecheck passed.
+
+- **ARIA accessibility labels**
+  - Requested labels already exist in `ResultPanel.tsx`, `PromptGenerator.tsx`, and `HistoryPanel.tsx`.
+  - Streaming preview already has `role="status"` and `aria-live="polite"`.
+  - No code change needed.
+
+### Memory repair
+
+- `context/PROGRESS.md` and `context/SESSION_LOG.md` were missing this follow-up verification.
+- Added this entry and a matching progress summary so the next Codex/Claude session knows which tasks were pushed and which were no-op verifications.

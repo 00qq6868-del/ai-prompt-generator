@@ -36,12 +36,19 @@ Do not edit or clean the Claude workspace unless the user explicitly approves.
 
 Latest verified GitHub/production state on 2026-05-02:
 
-- Codex completion commit on GitHub: `db61b5e feat: complete prompt generator stabilization pass`
-- Latest `origin/main` after scheduled model updates: `47e984b chore: auto-update models 2026-05-02`
-- Local Codex worktree has been fast-forwarded to `47e984b`
-- GitHub Actions E2E run `25225316579` for the Codex completion pass succeeded
-- `https://www.myprompt.asia` returned HTTP 200
-- Production `/api/models` returned 251 bundled models and includes `gpt-5.5`
+- Latest `origin/main` before this handoff memory repair: `b38b2ff fix: export recommendation type`
+- Latest model rollout commits on GitHub:
+  - `e4382cf chore: auto-ensure latest model registry`
+  - `f14da68 chore: auto-update models 2026-05-02`
+  - `3c54416 docs: record latest model rollout verification`
+  - `b38b2ff fix: export recommendation type`
+- Local Codex worktree was aligned with `origin/main` at `b38b2ff` before this context-only update.
+- GitHub E2E run `25248567893` for `b38b2ff` succeeded with `8/8`.
+- Production Smoke Test run `25248233632` succeeded.
+- Production `/api/models` returned 266 bundled models with `{ text: 245, video: 7, image: 7, tts: 7 }`.
+- Production includes `gpt-5.5`, `gpt-5.5-pro`, `gpt-image-2`, `deepseek-v4-pro`, `deepseek-v4-flash`, `gemini-3.1-pro-preview`, `claude-opus-4-7`, and `claude-haiku-4-5`.
+- Follow-up checks confirmed ResultPanel compare UI, history/favorites, `/api/generate` ModelInfo typing, and ARIA labels were already implemented.
+- The only follow-up code change was exporting `Recommendation` from `src/lib/model-recommender.ts`, pushed as `b38b2ff`.
 
 Follow-up fix in progress/completed locally on 2026-05-02:
 

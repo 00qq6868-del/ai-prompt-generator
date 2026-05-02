@@ -480,3 +480,40 @@ Final verification:
 - Production `/api/models` now returns `266` models with `{ text: 245, video: 7, image: 7, tts: 7 }`.
 - Production includes `gpt-5.5`, `gpt-5.5-pro`, `gpt-image-2`, `deepseek-v4-pro`, `deepseek-v4-flash`, `gemini-3.1-pro-preview`, `claude-opus-4-7`, and `claude-haiku-4-5`.
 - GitHub `Production Smoke Test` passed on run `25248233632`; homepage, models, analytics, probe, and real generation all passed.
+
+---
+
+## Follow-up Feature/QA Checks — 2026-05-02
+
+Codex checked the user's follow-up requests after the latest-model rollout and filled the missing handoff memory.
+
+Completed:
+
+- Confirmed `src/components/ResultPanel.tsx` already has the original-vs-optimized comparison UI:
+  - `originalPrompt?: string`
+  - `showDiff`
+  - `ArrowLeftRight` compare toggle
+  - responsive side-by-side comparison
+  - `PromptGenerator.tsx` passes `originalPrompt={idea}`
+- Confirmed the history/favorites system already exists and is integrated:
+  - `src/lib/history.ts`
+  - `src/components/HistoryPanel.tsx`
+  - `PromptGenerator.tsx` imports `HistoryPanel` and `saveHistory`
+  - all three success branches save generated prompts to local history
+- Confirmed `/api/generate` type cleanup is already present:
+  - imports `ModelInfo`
+  - typed `models.find((m: ModelInfo) => ...)`
+  - uses `targetModel.category ?? "text"` without `as any`
+- Confirmed requested accessibility labels are already present in `ResultPanel`, `PromptGenerator`, and `HistoryPanel`.
+- Fixed the only real missing TypeScript API detail: exported `Recommendation` from `src/lib/model-recommender.ts`.
+
+Verification:
+
+- Commit pushed: `b38b2ff fix: export recommendation type`.
+- GitHub E2E run `25248567893` passed with `8/8`.
+- Local `E:\AI工作台\AI-CHAIN.cmd typecheck` passed during the checks.
+- Current local branch is aligned with `origin/main` at `b38b2ff`; worktree was clean before this memory update.
+
+Notes:
+
+- The user-provided old recommended IDs `dall-e-3`, `sora`, `elevenlabs-tts`, and `suno` are not present in the current 266-model registry, so the live recommender intentionally keeps available IDs such as `gpt-image-2`, `sora-2-pro`, and `deepseek-v4-pro`.
