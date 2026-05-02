@@ -1,6 +1,6 @@
 export type RecommendedCategory = "image" | "video" | "tts" | "code" | "reasoning" | null;
 
-interface Recommendation {
+export interface Recommendation {
   category: RecommendedCategory;
   label: string;
   modelId: string;
