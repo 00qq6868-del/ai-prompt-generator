@@ -417,3 +417,23 @@ Verification:
 - `node scripts/patch-models.cjs` patched `251 / 251`.
 - `public/models.json` now has `247 / 251` non-zero-cost covered models, `98.41%` nominal coverage.
 - Zero-cost remaining: `seedance-1.0`, `seedance-2.0`, `llama3.2`, `qwen2.5:7b`.
+
+---
+
+## Media Model Ensure Script — 2026-05-02
+
+Codex added a reusable Node.js maintenance script for ensuring key media models exist in `public/models.json`.
+
+Completed:
+
+- Added `scripts/add-missing-media-models.cjs`.
+- Script reads `public/models.json`, checks duplicate IDs, merges existing `gpt-image-1`, `seedance-1.0`, and `seedance-2.0`, appends only if missing, and writes JSON back.
+- Ran `node scripts/add-missing-media-models.cjs`; current result was `Added: 0`, `Updated: 3` because all three models already existed.
+- Updated `gpt-image-1` to `isLatest: true` to match the requested model object.
+- Ran `node scripts/patch-models.cjs`.
+
+Verification:
+
+- `node --check scripts/add-missing-media-models.cjs` passed.
+- `node scripts/patch-models.cjs` patched `251 / 251`.
+- Current model totals: `251` total, categories `{ text: 240, video: 2, image: 4, tts: 5 }`, zero-cost `4`.

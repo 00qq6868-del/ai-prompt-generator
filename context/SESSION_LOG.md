@@ -525,3 +525,34 @@ Improved model pricing metadata coverage in the Codex-safe workspace.
 - `node scripts/patch-models.cjs` patched `251 / 251`.
 - Coverage is now `247 / 251`, or `98.41%`.
 - Zero-cost remaining models are intentional/non-token-priced local or video entries: `seedance-1.0`, `seedance-2.0`, `llama3.2`, `qwen2.5:7b`.
+
+---
+
+## Media Model Ensure Script — 2026-05-02 (Codex)
+
+### What was done
+
+Added and ran a Node.js script to ensure important image/video models are present in `public/models.json` without creating duplicates.
+
+### Files changed
+
+- `scripts/add-missing-media-models.cjs`
+- `public/models.json`
+- `context/SYSTEM_STATE.json`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+
+### Details
+
+- The script checks for `gpt-image-1`, `seedance-1.0`, and `seedance-2.0`.
+- If a model exists, it merges the requested ModelInfo object into the existing entry.
+- If a model is missing, it appends it to the JSON array.
+- It throws if duplicate IDs are detected.
+- In the current repository state, all three models already existed, so the run reported `Added: 0`, `Updated: 3`.
+- The only model data change after merge was `gpt-image-1.isLatest: false -> true`.
+
+### Verification
+
+- `node --check scripts/add-missing-media-models.cjs` passed.
+- `node scripts/add-missing-media-models.cjs` reported `251` total, categories `{ text: 240, video: 2, image: 4, tts: 5 }`, zero-cost `4`.
+- `node scripts/patch-models.cjs` passed and patched `251 / 251`.

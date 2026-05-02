@@ -2517,7 +2517,7 @@
     "speed": "medium",
     "accuracy": "supreme",
     "supportsStreaming": false,
-    "isLatest": false,
+    "isLatest": true,
     "tags": [
       "image-gen"
     ],
