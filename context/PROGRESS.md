@@ -56,9 +56,18 @@ Codex fixed the failing GitHub E2E assertions in the Codex-safe worktree.
 
 ---
 
-## Current Status: COMPREHENSIVE UPGRADE — COMPLETION PASS VERIFIED LOCALLY
+## Current Status: COMPREHENSIVE UPGRADE — PUSHED, CI PASSED, LOCAL SYNCED
 
-Previous Claude upgrade tasks and Codex CI/E2E repair have been pushed to GitHub. The current Codex completion pass is verified locally and ready to push.
+Previous Claude upgrade tasks, Codex CI/E2E repair, and the Codex completion pass have been pushed to GitHub `main`.
+
+Latest verified state on 2026-05-02:
+
+- Codex feature commit: `db61b5e feat: complete prompt generator stabilization pass`
+- Latest `origin/main` after automated model updates: `47e984b chore: auto-update models 2026-05-02`
+- Local Codex worktree fast-forwarded to `origin/main`
+- GitHub Actions E2E for the Codex completion pass succeeded: run `25225316579`, 8/8 tests
+- Production site `https://www.myprompt.asia` returned HTTP 200
+- Production `/api/models` returned 251 models from bundled data and includes `gpt-5.5`
 
 ## Codex Completion Pass — 2026-05-02
 
@@ -82,17 +91,30 @@ Codex continued after user requested completing the whole current section before
   - Replaced remaining `text-white/30` usages in `src/` with `text-white/45`.
 - **Electron updater note resolved as intentional**:
   - `electron-updater` remains in `optionalDependencies`; this is the intended setup so Vercel web deploys do not require desktop updater binaries.
-- **Verified locally**:
+- **Verified locally before push**:
   - `npx tsc --noEmit` passes
   - `node scripts/patch-models.cjs` passes and reports `Patched: 249 / 251`
   - `npm run build` passes
   - `npx playwright test --project=chromium --repeat-each=3` passes: 24/24
+- **Verified after push/sync**:
+  - `gh run view 25225316579 --repo 00qq6868-del/ai-prompt-generator --json status,conclusion,headSha,displayTitle,url` returned `completed/success`
+  - `curl.exe -I https://www.myprompt.asia` returned HTTP 200
+  - `Invoke-RestMethod https://www.myprompt.asia/api/models` returned `total=251`, `source=bundled`, `has_gpt_5_5=True`
 
 ---
 
 ## 🔄 Active Task
 
-Codex completion pass validated locally. Push to GitHub/main, then wait for GitHub Actions before closing.
+No active code-fix task is open from the Codex completion pass.
+
+Next practical task is a real production generation test with the user's relay/API key configured:
+
+- verify key save/probe
+- verify generator model selection
+- verify real `/api/generate` streaming, not mocked Playwright output
+- verify analytics behavior in production/Vercel-compatible storage
+
+After that, the next product stage is commercial-readiness work: auth, payment/subscription, usage quotas, abuse/rate limiting, privacy/terms, admin/audit logs, and production analytics storage.
 
 **重要对账提醒**：
 - `C:\Users\zero\.claude\plans\floating-conjuring-treasure.md` 里写的 Phase 2/3 是旧计划

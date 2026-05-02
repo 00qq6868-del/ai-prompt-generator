@@ -5,6 +5,35 @@
 
 ---
 
+## Deployment Sync Check — 2026-05-02 (Codex)
+
+### What was done
+
+Answered the user's question about whether Codex's fixes will sync to the live site and performed a read-only verification, then fast-forwarded the local Codex worktree to the latest `origin/main`.
+
+### Workspace / branch
+
+- Workspace: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
+- Branch: `codex/safe-audit-20260501-232542`
+- Latest local/remote commit after sync: `47e984b chore: auto-update models 2026-05-02`
+- Codex feature commit included in history: `db61b5e feat: complete prompt generator stabilization pass`
+
+### Verification
+
+- `git fetch origin --prune` showed GitHub `main` had advanced after the Codex feature commit through scheduled model-update commits.
+- `git merge --ff-only origin/main` fast-forwarded the local Codex worktree from `db61b5e` to `47e984b`.
+- `gh run view 25225316579 --repo 00qq6868-del/ai-prompt-generator --json status,conclusion,headSha,displayTitle,url` returned success for the Codex completion pass E2E run.
+- `curl.exe -I https://www.myprompt.asia` returned HTTP 200.
+- Production `/api/models` returned `total=251`, `source=bundled`, and includes `gpt-5.5`.
+
+### Notes for next session
+
+- Vercel should auto-deploy GitHub `main` if the project is connected to the repository, which appears consistent with the production site responding and serving the latest bundled model data.
+- Real generation still needs a production test using the user's relay/API key; Playwright E2E currently mocks generation.
+- Continue protecting Claude's workspace: inspect it read-only first if comparison is needed, and do not overwrite its local changes.
+
+---
+
 ## Codex Completion Pass — 2026-05-02 (Codex)
 
 ### What was done

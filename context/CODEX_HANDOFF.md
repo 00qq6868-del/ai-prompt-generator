@@ -34,6 +34,15 @@ The original Claude workspace had local uncommitted/generated changes and was be
 
 Do not edit or clean the Claude workspace unless the user explicitly approves.
 
+Latest verified GitHub/production state on 2026-05-02:
+
+- Codex completion commit on GitHub: `db61b5e feat: complete prompt generator stabilization pass`
+- Latest `origin/main` after scheduled model updates: `47e984b chore: auto-update models 2026-05-02`
+- Local Codex worktree has been fast-forwarded to `47e984b`
+- GitHub Actions E2E run `25225316579` for the Codex completion pass succeeded
+- `https://www.myprompt.asia` returned HTTP 200
+- Production `/api/models` returned 251 bundled models and includes `gpt-5.5`
+
 ## Recommended Workflow
 
 1. Codex makes changes in the Codex worktree only.
@@ -60,4 +69,3 @@ git status -sb
 git branch -vv
 git log -5 --oneline --decorate
 ```
-
