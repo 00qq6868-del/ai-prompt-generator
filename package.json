@@ -59,7 +59,7 @@
     "appId": "com.ai-prompt-generator.app",
     "productName": "AI提示词生成器",
     "copyright": "Copyright © 2025",
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "artifactName": "AI-Prompt-Generator-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist-electron"
     },

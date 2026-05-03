@@ -621,3 +621,9 @@ Pending:
 
 - The website download page is implemented in code. To make the live site show it, push this change to `main` and let Vercel deploy.
 - To make the Windows button download an installer directly, run the new `Desktop Release` GitHub Actions workflow once so a `.exe` asset exists on the latest GitHub Release.
+
+Follow-up packaging polish:
+
+- Set Electron Builder artifact name to `AI-Prompt-Generator-${version}-${os}-${arch}.${ext}` instead of deriving it from the Chinese product name.
+- Updated the `Desktop Release` workflow to delete old `.exe` and `.blockmap` release assets before uploading fresh ones.
+- Re-ran `E:\AI工作台\AI-CHAIN.cmd test-all`; Chromium E2E passed: 12/12.

@@ -54,6 +54,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             gh release create $env:TAG --title "AI 提示词生成器 $env:TAG" --notes "Windows desktop installer."
           }
+          $releaseJson = gh release view $env:TAG --json assets
+          $release = $releaseJson | ConvertFrom-Json
+          foreach ($asset in $release.assets) {
+            if ($asset.name -like "*.exe" -or $asset.name -like "*.blockmap") {
+              gh release delete-asset $env:TAG $asset.name -y
+            }
+          }
           gh release upload $env:TAG "dist-electron\*.exe" --clobber
           gh release upload $env:TAG "dist-electron\*.blockmap" --clobber
 

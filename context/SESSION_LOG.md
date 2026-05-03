@@ -830,3 +830,10 @@ Notes for next AI:
 - No dev server is left running on port 3100.
 - The new download API route is forced dynamic so GitHub latest release lookup is not frozen at build time.
 - The `Desktop Release` workflow is manual (`workflow_dispatch`) and should be run after push if a downloadable Windows installer is needed immediately.
+
+Follow-up:
+
+- The first desktop workflow run succeeded and produced an installer, but Electron Builder sanitized the Chinese product-name artifact into `AI.-1.0.0-win-x64.exe`.
+- Updated `package.json` artifactName to use the clean ASCII name `AI-Prompt-Generator-${version}-${os}-${arch}.${ext}`.
+- Updated `.github/workflows/desktop-release.yml` to delete old `.exe`/`.blockmap` release assets before uploading new files.
+- Re-ran `E:\AI工作台\AI-CHAIN.cmd test-all`; 12/12 Chromium tests passed.
