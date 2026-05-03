@@ -790,3 +790,12 @@ Validation:
 Remaining boundary:
 
 - Android native APK is not implemented yet. Current Android path is PWA install. True APK needs a separate Android packaging implementation.
+
+Update — 2026-05-03:
+
+- Desktop Release is now complete for the current cross-platform desktop scope.
+- Commit `134ea07 fix: avoid electron mirror for mac dmg assets` fixed macOS DMG/ZIP packaging.
+- GitHub run `25286900540` passed for Windows, macOS, and Linux.
+- Release `desktop-v1.0.0` now has Windows installer, Windows portable EXE, macOS DMG, macOS ZIP, and Linux AppImage.
+- Production `/download` returns HTTP 200.
+- Keep Android as PWA until a native APK packaging flow is implemented.

@@ -316,3 +316,28 @@ Remote:
 - Pushed `e7f5411 feat: add prompt tournament and source library sync`.
 - GitHub E2E run `25285272937` passed: 12/12.
 - Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics. Real generation was skipped because no local smoke API secret was available in this shell.
+
+## Desktop Release Status — 2026-05-03
+
+Latest remote/main:
+
+- `134ea07 fix: avoid electron mirror for mac dmg assets`
+
+What happened:
+
+- macOS release initially failed because `ELECTRON_MIRROR` leaked into dmg-builder's generic artifact download URL.
+- The working fix is to leave the mac job without `ELECTRON_MIRROR` and only set:
+  - `ELECTRON_BUILDER_BINARIES_MIRROR=https://github.com/electron-userland/electron-builder-binaries/releases/download/`
+
+Verified:
+
+- `npx tsc --noEmit` passed before push.
+- `git diff --check` passed before push.
+- GitHub E2E run `25286900416` passed.
+- Desktop Release run `25286900540` passed for all desktop platforms.
+- Release `desktop-v1.0.0` includes Windows installer/portable, macOS DMG/ZIP, and Linux AppImage.
+- `https://www.myprompt.asia/download` returned HTTP 200.
+
+Future caution:
+
+- If someone edits `.github/workflows/desktop-release.yml`, do not put `ELECTRON_MIRROR` back into the mac job unless the dmg-builder artifact URL is checked in the Actions log.

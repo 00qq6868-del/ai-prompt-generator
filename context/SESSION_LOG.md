@@ -1091,3 +1091,36 @@ Remote follow-up:
   - models ok: 266 total
   - analytics ok
   - generation deliberately skipped because no local smoke API secret was present in this shell.
+
+---
+
+## Desktop Release Follow-Up — 2026-05-03
+
+Completed:
+
+- Fixed the macOS Desktop Release packaging failure.
+- Root cause: the mac job's `ELECTRON_MIRROR` value was being reused by the dmg-builder downloader, causing it to request `dmg-builder@1.2.0` from the wrong host.
+- Final fix:
+  - Removed `ELECTRON_MIRROR` from the mac job.
+  - Kept `ELECTRON_BUILDER_BINARIES_MIRROR` pointed at the official electron-builder binaries release host.
+- Rebased over auto-model update `f3bce9e chore: auto-update models 2026-05-03`.
+- Pushed `134ea07 fix: avoid electron mirror for mac dmg assets`.
+
+Remote verification:
+
+- GitHub E2E run `25286900416` passed.
+- Desktop Release run `25286900540` passed:
+  - Windows job passed.
+  - macOS job passed.
+  - Linux job passed.
+- GitHub Release `desktop-v1.0.0` now contains:
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-1.0.0-mac-universal.dmg`
+  - `AI-Prompt-Generator-1.0.0-mac-universal.zip`
+  - `AI-Prompt-Generator-1.0.0-linux-x86_64.AppImage`
+- Production `/download` returned HTTP 200 after the release assets were uploaded.
+
+Remember:
+
+- Do not re-add `ELECTRON_MIRROR` to the mac release job unless the dmg-builder download path is also verified.
