@@ -583,3 +583,41 @@ Notes:
 - Do not delete `E:\vscode Claude\ai-prompt-generator`; it remains the Claude/original workspace.
 - Do not delete `node_modules`, `.next`, caches, logs, Ollama models, or IDE folders by default. They are useful for future work.
 - The old `E:\免费神器控制台` folder is tiny and harmless; keep it unless the user explicitly approves consolidation/removal.
+
+---
+
+## Provider Filter + Desktop Download Page — 2026-05-03
+
+User reported from production screenshots that the provider filter text `月之暗面` was clipped to `月之` on the homepage model selector and asked for a website download page for the desktop app.
+
+Completed:
+
+- Fixed provider filter clipping in `src/components/ModelSelector.tsx` by changing the provider tab row from horizontal overflow scrolling to wrapping chips with stable height.
+- Applied the same long-provider-name hardening in `src/components/ModelPicker.tsx`.
+- Hardened API key provider card headers in `src/components/KeysSettings.tsx` so `Kimi (月之暗面)` can wrap instead of crowding the "获取 Key" link.
+- Added a header download entry in `src/components/Header.tsx`.
+- Added `/download` at `src/app/download/page.tsx`.
+- Added `/api/download/windows` at `src/app/api/download/windows/route.ts`; it dynamically redirects to the latest GitHub Release `.exe` asset when present, otherwise to the latest release page.
+- Added `.github/workflows/desktop-release.yml` so a Windows desktop installer can be built and uploaded to GitHub Releases from Actions.
+- Extended `tests/e2e/quality.spec.ts` with regression coverage for:
+  - `月之暗面` provider tab visibility and viewport fit.
+  - `/download` page and Windows download button.
+
+Verification:
+
+- `E:\AI工作台\AI-CHAIN.cmd typecheck` passed.
+- `E:\AI工作台\AI-CHAIN.cmd build` passed; `/download` is static and `/api/download/windows` is dynamic.
+- `E:\AI工作台\AI-CHAIN.cmd quality` passed before the final test addition.
+- Manual Playwright screenshot check confirmed:
+  - provider tab text reads `月之暗面 1` and is fully visible.
+  - `/download` opens and shows `下载 Windows 版`.
+- Final `E:\AI工作台\AI-CHAIN.cmd test-all` passed:
+  - TypeScript passed.
+  - Next production build passed.
+  - Chromium Playwright E2E passed: 12/12.
+- Removed generated Playwright and PWA build artifacts after verification.
+
+Pending:
+
+- The website download page is implemented in code. To make the live site show it, push this change to `main` and let Vercel deploy.
+- To make the Windows button download an installer directly, run the new `Desktop Release` GitHub Actions workflow once so a `.exe` asset exists on the latest GitHub Release.

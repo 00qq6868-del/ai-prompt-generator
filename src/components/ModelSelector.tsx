@@ -276,7 +276,7 @@ export function ModelSelector({
         </div>
 
         {/* ── Provider filter (horizontal scroll) ── */}
-        <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex gap-1 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex flex-wrap gap-1.5 mb-3 overflow-visible pb-1">
           {PROVIDER_TABS.map((p) => {
             const count = provCounts[p] ?? 0;
             if (p !== "全部" && count === 0) return null;
@@ -286,7 +286,7 @@ export function ModelSelector({
                 role="tab"
                 aria-selected={provider === p}
                 onClick={() => setProvider(p)}
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
+                className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap transition-all shrink-0
                   ${provider === p
                     ? "bg-white/15 text-white border border-white/20"
                     : "text-white/70 hover:text-white/50 border border-transparent"
@@ -377,8 +377,8 @@ function ModelCard({
           最新 New
         </span>
       )}
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-xs text-white/50">{m.provider}</span>
+      <div className="flex items-center gap-1.5 mb-1 pr-14">
+        <span className="text-xs leading-5 text-white/50 break-keep">{m.provider}</span>
       </div>
       <div className="font-semibold text-sm text-white leading-tight mb-1.5 pr-14">{m.name}</div>
       <div className="flex flex-wrap gap-1.5">

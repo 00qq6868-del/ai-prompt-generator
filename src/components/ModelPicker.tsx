@@ -220,7 +220,7 @@ export function ModelPicker({
                 收藏
               </button>
               <div className="h-3 w-px bg-white/10" />
-              <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+              <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex flex-wrap gap-1.5 overflow-visible">
                 {PROVIDER_TABS.map(p => {
                   const count = providerCounts[p] ?? 0;
                   if (p !== "全部" && count === 0) return null;
@@ -230,7 +230,7 @@ export function ModelPicker({
                       role="tab"
                       aria-selected={provider === p}
                       onClick={() => setProvider(p)}
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0
+                      className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap transition-all shrink-0
                         ${provider === p
                           ? "bg-white/15 text-white border border-white/20"
                           : "text-white/70 hover:text-white/50 border border-transparent"
@@ -345,7 +345,7 @@ function PickerCard({
       </div>
 
       {/* Provider */}
-      <div className="text-[11px] text-white/65 mb-0.5">{m.provider}</div>
+      <div className="text-[11px] leading-5 text-white/65 mb-0.5 pr-20 break-keep">{m.provider}</div>
 
       {/* Name */}
       <div className="font-semibold text-sm text-white leading-tight mb-2 pr-20">{m.name}</div>

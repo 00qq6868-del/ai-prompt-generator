@@ -71,4 +71,39 @@ test.describe("Quality and accessibility audit", () => {
 
     expect(consoleErrors).toEqual([]);
   });
+
+  test("provider filters wrap long Chinese names instead of clipping them", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const providerTab = page.getByRole("tab", { name: /月之暗面/ }).first();
+    await expect(providerTab).toBeVisible();
+    await expect(providerTab).toContainText("月之暗面");
+
+    const box = await providerTab.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box).not.toBeNull();
+    expect(viewport).not.toBeNull();
+
+    if (box && viewport) {
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    }
+  });
+
+  test("download page exposes the Windows desktop download entry", async ({
+    page,
+  }) => {
+    await page.goto("/download");
+
+    await expect(
+      page.getByRole("heading", { name: "下载 AI 提示词生成器" })
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /下载 Windows 版/ })).toHaveAttribute(
+      "href",
+      "/api/download/windows"
+    );
+    await expect(page.getByRole("link", { name: /查看发布页/ })).toBeVisible();
+  });
 });

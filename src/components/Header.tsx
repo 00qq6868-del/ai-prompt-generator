@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, QrCode, X, ExternalLink, KeyRound } from "lucide-react";
+import { Sparkles, QrCode, X, ExternalLink, KeyRound, Download } from "lucide-react";
 import { NetworkStatus } from "./NetworkStatus";
 import { KeysSettings } from "./KeysSettings";
 import { useState } from "react";
@@ -79,6 +79,15 @@ export function Header() {
             )}
           </AnimatePresence>
         </div>
+
+        <a
+          href="/download"
+          aria-label="下载桌面版 Download desktop app"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-white/75 hover:border-indigo-500/35 hover:bg-indigo-500/10 hover:text-white transition-all"
+        >
+          <Download size={14} />
+          <span className="hidden sm:inline">下载</span>
+        </a>
 
         <a
           href="https://github.com/00qq6868-del/ai-prompt-generator"

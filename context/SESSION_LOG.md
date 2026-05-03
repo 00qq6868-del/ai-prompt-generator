@@ -792,3 +792,41 @@ User asked Codex to continue the original free AI workbench setup, verify all fr
   - analytics ok
   - relay probe ok: `224` models
   - real generation ok through Groq fallback after Google failed
+
+---
+
+## 2026-05-03 — Provider text clipping fix and desktop download page
+
+User provided screenshots showing the homepage provider filter clipped `月之暗面` to `月之`, then asked for a page on the website where users can download the desktop software.
+
+Actions:
+
+- Read project memory and checked status with `E:\AI工作台\AI-CHAIN.cmd status`.
+- Confirmed Codex-safe branch was aligned with `origin/main` before code changes.
+- Changed provider filter rows in:
+  - `src/components/ModelSelector.tsx`
+  - `src/components/ModelPicker.tsx`
+- Adjusted API key provider card header layout in `src/components/KeysSettings.tsx`.
+- Added header download link in `src/components/Header.tsx`.
+- Added:
+  - `src/app/download/page.tsx`
+  - `src/app/api/download/windows/route.ts`
+  - `.github/workflows/desktop-release.yml`
+- Added regression tests to `tests/e2e/quality.spec.ts`.
+
+Verification:
+
+- `E:\AI工作台\AI-CHAIN.cmd typecheck` passed.
+- `E:\AI工作台\AI-CHAIN.cmd build` passed.
+- `E:\AI工作台\AI-CHAIN.cmd quality` passed.
+- Manual Playwright screenshot verification:
+  - `月之暗面 1` was fully visible, bounding box inside viewport.
+  - `/download` loaded and showed `下载 Windows 版`.
+- Final `E:\AI工作台\AI-CHAIN.cmd test-all` passed, 12/12 Chromium tests.
+- Removed generated `test-results/`, `playwright-report/`, `public/sw.js`, `public/fallback-*.js`, and `public/workbox-*.js`.
+
+Notes for next AI:
+
+- No dev server is left running on port 3100.
+- The new download API route is forced dynamic so GitHub latest release lookup is not frozen at build time.
+- The `Desktop Release` workflow is manual (`workflow_dispatch`) and should be run after push if a downloadable Windows installer is needed immediately.

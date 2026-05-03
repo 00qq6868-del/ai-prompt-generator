@@ -420,9 +420,9 @@ function ProviderCard({ provider: p, value, show, onChange, onToggleVisible }: P
         }`}
     >
       {/* Header row */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className={`text-[13px] font-semibold ${p.color}`}>{p.name}</span>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className={`text-[13px] leading-5 font-semibold break-keep ${p.color}`}>{p.name}</span>
           {p.free && (
             <span className="rounded-md bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 text-[9px] font-bold text-green-400 tracking-wider uppercase">
               FREE
@@ -445,7 +445,7 @@ function ProviderCard({ provider: p, value, show, onChange, onToggleVisible }: P
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[11px] text-white/60 hover:text-violet-400 transition-colors"
+          className="flex shrink-0 items-center gap-1 text-[11px] text-white/60 hover:text-violet-400 transition-colors"
         >
           获取 Key <ArrowRight size={10} />
         </a>
