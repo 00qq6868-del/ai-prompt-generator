@@ -28,6 +28,8 @@ jobs:
 
       - name: Sync upstream prompt sources
         run: npm run sources:all
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Commit source status changes
         shell: bash

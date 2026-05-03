@@ -95,16 +95,38 @@ function ghMeta(repo) {
     projectRoot,
     true,
   );
-  if (!res.ok || !res.stdout) return {};
+  if (res.ok && res.stdout) {
+    try {
+      const data = JSON.parse(res.stdout);
+      return {
+        repo: data.nameWithOwner || repo,
+        stars: Number(data.stargazerCount || 0),
+        defaultBranch: data.defaultBranchRef?.name || "",
+        updatedAt: data.updatedAt || "",
+        description: data.description || "",
+        htmlUrl: data.url || `https://github.com/${repo}`,
+      };
+    } catch {
+      // Fall through to curl.
+    }
+  }
+
+  const curl = run(
+    "curl",
+    ["-fsSL", "-H", "Accept: application/vnd.github+json", `https://api.github.com/repos/${repo}`],
+    projectRoot,
+    true,
+  );
+  if (!curl.ok || !curl.stdout) return {};
   try {
-    const data = JSON.parse(res.stdout);
+    const data = JSON.parse(curl.stdout);
     return {
-      repo: data.nameWithOwner || repo,
-      stars: Number(data.stargazerCount || 0),
-      defaultBranch: data.defaultBranchRef?.name || "",
-      updatedAt: data.updatedAt || "",
+      repo: data.full_name || repo,
+      stars: Number(data.stargazers_count || 0),
+      defaultBranch: data.default_branch || "",
+      updatedAt: data.updated_at || "",
       description: data.description || "",
-      htmlUrl: data.url || `https://github.com/${repo}`,
+      htmlUrl: data.html_url || `https://github.com/${repo}`,
     };
   } catch {
     return {};
