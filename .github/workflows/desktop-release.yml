@@ -92,7 +92,6 @@ jobs:
       - name: Build macOS app
         run: npm run electron:build:mac
         env:
-          ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
           ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
 
       - name: Resolve release tag
