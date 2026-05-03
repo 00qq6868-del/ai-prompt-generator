@@ -627,3 +627,14 @@ Follow-up packaging polish:
 - Set Electron Builder artifact name to `AI-Prompt-Generator-${version}-${os}-${arch}.${ext}` instead of deriving it from the Chinese product name.
 - Updated the `Desktop Release` workflow to delete old `.exe` and `.blockmap` release assets before uploading fresh ones.
 - Re-ran `E:\AI工作台\AI-CHAIN.cmd test-all`; Chromium E2E passed: 12/12.
+
+Final deployment/publish results:
+
+- Pushed implementation commit `258d0e9 feat: add desktop download page`; GitHub E2E run `25267691625` passed with 12/12 tests.
+- Pushed packaging cleanup commit `4eca4b7 chore: clean desktop release artifacts`; GitHub E2E run `25267887313` passed with 12/12 tests.
+- Triggered `Desktop Release` workflow run `25267934422`; it passed and uploaded:
+  - `AI-Prompt-Generator-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-1.0.0-win-x64.exe.blockmap`
+- Verified production:
+  - `https://www.myprompt.asia/download` returns HTTP 200 and contains `下载 AI 提示词生成器`.
+  - `https://www.myprompt.asia/api/download/windows` redirects to the clean GitHub Release installer and final asset returns HTTP 200 with `Content-Length: 79301110`.

@@ -837,3 +837,12 @@ Follow-up:
 - Updated `package.json` artifactName to use the clean ASCII name `AI-Prompt-Generator-${version}-${os}-${arch}.${ext}`.
 - Updated `.github/workflows/desktop-release.yml` to delete old `.exe`/`.blockmap` release assets before uploading new files.
 - Re-ran `E:\AI工作台\AI-CHAIN.cmd test-all`; 12/12 Chromium tests passed.
+
+Final remote verification:
+
+- Pushed `258d0e9 feat: add desktop download page`; GitHub E2E run `25267691625` passed, 12/12.
+- Pushed `4eca4b7 chore: clean desktop release artifacts`; GitHub E2E run `25267887313` passed, 12/12.
+- Re-ran `Desktop Release`; workflow run `25267934422` passed.
+- GitHub Release `desktop-v1.0.0` now contains `AI-Prompt-Generator-1.0.0-win-x64.exe` and its `.blockmap`.
+- Production `/download` returns HTTP 200.
+- Production `/api/download/windows` redirects to `AI-Prompt-Generator-1.0.0-win-x64.exe`; following redirects reaches the 79,301,110 byte installer.
