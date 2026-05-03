@@ -10,18 +10,26 @@ const http  = require("http");
 // ── 配置 ─────────────────────────────────────────────────────
 const PORT        = 3748;
 const SERVER_URL  = `http://127.0.0.1:${PORT}`;
-const ENV_FILE    = path.join(app.getPath("userData"), ".env.local");
-const STATE_FILE  = path.join(app.getPath("userData"), "window-state.json");
 
 const IS_PACKAGED  = app.isPackaged;
 const RESOURCES    = IS_PACKAGED ? path.join(process.resourcesPath, "app") : path.join(__dirname, "..");
 const ICON_PATH    = path.join(RESOURCES, "public", "icons", "icon-512.png");
 const PROJECT_ENV  = path.join(RESOURCES, ".env.local");
+const PORTABLE_DIR = IS_PACKAGED && process.env.PORTABLE_EXECUTABLE_DIR
+  ? path.join(process.env.PORTABLE_EXECUTABLE_DIR, "AI-Prompt-Generator-Data")
+  : null;
+const DATA_DIR     = PORTABLE_DIR || app.getPath("userData");
+const ENV_FILE     = path.join(DATA_DIR, ".env.local");
+const STATE_FILE   = path.join(DATA_DIR, "window-state.json");
 
 let mainWindow = null;
 let serverProcess = null;
 let tray = null;
 let isQuitting = false;
+
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch {}
 
 // ── 窗口状态记忆 ──────────────────────────────────────────────
 function loadWindowState() {
@@ -79,6 +87,7 @@ function readEnv() {
 function hasAnyKey(env) {
   const keys = [
     "OPENAI_API_KEY","ANTHROPIC_API_KEY","GOOGLE_API_KEY",
+    "CUSTOM_API_KEY","AIHUBMIX_API_KEY",
     "GROQ_API_KEY","XAI_API_KEY","MISTRAL_API_KEY",
     "DEEPSEEK_API_KEY","ZHIPU_API_KEY","MOONSHOT_API_KEY",
     "QWEN_API_KEY","BAIDU_API_KEY",
@@ -88,13 +97,18 @@ function hasAnyKey(env) {
 
 // ── 启动 Next.js 服务器进程 ───────────────────────────────────
 function startServer(envVars) {
-  const serverScript = path.join(RESOURCES, ".next", "standalone", "server.js");
-  if (!fs.existsSync(serverScript)) {
+  const serverScript = [
+    path.join(RESOURCES, ".next", "standalone", "server.js"),
+    path.join(RESOURCES, "server.js"),
+  ].find((candidate) => fs.existsSync(candidate));
+
+  if (!serverScript) {
     showError("找不到服务器文件，请重新安装或运行 setup.bat 重新构建。");
     return;
   }
 
   serverProcess = spawn(process.execPath, [serverScript], {
+    cwd: path.dirname(serverScript),
     env: {
       ...process.env,
       ...envVars,
@@ -292,6 +306,11 @@ function createSettingsWindow(onSave) {
   Menu.setApplicationMenu(null);
   win.loadFile(path.join(__dirname, "settings.html"));
 
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("https://") || url.startsWith("http://")) shell.openExternal(url);
+    return { action: "deny" };
+  });
+
   ipcMain.once("save-keys", (_evt, keys) => {
     const lines = Object.entries(keys)
       .filter(([, v]) => v && v.trim())
@@ -347,6 +366,12 @@ ipcMain.on("open-settings", () => {
   createSettingsWindow(() => {
     if (mainWindow) mainWindow.reload();
   });
+});
+
+ipcMain.on("open-external", (_e, url) => {
+  if (typeof url !== "string") return;
+  if (!url.startsWith("https://") && !url.startsWith("http://")) return;
+  shell.openExternal(url);
 });
 
 ipcMain.handle("get-auto-launch", () => getAutoLaunch());

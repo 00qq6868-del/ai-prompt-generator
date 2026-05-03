@@ -27,6 +27,14 @@ Shared AI workbench sync:
 E:\AI工作台\AI-CHAIN.cmd gpt-image2-sync
 ```
 
+Automatic sync:
+
+```text
+.github/workflows/sync-prompt-sources.yml
+```
+
+The workflow runs every 6 hours and commits `src/lib/gpt-image-2-source-status.ts` when upstream commit hashes change. That push triggers the normal GitHub/Vercel deployment pipeline, so the website and the next desktop release build use the latest recorded source versions.
+
 ## Product Behavior
 
 When the target model is `gpt-image-2`, `/api/generate` now runs a GPT Image 2 source ensemble:

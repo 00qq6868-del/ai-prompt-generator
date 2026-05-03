@@ -681,3 +681,48 @@ Pending:
 - Public checks:
   - `https://www.myprompt.asia` HTTP 200
   - `/api/models` returns 266 models and includes `gpt-image-2`
+
+---
+
+## Prompt Source Auto-Sync + Desktop Standalone — 2026-05-03
+
+Completed locally:
+
+- Added automatic GPT Image 2 source sync workflow:
+  - `.github/workflows/sync-prompt-sources.yml`
+  - every 6 hours plus manual trigger
+  - commits source status changes when upstream repos update
+- Added future source-group instructions:
+  - `context/PROMPT_SOURCE_AUTOSYNC.md`
+- Desktop app hardening:
+  - Still runs the packaged app on local loopback `http://127.0.0.1:3748`.
+  - Does not depend on `www.myprompt.asia` to open or generate.
+  - Supports custom relay / AihubMix keys in first-run settings.
+  - Supports portable mode data next to the portable EXE.
+  - Adds Windows portable target alongside the installer.
+- Download page/API:
+  - `/api/download/windows` prefers installer assets.
+  - `/api/download/windows/portable` prefers portable assets.
+  - `/download` shows installer and portable options.
+- Added desktop packaging verification script:
+  - `scripts/verify-desktop-standalone.cjs`
+  - `npm run desktop:verify`
+
+Verified locally:
+
+- `npx tsc --noEmit`
+- `npm run build`
+- `npm run desktop:verify`
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium` — 4/4 passed
+- `npx playwright test --project=chromium` — 12/12 passed
+- `npm run sources:gpt-image2`
+- Electron Builder produced:
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
+
+Pending:
+
+- Commit and push.
+- Verify GitHub E2E.
+- Run `Desktop Release` workflow after push so GitHub Releases gets both installer and portable EXE.
+- Verify production `/download`, installer redirect, and portable redirect after Vercel deploy/release upload.

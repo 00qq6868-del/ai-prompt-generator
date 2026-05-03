@@ -12,10 +12,11 @@
     "lint": "next lint",
     "setup:icons": "node scripts/generate-icons.js",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && electron-builder --win --publish never",
-    "electron:build:mac": "npm run build && electron-builder --mac --publish never",
-    "electron:build:all": "npm run build && electron-builder --win --mac --publish never",
-    "electron:publish": "npm run build && electron-builder --win --mac --publish always",
+    "desktop:verify": "node scripts/verify-desktop-standalone.cjs",
+    "electron:build": "npm run build && npm run desktop:verify && electron-builder --win --config.win.signAndEditExecutable=false --publish never",
+    "electron:build:mac": "npm run build && npm run desktop:verify && electron-builder --mac --publish never",
+    "electron:build:all": "npm run build && npm run desktop:verify && electron-builder --win --mac --config.win.signAndEditExecutable=false --publish never",
+    "electron:publish": "npm run build && npm run desktop:verify && electron-builder --win --config.win.signAndEditExecutable=false --publish always",
     "smoke:prod": "node scripts/production-smoke.cjs",
     "sources:gpt-image2": "node scripts/sync-gpt-image2-sources.cjs",
     "test:e2e": "npx playwright test",
@@ -112,6 +113,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "public/icons/icon-512.png"
@@ -148,6 +155,7 @@
       ]
     },
     "nsis": {
+      "artifactName": "AI-Prompt-Generator-Setup-${version}-${os}-${arch}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
@@ -157,6 +165,9 @@
         "zh_CN"
       ],
       "language": "2052"
+    },
+    "portable": {
+      "artifactName": "AI-Prompt-Generator-Portable-${version}-${os}-${arch}.${ext}"
     }
   }
 }

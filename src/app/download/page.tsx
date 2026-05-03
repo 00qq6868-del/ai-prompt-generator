@@ -1,5 +1,5 @@
 import { Header } from "@/components/Header";
-import { ArrowLeft, Download, ExternalLink, Github, Monitor, PackageCheck, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Github, HardDriveDownload, Monitor, PackageCheck, RefreshCw, ShieldCheck, Usb } from "lucide-react";
 
 const releaseUrl = "https://github.com/00qq6868-del/ai-prompt-generator/releases/latest";
 
@@ -31,11 +31,11 @@ export default function DownloadPage() {
             下载 AI 提示词生成器
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-white/70 sm:text-base">
-            Windows 桌面版保留网页端的模型选择、提示词优化、历史记录和本地 Key 存储体验，适合固定在电脑上长期使用。
+            Windows 桌面版在本机启动完整应用服务，不依赖本站域名持续可用。只要电脑能联网访问你的 API，中转站或模型服务，就能继续生成提示词。
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
+        <section className="grid gap-4 lg:grid-cols-[1fr_1fr_0.8fr]">
           <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-5 shadow-2xl shadow-black/30">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -44,7 +44,7 @@ export default function DownloadPage() {
                   <h2 className="text-lg font-bold">Windows 安装包</h2>
                 </div>
                 <p className="text-sm leading-6 text-white/65">
-                  自动获取 GitHub Releases 中最新的 `.exe` 安装包。
+                  推荐长期安装在自己的电脑上使用，自动获取 GitHub Releases 中最新的安装包。
                 </p>
               </div>
               <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
@@ -71,7 +71,7 @@ export default function DownloadPage() {
                 className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-400"
               >
                 <Download size={16} />
-                下载 Windows 版
+                下载安装版
               </a>
               <a
                 href={releaseUrl}
@@ -81,6 +81,55 @@ export default function DownloadPage() {
               >
                 <ExternalLink size={16} />
                 查看发布页
+              </a>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/15 p-5 shadow-2xl shadow-black/30">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-white">
+                  <Usb size={18} className="text-emerald-300" />
+                  <h2 className="text-lg font-bold">Windows 便携版</h2>
+                </div>
+                <p className="text-sm leading-6 text-white/65">
+                  单文件运行，适合放进 U 盘。Key 和窗口状态保存在同目录数据文件夹。
+                </p>
+              </div>
+              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
+                Portable
+              </span>
+            </div>
+
+            <div className="mb-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+              {[
+                { icon: <HardDriveDownload size={14} />, label: "无需安装" },
+                { icon: <Usb size={14} />, label: "可 U 盘携带" },
+                { icon: <ShieldCheck size={14} />, label: "本地 Key" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-xs text-white/70">
+                  <span className="text-emerald-300">{item.icon}</span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="/api/download/windows/portable"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+              >
+                <Download size={16} />
+                下载便携版
+              </a>
+              <a
+                href={releaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white/70 hover:border-white/20 hover:text-white"
+              >
+                <ExternalLink size={16} />
+                发布页
               </a>
             </div>
           </div>

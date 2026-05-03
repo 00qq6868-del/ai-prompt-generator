@@ -913,6 +913,57 @@ GitHub / production verification:
 - `https://www.myprompt.asia` returned HTTP 200.
 - `https://www.myprompt.asia/api/models` includes `gpt-image-2`.
 
+---
+
+## 2026-05-03 — Prompt source auto-sync and standalone desktop hardening
+
+User asked whether the website and desktop app can keep GPT Image 2 prompt-source projects synced long term, and whether the downloaded desktop software can keep working if the domain/server expires.
+
+Completed:
+
+- Added `.github/workflows/sync-prompt-sources.yml`.
+  - Runs every 6 hours.
+  - Can be triggered manually.
+  - Runs `npm run sources:gpt-image2`.
+  - Commits `src/lib/gpt-image-2-source-status.ts` only when upstream commit hashes change.
+  - The commit triggers the normal GitHub/Vercel pipeline.
+- Added `context/PROMPT_SOURCE_AUTOSYNC.md` with the pattern for future prompt-source groups.
+- Updated `context/GPT_IMAGE2_SOURCES.md` to document automatic sync.
+- Hardened desktop independence:
+  - Electron still starts a local Next server at `http://127.0.0.1:3748`.
+  - `electron/main.js` no longer assumes only one packaged server layout; it can find both packaged standalone layouts.
+  - The desktop main process does not depend on `www.myprompt.asia`.
+  - Added portable data directory support via `PORTABLE_EXECUTABLE_DIR`; portable builds store settings next to the executable in `AI-Prompt-Generator-Data`.
+  - First-run desktop settings now support custom relay / AihubMix keys, matching the user's actual API setup better.
+- Added Windows portable build target in addition to the installer target.
+- Added `/api/download/windows/portable`.
+- Updated `/download` to expose both:
+  - Windows installer
+  - Windows portable EXE for USB use
+- Added `scripts/verify-desktop-standalone.cjs` and `npm run desktop:verify`.
+- Updated Electron build scripts to use `--config.win.signAndEditExecutable=false` so local Windows builds do not fail when the current user lacks symlink privileges for Electron Builder's winCodeSign helper.
+
+Verification:
+
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run desktop:verify` passed.
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium` passed: 4/4.
+- `npx playwright test --project=chromium` passed: 12/12.
+- `npm run sources:gpt-image2` passed.
+- Local Electron Builder first failed because Windows could not create symlinks while extracting `winCodeSign`; rerunning with `--config.win.signAndEditExecutable=false` succeeded.
+- Local desktop artifacts were produced:
+  - `dist-electron/AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
+  - `dist-electron/AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
+  - `dist-electron/AI-Prompt-Generator-Setup-1.0.0-win-x64.exe.blockmap`
+- Verified packaged resources include a local server at `dist-electron/win-unpacked/resources/app/server.js`.
+
+Notes:
+
+- The desktop app can run without the production domain because it serves the same app locally from the packaged Next standalone build.
+- It still needs internet access to call cloud APIs or a reachable relay/base URL unless the user configures a local provider such as Ollama.
+- Future source groups should follow `context/PROMPT_SOURCE_AUTOSYNC.md` and should not be blindly mixed into GPT Image 2 logic.
+
 Rules for next AI:
 
 - Do not copy the full four upstream repos into this project.

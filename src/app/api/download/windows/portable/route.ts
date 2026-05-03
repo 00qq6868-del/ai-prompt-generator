@@ -22,19 +22,13 @@ export async function GET() {
 
     const release = await response.json();
     const assets = Array.isArray(release.assets) ? release.assets : [];
-    const installer = assets.find((asset: { name?: string; browser_download_url?: string }) => {
+    const portable = assets.find((asset: { name?: string; browser_download_url?: string }) => {
       const name = asset.name?.toLowerCase() ?? "";
-      return name.endsWith(".exe") && name.includes("setup") && !name.includes("portable") && !name.includes("blockmap");
-    }) ?? assets.find((asset: { name?: string; browser_download_url?: string }) => {
-      const name = asset.name?.toLowerCase() ?? "";
-      return name.endsWith(".exe") && !name.includes("portable") && !name.includes("blockmap");
-    }) ?? assets.find((asset: { name?: string; browser_download_url?: string }) => {
-      const name = asset.name?.toLowerCase() ?? "";
-      return name.endsWith(".exe") && !name.includes("blockmap");
+      return name.endsWith(".exe") && name.includes("portable") && !name.includes("blockmap");
     });
 
-    if (installer?.browser_download_url) {
-      return NextResponse.redirect(installer.browser_download_url, 302);
+    if (portable?.browser_download_url) {
+      return NextResponse.redirect(portable.browser_download_url, 302);
     }
   } catch {
     // Fall through to the releases page when GitHub API is temporarily unavailable.

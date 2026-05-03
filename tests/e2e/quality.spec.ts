@@ -120,9 +120,13 @@ test.describe("Quality and accessibility audit", () => {
     await expect(
       page.getByRole("heading", { name: "下载 AI 提示词生成器" })
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /下载 Windows 版/ })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /下载安装版/ })).toHaveAttribute(
       "href",
       "/api/download/windows"
+    );
+    await expect(page.getByRole("link", { name: /下载便携版/ })).toHaveAttribute(
+      "href",
+      "/api/download/windows/portable"
     );
     await expect(page.getByRole("link", { name: /查看发布页/ })).toBeVisible();
   });

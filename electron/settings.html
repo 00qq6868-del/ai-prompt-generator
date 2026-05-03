@@ -80,6 +80,14 @@
     text-align: center;
     position: relative;
   }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 520px) {
+    .row { grid-template-columns: 1fr; }
+  }
   .divider::before, .divider::after {
     content: "";
     position: absolute;
@@ -135,7 +143,23 @@
   <div class="notice">
     <strong>Key 保存在哪？</strong><br>
     保存在你的电脑本地，不会上传到任何服务器。<br>
-    每台电脑只需填一次，之后直接打开即可。
+    安装版保存在当前电脑，便携版会保存在 U 盘同目录的 AI-Prompt-Generator-Data 文件夹。
+  </div>
+
+  <label>
+    中转站 Base URL <span style="color:#4ade80;font-size:10px">★ 推荐</span>
+  </label>
+  <input type="text" id="customBaseUrl" placeholder="https://aihubmix.com/v1" />
+
+  <div class="row">
+    <div>
+      <label>中转站 API Key</label>
+      <input type="password" id="customApiKey" placeholder="sk-..." />
+    </div>
+    <div>
+      <label>AiHubMix Key</label>
+      <input type="password" id="aihubmix" placeholder="sk-..." />
+    </div>
   </div>
 
   <!-- 推荐：有免费额度 -->
@@ -183,20 +207,22 @@
 
 <script>
   function open(url) {
-    // 通知主进程用系统浏览器打开
-    const { shell } = require && require("electron") || {};
-    window.open(url, "_blank");
+    if (window.electronAPI?.openExternal) window.electronAPI.openExternal(url);
+    else window.open(url, "_blank");
   }
 
   function save() {
     const keys = {
+      CUSTOM_BASE_URL:    document.getElementById("customBaseUrl").value.trim(),
+      CUSTOM_API_KEY:     document.getElementById("customApiKey").value.trim(),
+      AIHUBMIX_API_KEY:   document.getElementById("aihubmix").value.trim(),
       ANTHROPIC_API_KEY: document.getElementById("anthropic").value.trim(),
       GROQ_API_KEY:      document.getElementById("groq").value.trim(),
       GOOGLE_API_KEY:    document.getElementById("google").value.trim(),
       OPENAI_API_KEY:    document.getElementById("openai").value.trim(),
       DEEPSEEK_API_KEY:  document.getElementById("deepseek").value.trim(),
     };
-    const hasAny = Object.values(keys).some(v => v.length > 5);
+    const hasAny = Object.entries(keys).some(([key, value]) => key !== "CUSTOM_BASE_URL" && value.length > 5);
     if (!hasAny) {
       document.getElementById("err").style.display = "block";
       return;

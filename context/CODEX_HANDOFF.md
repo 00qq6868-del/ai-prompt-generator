@@ -196,3 +196,45 @@ Verification and deployment:
 - Live site check: `https://www.myprompt.asia` returns HTTP 200 and `/api/models` includes `gpt-image-2`.
 
 Next step after this handoff: for future GPT Image 2 updates, run `npm run sources:gpt-image2`, re-distill only changed strategy if needed, then run full local validation before pushing.
+
+## Latest Local Work — Auto-Sync and Standalone Desktop, 2026-05-03
+
+User asked for long-term automatic syncing of the four GPT Image 2 source repositories and a desktop build that keeps working even if the domain/server expires.
+
+Implemented locally:
+
+- `.github/workflows/sync-prompt-sources.yml`
+  - scheduled every 6 hours
+  - manual trigger supported
+  - commits `src/lib/gpt-image-2-source-status.ts` when upstream commits change
+- `context/PROMPT_SOURCE_AUTOSYNC.md`
+  - rules and steps for adding future GitHub prompt-source groups
+- Desktop independence:
+  - packaged app serves itself from local loopback `http://127.0.0.1:3748`
+  - `electron/main.js` can find packaged standalone server layouts
+  - no dependency on `www.myprompt.asia` in the Electron main process
+  - portable mode uses `PORTABLE_EXECUTABLE_DIR` and stores data in `AI-Prompt-Generator-Data`
+  - first-run settings support custom relay / AihubMix keys
+- Download changes:
+  - `/api/download/windows` prefers setup installer
+  - `/api/download/windows/portable` redirects to portable EXE
+  - `/download` shows both installer and portable choices
+- Packaging:
+  - Windows build now targets `nsis` and `portable`
+  - `scripts/verify-desktop-standalone.cjs`
+  - `npm run desktop:verify`
+  - build scripts include `--config.win.signAndEditExecutable=false` to avoid local Windows symlink-permission failures during Electron Builder's winCodeSign extraction
+
+Local verification passed:
+
+- `npx tsc --noEmit`
+- `npm run build`
+- `npm run desktop:verify`
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium` — 4/4
+- `npx playwright test --project=chromium` — 12/12
+- `npm run sources:gpt-image2`
+- Electron Builder produced local installer and portable EXE after disabling Windows executable edit/sign step:
+  - `dist-electron/AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
+  - `dist-electron/AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
+
+Next step: commit, push, wait for GitHub E2E, run the `Desktop Release` workflow, then verify production download redirects for both installer and portable assets.
