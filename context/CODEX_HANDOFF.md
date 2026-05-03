@@ -133,3 +133,51 @@ Then run:
 ```powershell
 powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status
 ```
+
+## Latest Local Work — GPT Image 2 Sources, 2026-05-03
+
+User wants four GPT Image 2 GitHub repositories used for prompt optimization, but not copied wholesale into the app repository. Public upstream repos are synced to:
+
+```text
+E:\AI工作台\资料 Sources\gpt-image-2
+```
+
+Use:
+
+```cmd
+npm run sources:gpt-image2
+E:\AI工作台\AI-CHAIN.cmd gpt-image2-sync
+```
+
+Current synced commits:
+
+- `EvoLinkAI/awesome-gpt-image-2-API-and-Prompts@c0a069d`
+- `YouMind-OpenLab/awesome-gpt-image-2@3c2dd22`
+- `Anil-matcha/Awesome-GPT-Image-2-API-Prompts@1123572`
+- `wuyoscar/gpt_image_2_skill@44ea0fa`
+
+New files in the app repo:
+
+- `scripts/sync-gpt-image2-sources.cjs`
+- `context/GPT_IMAGE2_SOURCES.md`
+- `src/lib/gpt-image-2-ensemble.ts`
+- `src/lib/gpt-image-2-source-status.ts`
+
+Modified runtime:
+
+- `src/app/api/generate/route.ts` detects GPT Image 2 targets and runs the ensemble.
+- `src/components/PromptGenerator.tsx` forwards `availableModelIds`.
+- `src/components/ResultPanel.tsx` displays ensemble review/cost metadata.
+- `src/lib/prompt-optimizer.ts` includes source-informed GPT Image 2 prompt guidance.
+- `src/components/ModelSelector.tsx` contrast fixes were added because axe caught low-contrast animated states.
+- `tests/e2e/quality.spec.ts` waits for finite animations before axe scanning and keeps the `月之暗面` clipping regression test.
+
+Local verification already passed:
+
+- `npm run sources:gpt-image2`
+- `npx tsc --noEmit`
+- `npm run build`
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium` — 4/4
+- `npx playwright test --project=chromium` — 12/12
+
+Next step after this handoff: commit and push, then verify GitHub Actions/Vercel before saying the live site is updated.

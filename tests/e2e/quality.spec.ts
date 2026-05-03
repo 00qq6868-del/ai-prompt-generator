@@ -1,5 +1,19 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+async function waitForFiniteAnimations(page: Page) {
+  await page.waitForFunction(() => {
+    const finiteAnimations = document.getAnimations().filter((animation) => {
+      const timing = animation.effect?.getTiming();
+      return timing?.iterations !== Infinity;
+    });
+
+    return finiteAnimations.every((animation) =>
+      animation.playState === "finished" || animation.playState === "idle"
+    );
+  });
+}
 
 test.describe("Quality and accessibility audit", () => {
   test("desktop homepage has no obvious layout or accessibility regressions", async ({
@@ -24,6 +38,7 @@ test.describe("Quality and accessibility audit", () => {
     }));
     expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);
     expect(layout.bodyHeight).toBeGreaterThan(500);
+    await waitForFiniteAnimations(page);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -77,8 +92,12 @@ test.describe("Quality and accessibility audit", () => {
   }) => {
     await page.goto("/");
 
+    await expect(page.getByRole("tab", { name: /全部\s+[1-9]/ }).first()).toBeVisible({
+      timeout: 15000,
+    });
+
     const providerTab = page.getByRole("tab", { name: /月之暗面/ }).first();
-    await expect(providerTab).toBeVisible();
+    await expect(providerTab).toBeVisible({ timeout: 15000 });
     await expect(providerTab).toContainText("月之暗面");
 
     const box = await providerTab.boundingBox();

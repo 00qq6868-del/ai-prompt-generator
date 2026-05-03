@@ -334,6 +334,8 @@ Photography techniques: long exposure silk water, double exposure overlay, infra
   - Text overlay: excellent text rendering — specify font, size, color, position precisely
   - Style consistency: reference same visual style across multi-image sets
   - Product mockups: "product photography on white background, studio lighting, e-commerce style"
+  - Source-informed optimization: for GPT Image 2 targets, prefer canvas/layout first, exact text in quotes, task-specific visual schemas, and commercial-ready detail density. Strong patterns include product ads, e-commerce storyboards, UI/mockups, stickers, posters, infographics, character sheets, research figures, and edit/reference-image invariants.
+  - For complex GPT Image 2 prompts, JSON-like visual specs work well: type, canvas, layout, subject, text, materials, lighting, camera, rendering, avoid.
 
 ### Stable Diffusion / SDXL / Flux
 - Separate positive prompt and negative prompt

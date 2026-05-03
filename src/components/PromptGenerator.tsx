@@ -56,8 +56,15 @@ interface GenerateResult {
     latencyMs: number;
     tokensDelta: number;
     changePercent: number;
+    estimatedCostUsd?: number;
   };
-  meta: { generatorModel: string; targetModel: string };
+  meta: {
+    generatorModel: string;
+    targetModel: string;
+    reviewSummary?: string;
+    judgeModels?: string[];
+    selectedStrategy?: string;
+  };
   generatorModelCost: { input: number; output: number };
 }
 
@@ -249,6 +256,7 @@ export function PromptGenerator() {
           language,
           maxTokens: 4096,
           userKeys,
+          availableModelIds,
           stream: true,
         }),
       });

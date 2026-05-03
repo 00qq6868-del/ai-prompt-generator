@@ -638,3 +638,38 @@ Final deployment/publish results:
 - Verified production:
   - `https://www.myprompt.asia/download` returns HTTP 200 and contains `下载 AI 提示词生成器`.
   - `https://www.myprompt.asia/api/download/windows` redirects to the clean GitHub Release installer and final asset returns HTTP 200 with `Content-Length: 79301110`.
+
+---
+
+## GPT Image 2 Source Ensemble — 2026-05-03
+
+Completed locally:
+
+- Four public GPT Image 2 prompt repositories are synced outside the app repo at `E:\AI工作台\资料 Sources\gpt-image-2`.
+- The app repo keeps only distilled strategy, not the full upstream galleries/assets.
+- New sync paths:
+  - `npm run sources:gpt-image2`
+  - `E:\AI工作台\AI-CHAIN.cmd gpt-image2-sync`
+- New documentation:
+  - `context/GPT_IMAGE2_SOURCES.md`
+  - `src/lib/gpt-image-2-source-status.ts`
+- New GPT Image 2 runtime:
+  - `src/lib/gpt-image-2-ensemble.ts`
+  - `/api/generate` uses it automatically when the target model is `gpt-image-2` / GPT Image 2.
+- Frontend now forwards probed `availableModelIds` so the backend can pick callable judge models from the user's relay/API setup.
+- Result panel shows GPT Image 2 judge summary, selected strategy, and ensemble estimated cost when available.
+- Quality audit now waits for finite UI animations before axe contrast scanning.
+- Model selector contrast was hardened.
+
+Verified locally:
+
+- `npm run sources:gpt-image2`
+- `npx tsc --noEmit`
+- `npm run build`
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium` — 4/4 passed
+- `npx playwright test --project=chromium` — 12/12 passed
+
+Pending:
+
+- Commit and push this change to GitHub.
+- After push, verify GitHub E2E and Vercel production deployment before claiming the live site has updated.

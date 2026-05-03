@@ -261,15 +261,15 @@ export function ModelSelector({
                 onClick={() => { if (!isEmpty) { setCategory(c.id); setProvider("全部"); } }}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0
                   ${isEmpty
-                    ? "text-white/15 cursor-not-allowed border border-transparent"
+                    ? "text-white/45 cursor-not-allowed border border-transparent"
                     : category === c.id
-                      ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/40"
-                      : "text-white/65 hover:text-white/60 border border-transparent"
+                      ? "bg-indigo-500/30 text-white border border-indigo-400/60"
+                      : "text-white/85 hover:text-white border border-transparent"
                   }`}
               >
                 {c.icon}
                 {c.label}
-                <span className={`text-[9px] ${isEmpty ? "opacity-30" : "opacity-60"}`}>{count}</span>
+                <span className={`text-[9px] ${isEmpty ? "text-white/45" : "text-white/80"}`}>{count}</span>
               </button>
             );
           })}
@@ -289,10 +289,10 @@ export function ModelSelector({
                 className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap transition-all shrink-0
                   ${provider === p
                     ? "bg-white/15 text-white border border-white/20"
-                    : "text-white/70 hover:text-white/50 border border-transparent"
+                    : "text-white/85 hover:text-white border border-transparent"
                   }`}
               >
-                {p} {count > 0 && <span className="opacity-50">{count}</span>}
+                {p} {count > 0 && <span className="text-white/75">{count}</span>}
               </button>
             );
           })}

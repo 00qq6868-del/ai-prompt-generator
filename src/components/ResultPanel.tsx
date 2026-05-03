@@ -10,11 +10,15 @@ interface Stats {
   latencyMs: number;
   tokensDelta: number;
   changePercent: number;
+  estimatedCostUsd?: number;
 }
 
 interface Meta {
   generatorModel: string;
   targetModel: string;
+  reviewSummary?: string;
+  judgeModels?: string[];
+  selectedStrategy?: string;
 }
 
 interface Props {
@@ -36,6 +40,7 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
   };
 
   const cost = (
+    stats.estimatedCostUsd ??
     stats.inputTokens  * generatorModelCost.input +
     stats.outputTokens * generatorModelCost.output
   ).toFixed(5);
@@ -148,9 +153,19 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
             </div>
           </div>
         ) : (
-          <pre className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto">
-            {prompt}
-          </pre>
+          <>
+            {meta.reviewSummary && (
+              <div className="px-5 pt-4 text-xs text-indigo-200/70">
+                {meta.reviewSummary}
+                {meta.selectedStrategy && (
+                  <span className="text-white/45"> · {meta.selectedStrategy}</span>
+                )}
+              </div>
+            )}
+            <pre className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto">
+              {prompt}
+            </pre>
+          </>
         )}
       </div>
     </motion.div>

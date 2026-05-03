@@ -846,3 +846,58 @@ Final remote verification:
 - GitHub Release `desktop-v1.0.0` now contains `AI-Prompt-Generator-1.0.0-win-x64.exe` and its `.blockmap`.
 - Production `/download` returns HTTP 200.
 - Production `/api/download/windows` redirects to `AI-Prompt-Generator-1.0.0-win-x64.exe`; following redirects reaches the 79,301,110 byte installer.
+
+---
+
+## 2026-05-03 — GPT Image 2 four-source ensemble integration
+
+User supplied four GPT Image 2 prompt repositories and clarified that the full repositories should not be uploaded into this app repo. The upstream GitHub versions should be treated as the current source of truth, while the older extracted E-drive folders are only local references.
+
+External upstream repos:
+
+- `EvoLinkAI/awesome-gpt-image-2-API-and-Prompts`
+- `YouMind-OpenLab/awesome-gpt-image-2`
+- `Anil-matcha/Awesome-GPT-Image-2-API-Prompts`
+- `wuyoscar/gpt_image_2_skill`
+
+Completed:
+
+- Added `scripts/sync-gpt-image2-sources.cjs`.
+- Added `npm run sources:gpt-image2`.
+- Added shared workbench command `E:\AI工作台\AI-CHAIN.cmd gpt-image2-sync`.
+- Synced the four upstream repos into `E:\AI工作台\资料 Sources\gpt-image-2`.
+- Added `src/lib/gpt-image-2-source-status.ts` with current upstream short commits:
+  - `EvoLinkAI/awesome-gpt-image-2-API-and-Prompts@c0a069d`
+  - `YouMind-OpenLab/awesome-gpt-image-2@3c2dd22`
+  - `Anil-matcha/Awesome-GPT-Image-2-API-Prompts@1123572`
+  - `wuyoscar/gpt_image_2_skill@44ea0fa`
+- Added `context/GPT_IMAGE2_SOURCES.md` to document source handling rules.
+- Added `src/lib/gpt-image-2-ensemble.ts`.
+- Updated `/api/generate` so GPT Image 2 target prompts run a special ensemble:
+  1. generate four independent source-strategy candidates,
+  2. generate one four-source hybrid candidate,
+  3. choose up to three strongest callable judge models from the user's configured API/model list,
+  4. score candidates,
+  5. synthesize when the best single-source prompt and hybrid are close,
+  6. return one final GPT Image 2 prompt plus judge metadata and estimated cost.
+- Forwarded `availableModelIds` from the frontend to `/api/generate` so custom relay/AihubMix model availability can guide judge selection.
+- Updated `ResultPanel` to show GPT Image 2 ensemble review metadata and estimated cost when present.
+- Updated `prompt-optimizer.ts` GPT Image section with source-informed GPT Image 2 principles.
+- Hardened `ModelSelector.tsx` provider/category chip contrast after the new quality audit exposed low-contrast states.
+- Hardened `tests/e2e/quality.spec.ts` to wait for finite UI animations before axe contrast scanning.
+
+Verification:
+
+- `npm run sources:gpt-image2` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium` passed: 4/4.
+- `npx playwright test --project=chromium` passed: 12/12.
+- Cleaned generated Playwright/PWA build artifacts after verification.
+
+Rules for next AI:
+
+- Do not copy the full four upstream repos into this project.
+- Sync upstream sources before modifying GPT Image 2 behavior.
+- If upstream prompt patterns materially change, update the distilled strategy in `src/lib/gpt-image-2-ensemble.ts` and this session log.
+- If multiple judge models are unavailable from the user's API setup, the ensemble intentionally falls back to the best callable generator/model path instead of failing the whole prompt generation.

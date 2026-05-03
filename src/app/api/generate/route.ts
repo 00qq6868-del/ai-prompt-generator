@@ -7,6 +7,7 @@ import { buildSystemPrompt, buildUserPrompt, comparePrompts } from "@/lib/prompt
 import { getModels } from "@/lib/model-cache";
 import { ModelInfo } from "@/lib/models-registry";
 import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
+import { resolveRuntimeApiProvider, runGptImage2Ensemble } from "@/lib/gpt-image-2-ensemble";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -15,6 +16,7 @@ export interface GenerateRequest {
   language?: "zh" | "en";
   maxTokens?: number;
   userKeys?: Record<string, string>;
+  availableModelIds?: string[];
   stream?: boolean;
 }
 
@@ -45,6 +47,9 @@ export async function POST(req: NextRequest) {
     if (body.userKeys && typeof body.userKeys === "object") {
       userKeys = body.userKeys;
     }
+    const availableModelIds = Array.isArray(body.availableModelIds)
+      ? body.availableModelIds.filter((id): id is string => typeof id === "string" && id.length > 0)
+      : undefined;
 
     const cleanIdea = userIdea?.trim() ?? "";
 
@@ -71,6 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     const targetCategory = targetModel.category ?? "text";
+    const runtimeGeneratorProvider = resolveRuntimeApiProvider(generatorModel, userKeys, availableModelIds);
 
     const systemPrompt = buildSystemPrompt({
       userIdea: cleanIdea,
@@ -90,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     const providerOpts = {
       model:       generatorModel.id,
-      apiProvider: generatorModel.apiProvider,
+      apiProvider: runtimeGeneratorProvider,
       systemPrompt,
       userPrompt,
       maxTokens,
@@ -102,6 +108,77 @@ export async function POST(req: NextRequest) {
       input:  generatorModel.inputCostPer1M  / 1_000_000,
       output: generatorModel.outputCostPer1M / 1_000_000,
     };
+
+    const targetModelKey = `${targetModel.id} ${targetModel.name}`.toLowerCase();
+    const isGptImage2Target =
+      targetCategory === "image" &&
+      (targetModelKey.includes("gpt image 2") || targetModelKey.includes("gpt-image-2"));
+
+    const makeDonePayload = (optimizedPrompt: string, stats: {
+      inputTokens: number;
+      outputTokens: number;
+      latencyMs: number;
+      tokensDelta: number;
+      changePercent: number;
+      estimatedCostUsd?: number;
+    }, metaExtra?: Record<string, unknown>) => ({
+      optimizedPrompt,
+      stats,
+      generatorModelCost,
+      meta: {
+        generatorModel: generatorModel.name,
+        targetModel:    targetModel.name,
+        ...metaExtra,
+      },
+    });
+
+    if (isGptImage2Target) {
+      const ensemble = await runGptImage2Ensemble({
+        userIdea: cleanIdea,
+        language,
+        targetModel,
+        generatorModel,
+        models,
+        userKeys,
+        availableModelIds,
+        maxTokens,
+      });
+      const comparison = comparePrompts(userIdea, ensemble.text);
+      const payload = makeDonePayload(
+        ensemble.text,
+        {
+          inputTokens: ensemble.inputTokens,
+          outputTokens: ensemble.outputTokens,
+          latencyMs: ensemble.latencyMs,
+          tokensDelta: comparison.delta,
+          changePercent: comparison.ratio,
+          estimatedCostUsd: ensemble.totalCostUsd,
+        },
+        ensemble.meta,
+      );
+
+      if (body.stream) {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ t: "chunk", c: ensemble.text })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ t: "done", data: payload })}\n\n`));
+            controller.close();
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+            "X-Accel-Buffering": "no",
+          },
+        });
+      }
+
+      return NextResponse.json(payload);
+    }
 
     // ── Streaming mode ──────────────────────────────────────────
     if (body.stream) {
@@ -121,21 +198,13 @@ export async function POST(req: NextRequest) {
 
             send({
               t: "done",
-              data: {
-                optimizedPrompt: result.text,
-                stats: {
-                  inputTokens:   result.inputTokens,
-                  outputTokens:  result.outputTokens,
-                  latencyMs:     result.latencyMs,
-                  tokensDelta:   comparison.delta,
-                  changePercent: comparison.ratio,
-                },
-                generatorModelCost,
-                meta: {
-                  generatorModel: generatorModel.name,
-                  targetModel:    targetModel.name,
-                },
-              },
+              data: makeDonePayload(result.text, {
+                inputTokens:   result.inputTokens,
+                outputTokens:  result.outputTokens,
+                latencyMs:     result.latencyMs,
+                tokensDelta:   comparison.delta,
+                changePercent: comparison.ratio,
+              }),
             });
           } catch (err: any) {
             send({ t: "error", error: err?.message ?? "服务器内部错误 / Internal error" });
@@ -159,21 +228,16 @@ export async function POST(req: NextRequest) {
     const result = await callProvider(providerOpts);
     const comparison = comparePrompts(userIdea, result.text);
 
-    return NextResponse.json({
-      optimizedPrompt: result.text,
-      stats: {
+    return NextResponse.json(makeDonePayload(
+      result.text,
+      {
         inputTokens:   result.inputTokens,
         outputTokens:  result.outputTokens,
         latencyMs:     result.latencyMs,
         tokensDelta:   comparison.delta,
         changePercent: comparison.ratio,
       },
-      generatorModelCost,
-      meta: {
-        generatorModel: generatorModel.name,
-        targetModel:    targetModel.name,
-      },
-    });
+    ));
   } catch (err: any) {
     console.error("[generate]", err);
     return NextResponse.json(
