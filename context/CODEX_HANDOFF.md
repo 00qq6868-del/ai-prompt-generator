@@ -310,3 +310,9 @@ Workbench updates outside git:
 
 - `E:\AI工作台\AI自我改进工作流.md`
 - `E:\AI工作台\工具 Tools\ai-chain.ps1` gained `prompt-sources` and `self-improve`.
+
+Remote:
+
+- Pushed `e7f5411 feat: add prompt tournament and source library sync`.
+- GitHub E2E run `25285272937` passed: 12/12.
+- Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics. Real generation was skipped because no local smoke API secret was available in this shell.

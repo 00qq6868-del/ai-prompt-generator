@@ -783,6 +783,9 @@ Validation:
 - `npm run desktop:verify` — passed after build
 - `npm run test:quality` — 4/4 passed
 - `npx playwright test --project=chromium` — 12/12 passed
+- Pushed `e7f5411 feat: add prompt tournament and source library sync`.
+- GitHub E2E run `25285272937` — 12/12 passed.
+- Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics. Real generation was skipped because this local shell had no smoke API secret.
 
 Remaining boundary:
 

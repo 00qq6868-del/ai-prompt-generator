@@ -1081,3 +1081,13 @@ Verification:
 - `npm run desktop:verify` passed after build.
 - `npm run test:quality` passed: 4/4.
 - `npx playwright test --project=chromium` passed: 12/12.
+
+Remote follow-up:
+
+- Pushed feature commit `e7f5411 feat: add prompt tournament and source library sync` after rebasing over auto-model update `2a20899`.
+- GitHub E2E run `25285272937` passed: 12/12.
+- Production smoke without generation secrets passed with `SMOKE_SKIP_GENERATE=1`:
+  - homepage ok
+  - models ok: 266 total
+  - analytics ok
+  - generation deliberately skipped because no local smoke API secret was present in this shell.
