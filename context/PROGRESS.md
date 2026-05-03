@@ -668,6 +668,7 @@ Verified locally:
 - `npm run build`
 - `npx playwright test tests/e2e/quality.spec.ts --project=chromium` — 4/4 passed
 - `npx playwright test --project=chromium` — 12/12 passed
+- After GitHub marked the first E2E run as flaky, `tests/e2e/quality.spec.ts` was hardened with an additional stable wait before axe scanning.
 
 Pending:
 

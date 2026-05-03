@@ -13,6 +13,7 @@ async function waitForFiniteAnimations(page: Page) {
       animation.playState === "finished" || animation.playState === "idle"
     );
   });
+  await page.waitForTimeout(1000);
 }
 
 test.describe("Quality and accessibility audit", () => {

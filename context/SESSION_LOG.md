@@ -894,6 +894,7 @@ Verification:
 - `npx playwright test tests/e2e/quality.spec.ts --project=chromium` passed: 4/4.
 - `npx playwright test --project=chromium` passed: 12/12.
 - Cleaned generated Playwright/PWA build artifacts after verification.
+- GitHub E2E initially passed only after retry because axe scanned during a UI opacity animation. Added an extra stable wait in `tests/e2e/quality.spec.ts` to remove that flake.
 
 Rules for next AI:
 

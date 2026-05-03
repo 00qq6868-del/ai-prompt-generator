@@ -170,7 +170,7 @@ Modified runtime:
 - `src/components/ResultPanel.tsx` displays ensemble review/cost metadata.
 - `src/lib/prompt-optimizer.ts` includes source-informed GPT Image 2 prompt guidance.
 - `src/components/ModelSelector.tsx` contrast fixes were added because axe caught low-contrast animated states.
-- `tests/e2e/quality.spec.ts` waits for finite animations before axe scanning and keeps the `月之暗面` clipping regression test.
+- `tests/e2e/quality.spec.ts` waits for finite animations plus an extra stable interval before axe scanning and keeps the `月之暗面` clipping regression test.
 
 Local verification already passed:
 
