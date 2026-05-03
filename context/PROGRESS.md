@@ -672,5 +672,12 @@ Verified locally:
 
 Pending:
 
-- Commit and push this change to GitHub.
-- After push, verify GitHub E2E and Vercel production deployment before claiming the live site has updated.
+- Completed. Code commits pushed:
+  - `9142663 feat: add GPT Image 2 source ensemble`
+  - `76dd157 test: stabilize accessibility audit`
+- GitHub E2E run `25281333634` passed cleanly: 12/12.
+- Vercel production deployment for `76dd157` succeeded.
+- Production smoke run `25281462814` passed, including real generation through Groq fallback.
+- Public checks:
+  - `https://www.myprompt.asia` HTTP 200
+  - `/api/models` returns 266 models and includes `gpt-image-2`

@@ -896,6 +896,23 @@ Verification:
 - Cleaned generated Playwright/PWA build artifacts after verification.
 - GitHub E2E initially passed only after retry because axe scanned during a UI opacity animation. Added an extra stable wait in `tests/e2e/quality.spec.ts` to remove that flake.
 
+GitHub / production verification:
+
+- Pushed `9142663 feat: add GPT Image 2 source ensemble`.
+- Pushed `76dd157 test: stabilize accessibility audit`.
+- GitHub E2E run `25281333634` passed cleanly: 12/12.
+- Vercel production deployment for `76dd157` succeeded:
+  - deployment id `4561806192`
+  - target `https://ai-prompt-generator-s6bk3j0dt-00qq6868-dels-projects.vercel.app`
+- Production smoke test run `25281462814` passed:
+  - homepage ok
+  - models ok: `266` total, `{ text: 245, video: 7, image: 7, tts: 7 }`
+  - analytics ok
+  - relay probe ok: `221` models
+  - real generation ok through Groq fallback after Google failed
+- `https://www.myprompt.asia` returned HTTP 200.
+- `https://www.myprompt.asia/api/models` includes `gpt-image-2`.
+
 Rules for next AI:
 
 - Do not copy the full four upstream repos into this project.

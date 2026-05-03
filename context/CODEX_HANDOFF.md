@@ -180,4 +180,19 @@ Local verification already passed:
 - `npx playwright test tests/e2e/quality.spec.ts --project=chromium` — 4/4
 - `npx playwright test --project=chromium` — 12/12
 
-Next step after this handoff: commit and push, then verify GitHub Actions/Vercel before saying the live site is updated.
+Verification and deployment:
+
+- Code commits pushed:
+  - `9142663 feat: add GPT Image 2 source ensemble`
+  - `76dd157 test: stabilize accessibility audit`
+- GitHub E2E run `25281333634` passed cleanly: 12/12.
+- Vercel production deployment for `76dd157` succeeded, deployment id `4561806192`.
+- Production smoke test run `25281462814` passed:
+  - homepage ok
+  - models ok: 266 total
+  - analytics ok
+  - relay probe ok: 221 models
+  - real generation ok through Groq fallback
+- Live site check: `https://www.myprompt.asia` returns HTTP 200 and `/api/models` includes `gpt-image-2`.
+
+Next step after this handoff: for future GPT Image 2 updates, run `npm run sources:gpt-image2`, re-distill only changed strategy if needed, then run full local validation before pushing.
