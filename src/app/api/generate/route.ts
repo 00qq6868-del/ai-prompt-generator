@@ -8,11 +8,14 @@ import { getModels } from "@/lib/model-cache";
 import { ModelInfo } from "@/lib/models-registry";
 import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
 import { resolveRuntimeApiProvider, runGptImage2Ensemble } from "@/lib/gpt-image-2-ensemble";
+import { runPromptTournament } from "@/lib/prompt-evaluator";
 
 export interface GenerateRequest {
   userIdea: string;
   targetModelId: string;
   generatorModelId: string;
+  generatorModelIds?: string[];
+  evaluatorModelIds?: string[];
   language?: "zh" | "en";
   maxTokens?: number;
   userKeys?: Record<string, string>;
@@ -69,7 +72,22 @@ export async function POST(req: NextRequest) {
 
     const models         = await getModels();
     const targetModel    = models.find((m: ModelInfo) => m.id === targetModelId);
-    const generatorModel = models.find((m: ModelInfo) => m.id === generatorModelId);
+    const generatorIds = Array.from(new Set([
+      ...(Array.isArray(body.generatorModelIds) ? body.generatorModelIds : []),
+      generatorModelId,
+    ].filter((id): id is string => typeof id === "string" && id.trim().length > 0))).slice(0, 6);
+    const evaluatorIds = Array.from(new Set(
+      (Array.isArray(body.evaluatorModelIds) ? body.evaluatorModelIds : [])
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0),
+    )).slice(0, 6);
+    const generatorModels = generatorIds
+      .map((id) => models.find((m: ModelInfo) => m.id === id))
+      .filter((m): m is ModelInfo => Boolean(m));
+    const evaluatorModels = evaluatorIds
+      .map((id) => models.find((m: ModelInfo) => m.id === id))
+      .filter((m): m is ModelInfo => Boolean(m))
+      .filter((m) => (m.category ?? "text") === "text");
+    const generatorModel = generatorModels[0];
 
     if (!targetModel || !generatorModel) {
       return NextResponse.json({ error: "未知的模型 ID / Unknown model id" }, { status: 400 });
@@ -132,6 +150,64 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const shouldRunPromptTournament =
+      !isGptImage2Target &&
+      (generatorModels.length > 1 || evaluatorModels.length > 0);
+
+    if (shouldRunPromptTournament) {
+      const tournament = await runPromptTournament({
+        userIdea: cleanIdea,
+        language,
+        targetModel,
+        generatorModels,
+        evaluatorModels,
+        models,
+        userKeys,
+        availableModelIds,
+        systemPrompt,
+        userPrompt,
+        maxTokens,
+      });
+      const comparison = comparePrompts(userIdea, tournament.text);
+      const payload = makeDonePayload(
+        tournament.text,
+        {
+          inputTokens: tournament.inputTokens,
+          outputTokens: tournament.outputTokens,
+          latencyMs: tournament.latencyMs,
+          tokensDelta: comparison.delta,
+          changePercent: comparison.ratio,
+          estimatedCostUsd: tournament.totalCostUsd,
+        },
+        {
+          generatorModel: generatorModels.map((model) => model.name).join(" + "),
+          ...tournament.meta,
+        },
+      );
+
+      if (body.stream) {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ t: "chunk", c: tournament.text })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ t: "done", data: payload })}\n\n`));
+            controller.close();
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+            "X-Accel-Buffering": "no",
+          },
+        });
+      }
+
+      return NextResponse.json(payload);
+    }
+
     if (isGptImage2Target) {
       const ensemble = await runGptImage2Ensemble({
         userIdea: cleanIdea,
@@ -141,6 +217,7 @@ export async function POST(req: NextRequest) {
         models,
         userKeys,
         availableModelIds,
+        evaluatorModelIds: evaluatorIds,
         maxTokens,
       });
       const comparison = comparePrompts(userIdea, ensemble.text);

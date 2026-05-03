@@ -2,9 +2,9 @@
 
 This project supports external prompt-engineering source repositories without copying full upstream galleries into the app repository.
 
-## Current Auto-Synced Group
+## Current Auto-Synced Groups
 
-GPT Image 2 sources:
+### GPT Image 2 Sources
 
 - `EvoLinkAI/awesome-gpt-image-2-API-and-Prompts`
 - `YouMind-OpenLab/awesome-gpt-image-2`
@@ -17,18 +17,51 @@ Local source root:
 E:\AI工作台\资料 Sources\gpt-image-2
 ```
 
+Project status:
+
+```text
+src/lib/gpt-image-2-source-status.ts
+```
+
+### Prompt Library Sources
+
+- `x1xhlol/system-prompts-and-models-of-ai-tools`
+- `dair-ai/Prompt-Engineering-Guide`
+- `danielmiessler/Fabric`
+- `JushBJJ/Mr.-Ranedeer-AI-Tutor`
+- `linshenkx/prompt-optimizer`
+- `elder-plinius/CL4R1T4S`
+- `promptfoo/promptfoo`
+- `elder-plinius/L1B3RT4S`
+- `Nagi-ovo/gemini-voyager`
+- `liyupi/ai-guide`
+
+Local source root:
+
+```text
+E:\AI工作台\资料 Sources\prompt-library
+```
+
+Project status:
+
+```text
+src/lib/prompt-source-library-status.ts
+```
+
+This group powers the general prompt-quality rubric and the multi-generator / multi-evaluator scoring flow. Repositories that contain adversarial or leaked prompt material are defensive references only.
+
 Manual sync:
 
 ```cmd
 E:\AI工作台\AI-CHAIN.cmd gpt-image2-sync
-npm run sources:gpt-image2
+npm run sources:all
 ```
 
 GitHub auto-sync:
 
 - Workflow: `.github/workflows/sync-prompt-sources.yml`
 - Runs every 6 hours and can also be triggered manually.
-- Commits only `src/lib/gpt-image-2-source-status.ts` when upstream commit hashes change.
+- Commits only generated source status files when upstream commit hashes change.
 - The commit triggers the normal GitHub/Vercel pipeline so the website and next desktop build use the latest recorded source versions.
 
 ## Rule

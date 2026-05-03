@@ -64,6 +64,20 @@ interface GenerateResult {
     reviewSummary?: string;
     judgeModels?: string[];
     selectedStrategy?: string;
+    promptEvaluation?: {
+      candidates: Array<{
+        id: string;
+        generatorModelId: string;
+        generatorModelName: string;
+        averageScore: number;
+        rank: number;
+        scores: Array<{ judgeModel: string; score: number; reason: string }>;
+      }>;
+      judgeModels: string[];
+      selectedCandidateId: string;
+      summary: string;
+      sourceCommits?: string[];
+    };
   };
   generatorModelCost: { input: number; output: number };
 }
@@ -85,7 +99,8 @@ export function PromptGenerator() {
   const [idea, setIdea]           = useState("");
   const [language, setLanguage]   = useState<"zh" | "en">("zh");
   const [targetModelId, setTargetModelId]       = useState(DEFAULT_TARGET);
-  const [generatorModelId, setGeneratorModelId] = useState<string>("");
+  const [generatorModelIds, setGeneratorModelIds] = useState<string[]>([]);
+  const [evaluatorModelIds, setEvaluatorModelIds] = useState<string[]>([]);
   const [loading, setLoading]     = useState(false);
   const [availableModelIds, setAvailableModelIds] = useState<string[] | undefined>(undefined);
   const [streamingText, setStreamingText] = useState("");
@@ -125,12 +140,12 @@ export function PromptGenerator() {
             }));
             selectBestFromProbe(data.models);
           } else {
-            setGeneratorModelId("gpt-4o-mini");
+            setGeneratorModelIds(["gpt-4o-mini"]);
           }
         })
         .catch(() => {
           toast.error("探测中转站失败，使用默认模型 / Probe failed, using default model");
-          setGeneratorModelId("gpt-4o-mini");
+          setGeneratorModelIds(["gpt-4o-mini"]);
         });
       return;
     }
@@ -138,7 +153,7 @@ export function PromptGenerator() {
     for (const { provider, modelId } of PROVIDER_PRIORITY) {
       const keyName = PROVIDER_KEY_MAP[provider];
       if (keyName && userKeys[keyName]?.trim().length > 5) {
-        setGeneratorModelId(modelId);
+        setGeneratorModelIds([modelId]);
         return;
       }
     }
@@ -151,13 +166,13 @@ export function PromptGenerator() {
       .then((data: { configured: string[] }) => {
         for (const { provider, modelId } of PROVIDER_PRIORITY) {
           if (data.configured.includes(provider)) {
-            setGeneratorModelId(modelId);
+            setGeneratorModelIds([modelId]);
             return;
           }
         }
-        setGeneratorModelId(PROVIDER_PRIORITY[0].modelId);
+        setGeneratorModelIds([PROVIDER_PRIORITY[0].modelId]);
       })
-      .catch(() => setGeneratorModelId(PROVIDER_PRIORITY[0].modelId));
+      .catch(() => setGeneratorModelIds([PROVIDER_PRIORITY[0].modelId]));
   }, []);
 
   const selectBestFromProbe = (probeModelIds: string[], targetId?: string, targetCategory?: string) => {
@@ -172,7 +187,7 @@ export function PromptGenerator() {
           m => probeModelIds.includes(m.id) && (m.category ?? "text") === "text"
         );
         if (available.length === 0) {
-          setGeneratorModelId("gpt-4o-mini");
+          setGeneratorModelIds(["gpt-4o-mini"]);
           return;
         }
 
@@ -182,7 +197,12 @@ export function PromptGenerator() {
           const availableIds = new Set(available.map(m => m.id));
           const match = affinity.recommended.find(id => availableIds.has(id));
           if (match) {
-            setGeneratorModelId(match);
+            setGeneratorModelIds([match]);
+            setEvaluatorModelIds(prev => prev.length ? prev : available
+              .filter(m => m.id !== match)
+              .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"))
+              .slice(0, 3)
+              .map(m => m.id));
             return;
           }
         }
@@ -192,9 +212,14 @@ export function PromptGenerator() {
         const best = available.reduce((a, b) =>
           scoreModel(b, generatorMode) > scoreModel(a, generatorMode) ? b : a
         );
-        setGeneratorModelId(best.id);
+        setGeneratorModelIds([best.id]);
+        setEvaluatorModelIds(prev => prev.length ? prev : available
+          .filter(m => m.id !== best.id)
+          .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"))
+          .slice(0, 3)
+          .map(m => m.id));
       })
-      .catch(() => setGeneratorModelId("gpt-4o-mini"));
+      .catch(() => setGeneratorModelIds(["gpt-4o-mini"]));
   };
 
   useEffect(() => {
@@ -214,7 +239,8 @@ export function PromptGenerator() {
       toast.error("请先输入你的想法或需求！/ Please enter your idea first!");
       return;
     }
-    if (!generatorModelId) {
+    const primaryGeneratorModelId = generatorModelIds[0] ?? "";
+    if (!primaryGeneratorModelId) {
       toast.error("请先点击右上角钥匙图标填入至少一个 API Key / Please set at least one API Key first");
       return;
     }
@@ -241,7 +267,7 @@ export function PromptGenerator() {
     const trackFirstToken = () => {
       if (firstTokenTracked) return;
       firstTokenTracked = true;
-      trackTTFT(performance.now() - requestStartedAt, generatorModelId);
+      trackTTFT(performance.now() - requestStartedAt, primaryGeneratorModelId);
     };
 
     try {
@@ -252,7 +278,9 @@ export function PromptGenerator() {
         body: JSON.stringify({
           userIdea: idea,
           targetModelId,
-          generatorModelId,
+          generatorModelId: primaryGeneratorModelId,
+          generatorModelIds,
+          evaluatorModelIds,
           language,
           maxTokens: 4096,
           userKeys,
@@ -308,7 +336,7 @@ export function PromptGenerator() {
                 setStreamingText("");
                 toast.dismiss(tid);
                 toast.success("提示词生成成功！/ Prompt generated!");
-                saveHistory({ userIdea: idea, optimizedPrompt: event.data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelId, language });
+                saveHistory({ userIdea: idea, optimizedPrompt: event.data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
               } else if (event.t === "error") {
                 trackGenerateCall(false, res.status);
                 throw new Error(event.error);
@@ -326,13 +354,13 @@ export function PromptGenerator() {
           setResult({
             optimizedPrompt: accumulated,
             stats: { inputTokens: 0, outputTokens: 0, latencyMs: 0, tokensDelta: 0, changePercent: 0 },
-            meta: { generatorModel: generatorModelId, targetModel: targetModelId },
+            meta: { generatorModel: primaryGeneratorModelId, targetModel: targetModelId },
             generatorModelCost: { input: 0, output: 0 },
           });
           setStreamingText("");
           toast.dismiss(tid);
           toast.success("提示词生成成功！/ Prompt generated!");
-          saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelId, language });
+          saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
         }
       } else {
         const data = await res.json().catch(() => ({}));
@@ -341,7 +369,7 @@ export function PromptGenerator() {
         setResult(data);
         toast.dismiss(tid);
         toast.success("提示词生成成功！/ Prompt generated!");
-        saveHistory({ userIdea: idea, optimizedPrompt: data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelId, language });
+        saveHistory({ userIdea: idea, optimizedPrompt: data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
     } catch (err: any) {
@@ -371,6 +399,7 @@ export function PromptGenerator() {
               onReuse={(item) => {
                 setIdea(item.userIdea);
                 setTargetModelId(item.targetModel);
+                setGeneratorModelIds(item.generatorModel.split(",").map(id => id.trim()).filter(Boolean));
                 setLanguage(item.language);
               }}
             />
@@ -420,9 +449,11 @@ export function PromptGenerator() {
       {/* Model selector */}
       <ModelSelector
         selectedTargetId={targetModelId}
-        selectedGeneratorId={generatorModelId}
+        selectedGeneratorIds={generatorModelIds}
+        selectedEvaluatorIds={evaluatorModelIds}
         onTargetChange={setTargetModelId}
-        onGeneratorChange={setGeneratorModelId}
+        onGeneratorChange={setGeneratorModelIds}
+        onEvaluatorChange={setEvaluatorModelIds}
         availableModelIds={availableModelIds}
       />
 

@@ -991,3 +991,93 @@ Rules for next AI:
 - Sync upstream sources before modifying GPT Image 2 behavior.
 - If upstream prompt patterns materially change, update the distilled strategy in `src/lib/gpt-image-2-ensemble.ts` and this session log.
 - If multiple judge models are unavailable from the user's API setup, the ensemble intentionally falls back to the best callable generator/model path instead of failing the whole prompt generation.
+
+---
+
+## 2026-05-04 — Multi-generator evaluation, prompt-library sources, cross-platform downloads
+
+User reported that the generator model picker page could not scroll after opening it and asked for broader prompt-quality optimization:
+
+- generator models should support multi-select
+- judge/evaluator models should be manually selectable, up to 6
+- prompt quality should be scored visually out of 100
+- the scoring standard should reference the top 10 GitHub prompt-engineering repositories provided by the user
+- the existing 4 GPT Image 2 sources must be preserved
+- the 10 new prompt sources must sync from GitHub over time
+- desktop downloads should include macOS and broader portable computer packages
+- AI Workbench memory should preserve the workflow for future stronger AIs
+
+Implemented:
+
+- `src/components/ModelPicker.tsx`
+  - Supports single-select and multi-select modes.
+  - Multi-select shows selected count and a Done button.
+  - Forwarded mouse-wheel scrolling from header/filter areas into the model list, so the full-screen picker remains scrollable even when the pointer is over filters.
+  - Provider chips keep long Chinese names such as `月之暗面` un-clipped.
+- `src/components/ModelSelector.tsx`
+  - Generator model picker now supports selecting up to 6 generator models.
+  - Added evaluator model picker, also up to 6 models.
+  - Evaluator picker is optional; backend auto-selects judges if none are chosen.
+- `src/components/PromptGenerator.tsx`
+  - Stores `generatorModelIds` and `evaluatorModelIds`.
+  - Sends both arrays to `/api/generate`.
+  - Probed relay models still auto-select a primary generator and recommended evaluator models.
+  - History reuse restores multi-generator IDs when available.
+- `src/app/api/generate/route.ts`
+  - Accepts `generatorModelIds` and `evaluatorModelIds`.
+  - Runs the new prompt tournament for normal text targets when multiple generators or evaluators are selected.
+  - Keeps GPT Image 2 on the existing four-source ensemble path, with manual evaluator-model support.
+- `src/lib/prompt-evaluator.ts`
+  - Generates one candidate per selected generator model.
+  - Selects up to 6 manual evaluator models, or auto-selects strong available judge models.
+  - Scores candidates from 0 to 100 using the prompt-library rubric.
+  - Aggregates judge scores and returns the highest-scoring prompt.
+- `src/components/ResultPanel.tsx`
+  - Shows the AI evaluation score panel with 0-100 bars, candidate rank, selected candidate, and judge summary.
+- `scripts/sync-prompt-library-sources.cjs`
+  - Syncs the 10 user-provided prompt repositories into `E:\AI工作台\资料 Sources\prompt-library`.
+  - Writes repo stars, focus, commit hashes, local paths, and rubric into `src/lib/prompt-source-library-status.ts`.
+  - Handles Windows invalid-path checkout failures by preserving git metadata instead of failing the whole sync.
+- `.github/workflows/sync-prompt-sources.yml`
+  - Now runs `npm run sources:all`.
+  - Commits both GPT Image 2 and prompt-library source status files.
+- `context/PROMPT_LIBRARY_SOURCES.md`
+  - Documents the new source group, safety boundary, scoring rubric usage, and future-AI handoff.
+- `context/PROMPT_SOURCE_AUTOSYNC.md`
+  - Updated to document both source groups.
+- Desktop/download updates:
+  - Added macOS download routes:
+    - `/api/download/mac`
+    - `/api/download/mac/portable`
+  - Added Linux AppImage route:
+    - `/api/download/linux`
+  - Download page now lists Windows installer, Windows portable EXE, macOS DMG/ZIP, Linux AppImage, and Android PWA install entry.
+  - `package.json` now has `electron:build:mac`, `electron:build:linux`, and mac ZIP / Linux AppImage targets.
+  - `desktop-release.yml` now has Windows, macOS, and Linux jobs.
+- AI Workbench updates outside the repo:
+  - Added `E:\AI工作台\AI自我改进工作流.md`.
+  - Updated `E:\AI工作台\工具 Tools\ai-chain.ps1` with:
+    - `prompt-sources`
+    - `self-improve`
+    - memory output for prompt-source docs.
+
+Important boundary:
+
+- There is no single executable that can run unchanged on Windows, macOS, Linux, and Android. The implemented path is platform-specific portable packages: Windows Portable EXE, macOS ZIP, Linux AppImage, plus Android PWA for now.
+- Native Android APK is not completed in this commit; the download page states APK will be added after the Android packaging chain is built.
+
+Source sync notes:
+
+- `npm run sources:all` completed.
+- The prompt-library sync wrote `src/lib/prompt-source-library-status.ts`.
+- `elder-plinius/L1B3RT4S` and `liyupi/ai-guide` contain Windows-invalid paths; the sync script preserves git metadata and continues.
+- A transient TLS warning happened while updating `promptfoo/promptfoo`; the script continued using the existing local commit and completed.
+
+Verification:
+
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npm run desktop:verify` passed after build.
+- `npm run test:quality` passed: 4/4.
+- `npx playwright test --project=chromium` passed: 12/12.

@@ -734,3 +734,56 @@ Completed remotely:
 - `/api/download/windows/portable` redirects to the portable EXE.
 - Manual `Sync Prompt Sources` workflow run `25282673189` passed.
 - Production Smoke Test run `25282673405` passed, including real generation through Groq fallback.
+
+---
+
+## Multi-Generator Prompt Evaluation + Prompt Library Sources — 2026-05-04
+
+Completed:
+
+- Fixed/improved generator picker scroll behavior:
+  - `ModelPicker` remains full-screen and now forwards wheel events from header/filter areas into the scrollable model list.
+  - Long provider names such as `月之暗面` remain visible.
+- Added generator model multi-select:
+  - Up to 6 selected generator models.
+  - `PromptGenerator` sends `generatorModelIds` to `/api/generate`.
+- Added evaluator model multi-select:
+  - Up to 6 selected evaluator/judge models.
+  - If none are chosen, backend auto-selects strong callable judge models.
+- Added backend prompt tournament:
+  - New file: `src/lib/prompt-evaluator.ts`.
+  - Generates one optimized prompt candidate per selected generator model.
+  - Scores candidates from 0-100 using judge models.
+  - Selects the highest-scoring candidate.
+  - Result panel visualizes candidate scores and selected winner.
+- Kept GPT Image 2 special handling:
+  - Existing four-source GPT Image 2 ensemble remains.
+  - Added manual evaluator-model support for GPT Image 2.
+- Added 10 prompt-library GitHub sources:
+  - New script: `scripts/sync-prompt-library-sources.cjs`.
+  - New status/rubric file: `src/lib/prompt-source-library-status.ts`.
+  - New docs: `context/PROMPT_LIBRARY_SOURCES.md`.
+  - `npm run sources:all` now syncs both GPT Image 2 and prompt-library sources.
+- Updated prompt-source GitHub workflow:
+  - `.github/workflows/sync-prompt-sources.yml` now commits both source status files.
+- Expanded desktop/download targets:
+  - macOS DMG and macOS ZIP routes.
+  - Linux AppImage route.
+  - Download page now shows Windows, macOS, Linux, and Android PWA options.
+  - `desktop-release.yml` now includes Windows, macOS, and Linux jobs.
+- Updated AI Workbench outside the repo:
+  - `E:\AI工作台\AI自我改进工作流.md`
+  - `E:\AI工作台\工具 Tools\ai-chain.ps1` commands: `prompt-sources`, `self-improve`.
+
+Validation:
+
+- `npx tsc --noEmit` — passed
+- `git diff --check` — passed
+- `npm run build` — passed
+- `npm run desktop:verify` — passed after build
+- `npm run test:quality` — 4/4 passed
+- `npx playwright test --project=chromium` — 12/12 passed
+
+Remaining boundary:
+
+- Android native APK is not implemented yet. Current Android path is PWA install. True APK needs a separate Android packaging implementation.

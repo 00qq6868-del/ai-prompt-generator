@@ -1,5 +1,5 @@
 import { Header } from "@/components/Header";
-import { ArrowLeft, Download, ExternalLink, Github, HardDriveDownload, Monitor, PackageCheck, RefreshCw, ShieldCheck, Usb } from "lucide-react";
+import { ArrowLeft, Apple, Download, ExternalLink, Github, HardDriveDownload, Monitor, PackageCheck, RefreshCw, ShieldCheck, Smartphone, Usb } from "lucide-react";
 
 const releaseUrl = "https://github.com/00qq6868-del/ai-prompt-generator/releases/latest";
 
@@ -31,11 +31,11 @@ export default function DownloadPage() {
             下载 AI 提示词生成器
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-white/70 sm:text-base">
-            Windows 桌面版在本机启动完整应用服务，不依赖本站域名持续可用。只要电脑能联网访问你的 API，中转站或模型服务，就能继续生成提示词。
+            桌面版在本机启动完整应用服务，不依赖本站域名持续可用。只要设备能联网访问你的 API、中转站或模型服务，就能继续生成提示词。便携包按系统分别下载，U 盘可携带对应系统版本。
           </p>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[1fr_1fr_0.8fr]">
+        <section className="grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-5 shadow-2xl shadow-black/30">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -83,6 +83,91 @@ export default function DownloadPage() {
                 查看发布页
               </a>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-sky-500/20 bg-sky-950/15 p-5 shadow-2xl shadow-black/30">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-white">
+                  <Apple size={18} className="text-sky-300" />
+                  <h2 className="text-lg font-bold">macOS 桌面版</h2>
+                </div>
+                <p className="text-sm leading-6 text-white/65">
+                  DMG 用于正常安装，ZIP 可作为 macOS 便携包保存到移动硬盘或 U 盘。
+                </p>
+              </div>
+              <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-300">
+                Universal
+              </span>
+            </div>
+
+            <div className="mb-5 grid gap-2 sm:grid-cols-3">
+              {[
+                { icon: <Apple size={14} />, label: "macOS" },
+                { icon: <HardDriveDownload size={14} />, label: "DMG / ZIP" },
+                { icon: <ShieldCheck size={14} />, label: "本地运行" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-xs text-white/70">
+                  <span className="text-sky-300">{item.icon}</span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="/api/download/mac"
+                className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:bg-sky-400"
+              >
+                <Download size={16} />
+                下载 Mac 版
+              </a>
+              <a
+                href="/api/download/mac/portable"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white/70 hover:border-white/20 hover:text-white"
+              >
+                <Usb size={16} />
+                Mac 便携 ZIP
+              </a>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 shadow-2xl shadow-black/30">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-white">
+                  <Monitor size={18} className="text-white/70" />
+                  <h2 className="text-lg font-bold">Linux 便携版</h2>
+                </div>
+                <p className="text-sm leading-6 text-white/65">
+                  AppImage 单文件运行，适合 Linux 桌面系统和移动硬盘携带。
+                </p>
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-[11px] font-medium text-white/70">
+                AppImage
+              </span>
+            </div>
+
+            <div className="mb-5 grid gap-2 sm:grid-cols-3">
+              {[
+                { icon: <HardDriveDownload size={14} />, label: "单文件" },
+                { icon: <Usb size={14} />, label: "可携带" },
+                { icon: <Github size={14} />, label: "Release" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-xs text-white/70">
+                  <span className="text-white/75">{item.icon}</span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="/api/download/linux"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-white/80 hover:border-white/20 hover:bg-white/[0.09]"
+            >
+              <Download size={16} />
+              下载 Linux AppImage
+            </a>
           </div>
 
           <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/15 p-5 shadow-2xl shadow-black/30">
@@ -134,7 +219,45 @@ export default function DownloadPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+          <div className="rounded-2xl border border-violet-500/20 bg-violet-950/15 p-5 shadow-2xl shadow-black/30">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-white">
+                  <Smartphone size={18} className="text-violet-300" />
+                  <h2 className="text-lg font-bold">Android 手机版</h2>
+                </div>
+                <p className="text-sm leading-6 text-white/65">
+                  当前先提供 PWA 安装：安卓 Chrome 打开本站后可“添加到主屏幕”。原生 APK 会在 Android 打包链完成后加入发布页。
+                </p>
+              </div>
+              <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-300">
+                PWA
+              </span>
+            </div>
+
+            <div className="mb-5 grid gap-2 sm:grid-cols-3">
+              {[
+                { icon: <Smartphone size={14} />, label: "安卓可装" },
+                { icon: <RefreshCw size={14} />, label: "离线缓存" },
+                { icon: <Github size={14} />, label: "APK 待构建" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-xs text-white/70">
+                  <span className="text-violet-300">{item.icon}</span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+            >
+              <Smartphone size={16} />
+              打开并安装 PWA
+            </a>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 lg:col-span-2">
             <h2 className="mb-3 text-base font-bold text-white">版本信息</h2>
             <div className="space-y-3 text-sm text-white/70">
               <div className="flex items-center justify-between gap-3 border-b border-white/8 pb-3">
@@ -143,7 +266,7 @@ export default function DownloadPage() {
               </div>
               <div className="flex items-center justify-between gap-3 border-b border-white/8 pb-3">
                 <span>平台</span>
-                <span className="text-white/85">Windows x64</span>
+                <span className="text-white/85">Windows x64 / macOS universal / Linux AppImage / Android PWA</span>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span>发布源</span>

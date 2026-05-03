@@ -15,10 +15,13 @@
     "desktop:verify": "node scripts/verify-desktop-standalone.cjs",
     "electron:build": "npm run build && npm run desktop:verify && electron-builder --win --config.win.signAndEditExecutable=false --publish never",
     "electron:build:mac": "npm run build && npm run desktop:verify && electron-builder --mac --publish never",
-    "electron:build:all": "npm run build && npm run desktop:verify && electron-builder --win --mac --config.win.signAndEditExecutable=false --publish never",
+    "electron:build:linux": "npm run build && npm run desktop:verify && electron-builder --linux --publish never",
+    "electron:build:all": "npm run build && npm run desktop:verify && electron-builder --win --mac --linux --config.win.signAndEditExecutable=false --publish never",
     "electron:publish": "npm run build && npm run desktop:verify && electron-builder --win --config.win.signAndEditExecutable=false --publish always",
     "smoke:prod": "node scripts/production-smoke.cjs",
     "sources:gpt-image2": "node scripts/sync-gpt-image2-sources.cjs",
+    "sources:prompt-library": "node scripts/sync-prompt-library-sources.cjs",
+    "sources:all": "npm run sources:gpt-image2 && npm run sources:prompt-library",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
     "test:quality": "npx playwright test tests/e2e/quality.spec.ts --project=chromium"
@@ -130,6 +133,12 @@
           "arch": [
             "universal"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
         }
       ],
       "icon": "public/icons/icon-512.png",
@@ -138,6 +147,18 @@
       "gatekeeperAssess": false,
       "entitlements": "electron/entitlements.mac.plist",
       "entitlementsInherit": "electron/entitlements.mac.plist"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/icons/icon-512.png",
+      "category": "Utility"
     },
     "dmg": {
       "title": "AI提示词生成器",

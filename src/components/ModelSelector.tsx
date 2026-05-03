@@ -9,9 +9,11 @@ import { ModelPicker } from "./ModelPicker";
 
 interface Props {
   selectedTargetId: string;
-  selectedGeneratorId: string;
+  selectedGeneratorIds: string[];
+  selectedEvaluatorIds: string[];
   onTargetChange: (id: string) => void;
-  onGeneratorChange: (id: string) => void;
+  onGeneratorChange: (ids: string[]) => void;
+  onEvaluatorChange: (ids: string[]) => void;
   availableModelIds?: string[];
 }
 
@@ -63,9 +65,11 @@ const ACC_RANK: Record<string, number> = { supreme: 4, high: 3, medium: 2, low: 
 
 export function ModelSelector({
   selectedTargetId,
-  selectedGeneratorId,
+  selectedGeneratorIds,
+  selectedEvaluatorIds,
   onTargetChange,
   onGeneratorChange,
+  onEvaluatorChange,
   availableModelIds,
 }: Props) {
   const { models, loading, source, updatedAt, refresh } = useModels("accurate");
@@ -74,10 +78,20 @@ export function ModelSelector({
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortKey>("release");
   const [generatorPickerOpen, setGeneratorPickerOpen] = useState(false);
+  const [evaluatorPickerOpen, setEvaluatorPickerOpen] = useState(false);
 
-  const selectedGenerator = useMemo(
-    () => models.find(m => m.id === selectedGeneratorId),
-    [models, selectedGeneratorId]
+  const selectedGenerators = useMemo(
+    () => selectedGeneratorIds
+      .map(id => models.find(m => m.id === id))
+      .filter((m): m is ModelInfo => Boolean(m)),
+    [models, selectedGeneratorIds]
+  );
+
+  const selectedEvaluators = useMemo(
+    () => selectedEvaluatorIds
+      .map(id => models.find(m => m.id === id))
+      .filter((m): m is ModelInfo => Boolean(m)),
+    [models, selectedEvaluatorIds]
   );
 
   const targetModel = useMemo(
@@ -90,6 +104,7 @@ export function ModelSelector({
     : targetCategory === "video"
     ? "目标是视频模型 — 推荐选质量高的生成器 / Target is video model"
     : "用来写提示词的 AI — 推荐选便宜快速的模型";
+  const evaluatorSubtitle = "最多 6 个，用来给生成器产出的提示词打 0-100 分 / Up to 6 judge models";
 
   // Category counts (across all models, unaffected by filters)
   const catCounts = useMemo(() => {
@@ -163,7 +178,7 @@ export function ModelSelector({
           <h3 className="text-sm font-medium text-white/60 flex items-center gap-1.5">
             <Cpu size={13} />
             生成器模型
-            <span className="text-xs text-white/70">（用来写提示词的 AI）</span>
+            <span className="text-xs text-white/70">（可多选，用来写提示词）</span>
           </h3>
         </div>
         <button
@@ -171,21 +186,20 @@ export function ModelSelector({
           aria-label="选择生成器模型 Open generator model picker"
           className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/30 hover:bg-white/[0.06] text-sm text-white transition-all group"
         >
-          {selectedGenerator ? (
+          {selectedGenerators.length > 0 ? (
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/15 shrink-0">
                 <Cpu size={14} className="text-indigo-400" />
               </div>
               <div className="text-left min-w-0">
-                <div className="font-medium text-white truncate">{selectedGenerator.name}</div>
+                <div className="font-medium text-white truncate">
+                  {selectedGenerators.length === 1
+                    ? selectedGenerators[0].name
+                    : `${selectedGenerators[0].name} +${selectedGenerators.length - 1}`}
+                </div>
                 <div className="text-[11px] text-white/65 flex items-center gap-2">
-                  <span>{selectedGenerator.provider}</span>
-                  <span className={`${SPEED_COLOR[selectedGenerator.speed] ?? ""}`}>
-                    ⚡ {SPEED_LABEL[selectedGenerator.speed] ?? selectedGenerator.speed}
-                  </span>
-                  <span className={`px-1 rounded ${ACC_BADGE[selectedGenerator.accuracy] ?? ""}`}>
-                    {ACC_LABEL[selectedGenerator.accuracy] ?? selectedGenerator.accuracy}
-                  </span>
+                  <span>{selectedGenerators.map(m => m.provider).slice(0, 2).join(" / ")}</span>
+                  <span className="text-indigo-300">已选 {selectedGenerators.length}</span>
                 </div>
               </div>
             </div>
@@ -197,12 +211,64 @@ export function ModelSelector({
 
         <ModelPicker
           models={models}
-          selectedId={selectedGeneratorId}
-          onChange={onGeneratorChange}
+          selectedIds={selectedGeneratorIds}
+          onMultiChange={onGeneratorChange}
+          multiple
+          maxSelected={6}
           title="选择生成器模型"
           subtitle={generatorSubtitle}
           open={generatorPickerOpen}
           onClose={() => setGeneratorPickerOpen(false)}
+          availableModelIds={availableModelIds}
+        />
+      </div>
+
+      {/* Evaluator model picker */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-white/60 flex items-center gap-1.5">
+            <ScanSearch size={13} />
+            评价模型
+            <span className="text-xs text-white/70">（可选，最多 6 个）</span>
+          </h3>
+        </div>
+        <button
+          onClick={() => setEvaluatorPickerOpen(true)}
+          aria-label="选择评价模型 Open evaluator model picker"
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-violet-500/30 hover:bg-white/[0.06] text-sm text-white transition-all group"
+        >
+          {selectedEvaluators.length > 0 ? (
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/15 shrink-0">
+                <ScanSearch size={14} className="text-violet-300" />
+              </div>
+              <div className="text-left min-w-0">
+                <div className="font-medium text-white truncate">
+                  {selectedEvaluators.length === 1
+                    ? selectedEvaluators[0].name
+                    : `${selectedEvaluators[0].name} +${selectedEvaluators.length - 1}`}
+                </div>
+                <div className="text-[11px] text-white/65">
+                  0-100 分评审 · 已选 {selectedEvaluators.length}/6
+                </div>
+              </div>
+            </div>
+          ) : (
+            <span className="text-white/65">可选：点击选择评价模型，未选时自动挑选</span>
+          )}
+          <ChevronRight size={16} className="text-white/70 group-hover:text-violet-300 transition-colors shrink-0" />
+        </button>
+
+        <ModelPicker
+          models={models}
+          selectedIds={selectedEvaluatorIds}
+          onMultiChange={onEvaluatorChange}
+          multiple
+          maxSelected={6}
+          title="选择评价模型"
+          subtitle={evaluatorSubtitle}
+          open={evaluatorPickerOpen}
+          onClose={() => setEvaluatorPickerOpen(false)}
           availableModelIds={availableModelIds}
         />
       </div>

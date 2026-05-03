@@ -254,3 +254,59 @@ Remote verification and release are complete:
 - Production Smoke Test run `25282673405` passed, including real generation through Groq fallback.
 
 Next step: when the user gives more GitHub prompt-source projects, follow `context/PROMPT_SOURCE_AUTOSYNC.md`; keep new source groups separate and add their own sync/status/runtime integration.
+
+## Latest Work — Multi-Generator Evaluation and Cross-Platform Downloads, 2026-05-04
+
+User asked to fix the generator picker scroll issue, add multi-generator and manual judge-model selection, sync 10 more prompt-source repositories, and expand downloads to macOS / all computer systems / Android.
+
+What changed:
+
+- `src/components/ModelPicker.tsx`
+  - Multi-select support.
+  - Header/filter wheel events now scroll the model list.
+  - Selected count and Done button for multi-select.
+- `src/components/ModelSelector.tsx`
+  - Generator models: up to 6.
+  - Evaluator models: up to 6.
+- `src/components/PromptGenerator.tsx`
+  - Tracks `generatorModelIds` and `evaluatorModelIds`.
+  - Sends both arrays to `/api/generate`.
+- `src/app/api/generate/route.ts`
+  - Runs a prompt tournament for normal targets when multiple generators or evaluators are selected.
+  - Keeps GPT Image 2 on the four-source ensemble path.
+- `src/lib/prompt-evaluator.ts`
+  - Generates candidates from selected generators.
+  - Scores with selected/auto judge models.
+  - Aggregates 0-100 scores and returns the best candidate.
+- `src/components/ResultPanel.tsx`
+  - Shows visual score bars and selected candidate.
+- `scripts/sync-prompt-library-sources.cjs`
+  - Syncs 10 new prompt-library repos into `E:\AI工作台\资料 Sources\prompt-library`.
+- `src/lib/prompt-source-library-status.ts`
+  - Generated status and scoring rubric.
+- `.github/workflows/sync-prompt-sources.yml`
+  - Runs `npm run sources:all`.
+- Download / release:
+  - Added mac routes: `/api/download/mac`, `/api/download/mac/portable`.
+  - Added Linux route: `/api/download/linux`.
+  - Download page shows Windows installer, Windows portable, macOS DMG/ZIP, Linux AppImage, Android PWA.
+  - Desktop Release workflow has Windows, macOS, and Linux jobs.
+
+Important boundary:
+
+- There is no true one-file portable app that works unchanged on every OS. Current implementation uses platform-specific packages: Windows EXE, macOS ZIP/DMG, Linux AppImage, Android PWA.
+- Native Android APK is not built yet.
+
+Validated locally:
+
+- `npx tsc --noEmit`
+- `git diff --check`
+- `npm run build`
+- `npm run desktop:verify`
+- `npm run test:quality` — 4/4
+- `npx playwright test --project=chromium` — 12/12
+
+Workbench updates outside git:
+
+- `E:\AI工作台\AI自我改进工作流.md`
+- `E:\AI工作台\工具 Tools\ai-chain.ps1` gained `prompt-sources` and `self-improve`.

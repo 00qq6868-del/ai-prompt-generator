@@ -112,7 +112,7 @@ test.describe("Quality and accessibility audit", () => {
     }
   });
 
-  test("download page exposes the Windows desktop download entry", async ({
+test("download page exposes desktop and mobile download entries", async ({
     page,
   }) => {
     await page.goto("/download");
@@ -127,6 +127,22 @@ test.describe("Quality and accessibility audit", () => {
     await expect(page.getByRole("link", { name: /下载便携版/ })).toHaveAttribute(
       "href",
       "/api/download/windows/portable"
+    );
+    await expect(page.getByRole("link", { name: /下载 Mac 版/ })).toHaveAttribute(
+      "href",
+      "/api/download/mac"
+    );
+    await expect(page.getByRole("link", { name: /Mac 便携 ZIP/ })).toHaveAttribute(
+      "href",
+      "/api/download/mac/portable"
+    );
+    await expect(page.getByRole("link", { name: /下载 Linux AppImage/ })).toHaveAttribute(
+      "href",
+      "/api/download/linux"
+    );
+    await expect(page.getByRole("link", { name: /打开并安装 PWA/ })).toHaveAttribute(
+      "href",
+      "/"
     );
     await expect(page.getByRole("link", { name: /查看发布页/ })).toBeVisible();
   });

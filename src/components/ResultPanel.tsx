@@ -19,6 +19,20 @@ interface Meta {
   reviewSummary?: string;
   judgeModels?: string[];
   selectedStrategy?: string;
+  promptEvaluation?: {
+    candidates: Array<{
+      id: string;
+      generatorModelId: string;
+      generatorModelName: string;
+      averageScore: number;
+      rank: number;
+      scores: Array<{ judgeModel: string; score: number; reason: string }>;
+    }>;
+    judgeModels: string[];
+    selectedCandidateId: string;
+    summary: string;
+    sourceCommits?: string[];
+  };
 }
 
 interface Props {
@@ -159,6 +173,51 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
                 {meta.reviewSummary}
                 {meta.selectedStrategy && (
                   <span className="text-white/45"> · {meta.selectedStrategy}</span>
+                )}
+              </div>
+            )}
+            {meta.promptEvaluation && (
+              <div className="mx-5 mt-4 rounded-xl border border-white/10 bg-white/[0.035] p-3">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-xs font-semibold text-white/80">
+                    AI 评价打分 Evaluation
+                  </div>
+                  <div className="text-[10px] text-white/50">
+                    满分 100 · {meta.promptEvaluation.judgeModels.length || 0} 个评价模型
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {meta.promptEvaluation.candidates.slice(0, 6).map((candidate) => {
+                    const score = Math.round(candidate.averageScore);
+                    const selected = candidate.id === meta.promptEvaluation?.selectedCandidateId;
+                    return (
+                      <div key={candidate.id} className={`rounded-lg border px-3 py-2 ${selected ? "border-indigo-400/40 bg-indigo-500/10" : "border-white/8 bg-white/[0.025]"}`}>
+                        <div className="mb-1 flex items-center justify-between gap-3">
+                          <div className="min-w-0 truncate text-xs text-white/75">
+                            #{candidate.rank} {candidate.generatorModelName}
+                            {selected && <span className="ml-2 text-indigo-300">已采用 Selected</span>}
+                          </div>
+                          <div className="font-mono text-xs font-semibold text-white">{score}/100</div>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-white/8">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                            style={{ width: `${Math.max(0, Math.min(100, score))}%` }}
+                          />
+                        </div>
+                        {candidate.scores[0]?.reason && (
+                          <div className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-white/50">
+                            {candidate.scores[0].reason}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {meta.promptEvaluation.summary && (
+                  <div className="mt-2 text-[10px] leading-4 text-white/55">
+                    {meta.promptEvaluation.summary}
+                  </div>
                 )}
               </div>
             )}

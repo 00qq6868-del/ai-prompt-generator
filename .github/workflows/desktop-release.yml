@@ -72,3 +72,118 @@ jobs:
             dist-electron/*.exe
             dist-electron/*.blockmap
           retention-days: 14
+
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: windows
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS app
+        run: npm run electron:build:mac
+        env:
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          tag="${{ inputs.tag }}"
+          if [ -z "$tag" ]; then
+            version=$(node -p "require('./package.json').version")
+            tag="desktop-v$version"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "AI 提示词生成器 $TAG" --notes "Desktop releases."
+          for asset in $(gh release view "$TAG" --json assets --jq '.assets[].name'); do
+            case "$asset" in
+              *.dmg|*.zip)
+                gh release delete-asset "$TAG" "$asset" -y || true
+                ;;
+            esac
+          done
+          gh release upload "$TAG" dist-electron/*.dmg --clobber
+          if ls dist-electron/*.zip >/dev/null 2>&1; then
+            gh release upload "$TAG" dist-electron/*.zip --clobber
+          fi
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-desktop
+          path: |
+            dist-electron/*.dmg
+            dist-electron/*.zip
+          retention-days: 14
+
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: windows
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Linux AppImage
+        run: npm run electron:build:linux
+        env:
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          tag="${{ inputs.tag }}"
+          if [ -z "$tag" ]; then
+            version=$(node -p "require('./package.json').version")
+            tag="desktop-v$version"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "AI 提示词生成器 $TAG" --notes "Desktop releases."
+          for asset in $(gh release view "$TAG" --json assets --jq '.assets[].name'); do
+            case "$asset" in
+              *.AppImage)
+                gh release delete-asset "$TAG" "$asset" -y || true
+                ;;
+            esac
+          done
+          gh release upload "$TAG" dist-electron/*.AppImage --clobber
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-desktop
+          path: dist-electron/*.AppImage
+          retention-days: 14

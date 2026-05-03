@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Star, Zap } from "lucide-react";
+import { Check, Search, X, Star, Zap } from "lucide-react";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
 
 const STORAGE_KEY_FAVORITES = "ai_prompt_model_favorites";
@@ -46,8 +46,12 @@ const PROVIDER_TABS = [
 
 interface ModelPickerProps {
   models: ModelInfo[];
-  selectedId: string;
-  onChange: (id: string) => void;
+  selectedId?: string;
+  selectedIds?: string[];
+  onChange?: (id: string) => void;
+  onMultiChange?: (ids: string[]) => void;
+  multiple?: boolean;
+  maxSelected?: number;
   title: string;
   subtitle?: string;
   open: boolean;
@@ -58,13 +62,18 @@ interface ModelPickerProps {
 export function ModelPicker({
   models,
   selectedId,
+  selectedIds,
   onChange,
+  onMultiChange,
+  multiple = false,
+  maxSelected = 6,
   title,
   subtitle,
   open,
   onClose,
   availableModelIds,
 }: ModelPickerProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState("");
   const [provider, setProvider] = useState("全部");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -153,9 +162,36 @@ export function ModelPicker({
     [availableModelIds]
   );
 
+  const selectedSet = useMemo(() => {
+    if (multiple) return new Set(selectedIds ?? []);
+    return new Set(selectedId ? [selectedId] : []);
+  }, [multiple, selectedId, selectedIds]);
+
   const handleSelect = (id: string) => {
-    onChange(id);
+    if (availableSet && !availableSet.has(id)) return;
+
+    if (multiple) {
+      const current = selectedIds ?? [];
+      if (current.includes(id)) {
+        onMultiChange?.(current.filter(item => item !== id));
+        return;
+      }
+      if (current.length >= maxSelected) return;
+      onMultiChange?.([...current, id]);
+      return;
+    }
+
+    onChange?.(id);
     onClose();
+  };
+
+  const forwardWheelToList = (event: React.WheelEvent) => {
+    if (!scrollRef.current) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("input, textarea, select")) return;
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    event.preventDefault();
+    scrollRef.current.scrollTop += event.deltaY;
   };
 
   return (
@@ -165,7 +201,7 @@ export function ModelPicker({
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          className="fixed inset-0 z-50 flex flex-col bg-[#08080f]"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#08080f]"
           style={{ height: "100dvh" }}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -173,7 +209,7 @@ export function ModelPicker({
           transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {/* Top bar */}
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 shrink-0">
+          <div onWheel={forwardWheelToList} className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 shrink-0">
             <div>
               <h2 className="text-base font-bold text-white">{title}</h2>
               {subtitle && <p className="text-[11px] text-white/65 mt-0.5">{subtitle}</p>}
@@ -188,7 +224,7 @@ export function ModelPicker({
           </div>
 
           {/* Search + filters */}
-          <div className="border-b border-white/[0.07] px-6 py-3 space-y-3 shrink-0">
+          <div onWheel={forwardWheelToList} className="border-b border-white/[0.07] px-6 py-3 space-y-3 shrink-0">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70" />
               <input
@@ -230,10 +266,10 @@ export function ModelPicker({
                       role="tab"
                       aria-selected={provider === p}
                       onClick={() => setProvider(p)}
-                      className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap transition-all shrink-0
+                      className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap break-keep transition-all shrink-0
                         ${provider === p
                           ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/70 hover:text-white/50 border border-transparent"
+                          : "text-white/85 hover:text-white border border-transparent"
                         }`}
                     >
                       {p} {count > 0 && <span className="opacity-50">{count}</span>}
@@ -245,7 +281,7 @@ export function ModelPicker({
           </div>
 
           {/* Model grid */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
             <div className="mx-auto max-w-5xl px-6 py-4">
               {filtered.length === 0 ? (
                 <div className="text-center text-white/70 text-sm py-16">
@@ -258,10 +294,11 @@ export function ModelPicker({
                       key={m.id}
                       model={m}
                       score={score}
-                      isSelected={m.id === selectedId}
+                      isSelected={selectedSet.has(m.id)}
                       isFavorite={favorites.has(m.id)}
                       isTop={topIds.has(m.id)}
                       isAvailable={availableSet ? availableSet.has(m.id) : true}
+                      multiple={multiple}
                       onSelect={() => handleSelect(m.id)}
                       onToggleFavorite={() => toggleFavorite(m.id)}
                     />
@@ -273,12 +310,23 @@ export function ModelPicker({
 
           {/* Bottom status */}
           <div className="border-t border-white/[0.07] px-6 py-3 shrink-0">
-            <div className="flex items-center justify-between text-[11px] text-white/70">
-              <span>共 {filtered.length} 个文本模型</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-white/70">
+              <span>
+                共 {filtered.length} 个文本模型
+                {multiple && <span className="text-indigo-300"> · 已选 {selectedSet.size}/{maxSelected}</span>}
+              </span>
               {availableSet && (
                 <span className="text-emerald-400/70">
                   中转站可用: {availableSet.size} 个
                 </span>
+              )}
+              {multiple && (
+                <button
+                  onClick={onClose}
+                  className="ml-auto rounded-lg border border-indigo-500/30 bg-indigo-500/20 px-3 py-1.5 text-xs font-medium text-indigo-200 hover:bg-indigo-500/30"
+                >
+                  完成 Done
+                </button>
               )}
             </div>
           </div>
@@ -295,6 +343,7 @@ function PickerCard({
   isFavorite,
   isTop,
   isAvailable,
+  multiple,
   onSelect,
   onToggleFavorite,
 }: {
@@ -304,6 +353,7 @@ function PickerCard({
   isFavorite: boolean;
   isTop: boolean;
   isAvailable: boolean;
+  multiple: boolean;
   onSelect: () => void;
   onToggleFavorite: () => void;
 }) {
@@ -315,6 +365,7 @@ function PickerCard({
       onClick={onSelect}
       aria-label={`${m.name} — ${m.provider}`}
       aria-pressed={isSelected}
+      disabled={!isAvailable}
       className={`relative text-left rounded-2xl border p-4 transition-all duration-200
         ${isSelected
           ? "border-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30"
@@ -333,6 +384,11 @@ function PickerCard({
         {m.isLatest && (
           <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded-full">
             最新
+          </span>
+        )}
+        {multiple && isSelected && (
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-white">
+            <Check size={10} />
           </span>
         )}
         <button

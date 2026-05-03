@@ -16,6 +16,7 @@ interface GptImage2EnsembleOptions {
   models: ModelInfo[];
   userKeys: Record<string, string>;
   availableModelIds?: string[];
+  evaluatorModelIds?: string[];
   maxTokens: number;
 }
 
@@ -30,6 +31,20 @@ export interface GptImage2EnsembleResult {
     judgeModels: string[];
     selectedStrategy: string;
     sourceCommits: string[];
+    promptEvaluation?: {
+      candidates: Array<{
+        id: string;
+        generatorModelId: string;
+        generatorModelName: string;
+        averageScore: number;
+        rank: number;
+        scores: Array<{ judgeModel: string; score: number; reason: string }>;
+      }>;
+      judgeModels: string[];
+      selectedCandidateId: string;
+      summary: string;
+      sourceCommits: string[];
+    };
   };
 }
 
@@ -282,6 +297,12 @@ function selectJudgeModels(opts: GptImage2EnsembleOptions): Array<{ model: Model
     seen.add(model.id);
   };
 
+  for (const id of opts.evaluatorModelIds ?? []) {
+    add(opts.models.find((m) => m.id === id));
+    if (chosen.length >= 6) return chosen;
+  }
+  if (chosen.length > 0) return chosen;
+
   for (const id of JUDGE_PREFERENCE) {
     add(opts.models.find((m) => m.id === id));
     if (chosen.length >= 3) return chosen;
@@ -437,6 +458,22 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
       judgeModels: judgePlans.map((p) => p.model.name),
       selectedStrategy,
       sourceCommits: [...GPT_IMAGE_2_SOURCE_COMMITS],
+      promptEvaluation: {
+        candidates: averages.map((item, index) => ({
+          id: item.candidate.id,
+          generatorModelId: item.candidate.id,
+          generatorModelName: item.candidate.label,
+          averageScore: item.average,
+          rank: index + 1,
+          scores: item.average > 0
+            ? [{ judgeModel: "Average", score: item.average, reason: item.candidate.label }]
+            : [],
+        })),
+        judgeModels: judgePlans.map((p) => p.model.name),
+        selectedCandidateId: top.candidate.id,
+        summary: `GPT Image 2 source strategy scores: ${scoreText || "fallback selected"}.`,
+        sourceCommits: [...GPT_IMAGE_2_SOURCE_COMMITS],
+      },
     },
   };
 }
