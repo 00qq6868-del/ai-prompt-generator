@@ -237,4 +237,20 @@ Local verification passed:
   - `dist-electron/AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
   - `dist-electron/AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
 
-Next step: commit, push, wait for GitHub E2E, run the `Desktop Release` workflow, then verify production download redirects for both installer and portable assets.
+Remote verification and release are complete:
+
+- Pushed `d06486e feat: automate prompt source sync and portable desktop`.
+- GitHub E2E run `25282442312` passed cleanly: 12/12.
+- Vercel production deployment for `d06486e` succeeded.
+- Desktop Release workflow run `25282500662` passed.
+- GitHub Release `desktop-v1.0.0` contains:
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe.blockmap`
+- `https://www.myprompt.asia/download` returns HTTP 200 and shows both installer and portable options.
+- `/api/download/windows` redirects to the setup installer.
+- `/api/download/windows/portable` redirects to the portable EXE.
+- Manual Sync Prompt Sources workflow run `25282673189` passed.
+- Production Smoke Test run `25282673405` passed, including real generation through Groq fallback.
+
+Next step: when the user gives more GitHub prompt-source projects, follow `context/PROMPT_SOURCE_AUTOSYNC.md`; keep new source groups separate and add their own sync/status/runtime integration.

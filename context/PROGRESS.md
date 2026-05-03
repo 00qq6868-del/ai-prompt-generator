@@ -720,9 +720,17 @@ Verified locally:
   - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
   - `AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
 
-Pending:
+Completed remotely:
 
-- Commit and push.
-- Verify GitHub E2E.
-- Run `Desktop Release` workflow after push so GitHub Releases gets both installer and portable EXE.
-- Verify production `/download`, installer redirect, and portable redirect after Vercel deploy/release upload.
+- Pushed `d06486e feat: automate prompt source sync and portable desktop`.
+- GitHub E2E run `25282442312` passed cleanly: 12/12.
+- Vercel production deployment for `d06486e` succeeded.
+- Desktop Release workflow run `25282500662` passed.
+- Release `desktop-v1.0.0` now has both installer and portable EXE:
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe`
+  - `AI-Prompt-Generator-Portable-1.0.0-win-x64.exe`
+- Production `/download` returns HTTP 200 and includes both download choices.
+- `/api/download/windows` redirects to the setup installer.
+- `/api/download/windows/portable` redirects to the portable EXE.
+- Manual `Sync Prompt Sources` workflow run `25282673189` passed.
+- Production Smoke Test run `25282673405` passed, including real generation through Groq fallback.

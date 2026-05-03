@@ -964,6 +964,27 @@ Notes:
 - It still needs internet access to call cloud APIs or a reachable relay/base URL unless the user configures a local provider such as Ollama.
 - Future source groups should follow `context/PROMPT_SOURCE_AUTOSYNC.md` and should not be blindly mixed into GPT Image 2 logic.
 
+Final GitHub / production verification:
+
+- Pushed `d06486e feat: automate prompt source sync and portable desktop`.
+- GitHub E2E run `25282442312` passed cleanly: 12/12.
+- Vercel production deployment for `d06486e` succeeded at `2026-05-03T14:57:37Z`.
+- Desktop Release run `25282500662` passed.
+- GitHub Release `desktop-v1.0.0` now contains:
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe` — 79,243,965 bytes
+  - `AI-Prompt-Generator-Portable-1.0.0-win-x64.exe` — 79,050,371 bytes
+  - `AI-Prompt-Generator-Setup-1.0.0-win-x64.exe.blockmap`
+- Production `/download` returns HTTP 200 and contains both installer and portable download entries.
+- Production `/api/download/windows` redirects to the setup installer.
+- Production `/api/download/windows/portable` redirects to the portable EXE.
+- Manual `Sync Prompt Sources` workflow run `25282673189` passed; no source-status commit was needed because upstream commits were unchanged.
+- Production Smoke Test run `25282673405` passed:
+  - homepage ok
+  - models ok: `266` total, `{ text: 245, video: 7, image: 7, tts: 7 }`
+  - analytics ok
+  - relay probe ok: `221` models
+  - real generation ok through Groq fallback after Google failed.
+
 Rules for next AI:
 
 - Do not copy the full four upstream repos into this project.
