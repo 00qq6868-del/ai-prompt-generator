@@ -421,3 +421,40 @@ Verified:
 Future caution:
 
 - If someone edits `.github/workflows/desktop-release.yml`, do not put `ELECTRON_MIRROR` back into the mac job unless the dmg-builder artifact URL is checked in the Actions log.
+
+## Current Handoff — 2026-05-04 Generation Reliability
+
+Latest local work adds automatic handling for unstable relay/model calls and visible waiting estimates on the generation UI.
+
+Files changed:
+
+- `src/lib/model-health.ts`
+- `src/lib/prompt-evaluator.ts`
+- `src/lib/gpt-image-2-ensemble.ts`
+- `src/app/api/generate/route.ts`
+- `src/components/PromptGenerator.tsx`
+- `src/components/ResultPanel.tsx`
+- `context/PROGRESS.md`
+- `context/SESSION_LOG.md`
+- `context/CODEX_HANDOFF.md`
+
+Behavior now expected:
+
+- A model/provider that times out, rate-limits, returns upstream/5xx/network errors, or returns access/model errors is recorded as unhealthy and cooled for a short period.
+- Cooldown is automatic and temporary. A later success resets the model to healthy.
+- Multi-generator and judge workflows continue when some models fail.
+- GPT Image 2 ensemble continues when judges or synthesis fail, as long as candidate prompt generation succeeded.
+- Single-model generation retries once with a healthy fallback if the primary model fails before streaming any text.
+- UI shows generation phase, elapsed time, and estimated remaining time while waiting.
+
+Validation already run locally:
+
+- `npx tsc --noEmit`
+- `npm run build`
+- `npm run test:quality`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium`
+- `npx playwright test --project=mobile`
+
+Important limitation:
+
+- `model-health.ts` uses in-memory state. It is free and simple, but not shared across Vercel instances and resets on server restart. A persistent Redis/Vercel KV health registry would be the next upgrade if the user wants cross-instance memory.

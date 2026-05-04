@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Languages } from "lucide-react";
+import { Sparkles, Languages, Clock } from "lucide-react";
 import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
@@ -64,6 +64,11 @@ interface GenerateResult {
     reviewSummary?: string;
     judgeModels?: string[];
     selectedStrategy?: string;
+    modelHealth?: {
+      skippedCooling?: Array<{ modelId: string; modelName?: string; cooldownUntil: number; lastError: string }>;
+      failed?: Array<{ modelId: string; modelName?: string; lastError: string }>;
+      successful?: Array<{ modelId: string; modelName?: string; latencyMs: number }>;
+    };
     promptEvaluation?: {
       candidates: Array<{
         id: string;
@@ -82,6 +87,15 @@ interface GenerateResult {
   generatorModelCost: { input: number; output: number };
 }
 
+interface GenerationProgress {
+  phase: string;
+  current?: number;
+  total?: number;
+  etaSec?: number;
+  elapsedSec?: number;
+  message?: string;
+}
+
 function loadProbeCache(): string[] | null {
   if (typeof window === "undefined") return null;
   try {
@@ -95,6 +109,21 @@ function loadProbeCache(): string[] | null {
   }
 }
 
+function formatDuration(sec: number): string {
+  const safeSec = Math.max(0, Math.round(sec));
+  if (safeSec < 60) return `${safeSec} 秒`;
+  const minutes = Math.floor(safeSec / 60);
+  const seconds = safeSec % 60;
+  return seconds ? `${minutes} 分 ${seconds} 秒` : `${minutes} 分钟`;
+}
+
+function estimateTotalSeconds(targetModelId: string, generatorCount: number, evaluatorCount: number): number {
+  const target = targetModelId.toLowerCase();
+  if (target.includes("gpt-image-2") || target.includes("gpt image 2")) return 90;
+  if (generatorCount > 1 || evaluatorCount > 0) return 65;
+  return 35;
+}
+
 export function PromptGenerator() {
   const [idea, setIdea]           = useState("");
   const [language, setLanguage]   = useState<"zh" | "en">("zh");
@@ -104,8 +133,20 @@ export function PromptGenerator() {
   const [loading, setLoading]     = useState(false);
   const [availableModelIds, setAvailableModelIds] = useState<string[] | undefined>(undefined);
   const [streamingText, setStreamingText] = useState("");
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
   const [result, setResult]       = useState<GenerateResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!loading) return;
+    const startedAt = Date.now();
+    setElapsedSec(0);
+    const timer = window.setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [loading]);
 
   useEffect(() => {
     const userKeys = loadUserKeys();
@@ -247,7 +288,17 @@ export function PromptGenerator() {
     setLoading(true);
     setResult(null);
     setStreamingText("");
-    const tid = toast.loading("AI 正在生成优化提示词…");
+    const estimatedTotalSec = estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length);
+    setElapsedSec(0);
+    setGenerationProgress({
+      phase: "准备生成",
+      current: 0,
+      total: 1,
+      etaSec: estimatedTotalSec,
+      elapsedSec: 0,
+      message: "接口不稳定时会自动跳过并稍后重试。",
+    });
+    const tid = toast.loading(`AI 正在生成优化提示词…预计 ${formatDuration(estimatedTotalSec)} 内完成`);
     const requestStartedAt = performance.now();
     let responseStatus = 0;
     let apiCallTracked = false;
@@ -321,7 +372,21 @@ export function PromptGenerator() {
 
             try {
               const event = JSON.parse(jsonStr);
-              if (event.t === "chunk") {
+              if (event.t === "progress") {
+                const nextProgress: GenerationProgress = {
+                  phase: typeof event.phase === "string" ? event.phase : "正在生成",
+                  current: typeof event.current === "number" ? event.current : undefined,
+                  total: typeof event.total === "number" ? event.total : undefined,
+                  etaSec: typeof event.etaSec === "number" ? event.etaSec : undefined,
+                  elapsedSec: typeof event.elapsedSec === "number" ? event.elapsedSec : undefined,
+                  message: typeof event.message === "string" ? event.message : undefined,
+                };
+                setGenerationProgress(nextProgress);
+                toast.loading(
+                  `${nextProgress.phase}…${typeof nextProgress.etaSec === "number" ? `预计还需 ${formatDuration(nextProgress.etaSec)}` : ""}`,
+                  { id: tid },
+                );
+              } else if (event.t === "chunk") {
                 trackFirstToken();
                 accumulated += event.c;
                 setStreamingText(accumulated);
@@ -334,6 +399,7 @@ export function PromptGenerator() {
                 trackGenerateCall(true, res.status);
                 setResult(event.data);
                 setStreamingText("");
+                setGenerationProgress(null);
                 toast.dismiss(tid);
                 toast.success("提示词生成成功！/ Prompt generated!");
                 saveHistory({ userIdea: idea, optimizedPrompt: event.data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
@@ -358,6 +424,7 @@ export function PromptGenerator() {
             generatorModelCost: { input: 0, output: 0 },
           });
           setStreamingText("");
+          setGenerationProgress(null);
           toast.dismiss(tid);
           toast.success("提示词生成成功！/ Prompt generated!");
           saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
@@ -367,6 +434,7 @@ export function PromptGenerator() {
         if (!data.optimizedPrompt) throw new Error("返回数据异常 Invalid response data");
         trackGenerateCall(true, res.status);
         setResult(data);
+        setGenerationProgress(null);
         toast.dismiss(tid);
         toast.success("提示词生成成功！/ Prompt generated!");
         saveHistory({ userIdea: idea, optimizedPrompt: data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
@@ -375,6 +443,7 @@ export function PromptGenerator() {
     } catch (err: any) {
       trackGenerateCall(false);
       trackError(err.message ?? "生成失败 Generate failed");
+      setGenerationProgress(null);
       toast.dismiss(tid);
       toast.error(err.message ?? "生成失败，请检查 API Key / Generation failed, check your API Key");
     } finally {
@@ -386,7 +455,17 @@ export function PromptGenerator() {
   const approxTokens = Math.ceil(charCount / (language === "zh" ? 1.8 : 4));
   const recommendation = recommendModel(idea);
 
-  const showStreamingPreview = loading && streamingText.length > 0;
+  const renderEstimatedTotalSec = estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length);
+  const remainingSec =
+    typeof generationProgress?.etaSec === "number"
+      ? generationProgress.etaSec
+      : Math.max(0, renderEstimatedTotalSec - elapsedSec);
+  const progressPhase = generationProgress?.phase ?? "正在生成优化提示词";
+  const progressCount =
+    typeof generationProgress?.current === "number" && typeof generationProgress?.total === "number" && generationProgress.total > 0
+      ? `${generationProgress.current}/${generationProgress.total}`
+      : "";
+  const showStreamingPreview = loading && (streamingText.length > 0 || Boolean(generationProgress));
 
   return (
     <div className="space-y-6">
@@ -477,7 +556,9 @@ export function PromptGenerator() {
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full"
             />
-            AI 正在生成优化提示词…
+            <span className="min-w-0 max-w-full truncate">
+              {progressPhase} · 已等 {formatDuration(elapsedSec)} · 预计还需 {formatDuration(remainingSec)}
+            </span>
           </>
         ) : (
           <>
@@ -506,14 +587,22 @@ export function PromptGenerator() {
             transition={{ duration: 0.25 }}
           >
             <div className="relative rounded-2xl border border-indigo-500/20 bg-indigo-950/40 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-white/[0.03]">
-                <div className="flex items-center gap-2 text-xs text-white/50">
+              <div className="flex flex-col gap-2 px-4 py-2.5 border-b border-white/5 bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2 text-xs text-white/50">
                   <motion.div
                     animate={{ opacity: [0.4, 1, 0.4] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                     className="w-2 h-2 rounded-full bg-indigo-400"
                   />
-                  <span className="text-indigo-400 font-medium">正在生成中 Streaming...</span>
+                  <span className="truncate text-indigo-400 font-medium">
+                    {progressPhase}{progressCount ? ` ${progressCount}` : ""}
+                  </span>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5 text-[10px] text-white/55">
+                  <Clock size={12} />
+                  <span>已等 {formatDuration(elapsedSec)}</span>
+                  <span>·</span>
+                  <span>预计还需 {formatDuration(remainingSec)}</span>
                 </div>
               </div>
               <pre
@@ -522,7 +611,7 @@ export function PromptGenerator() {
                 aria-label="流式生成预览 Streaming preview"
                 className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto"
               >
-                {streamingText}
+                {streamingText || generationProgress?.message || "正在等待模型返回结果，慢模型会被自动跳过，不会拖垮整次生成。"}
                 <motion.span
                   animate={{ opacity: [1, 0] }}
                   transition={{ duration: 0.5, repeat: Infinity }}

@@ -1203,3 +1203,49 @@ Update — 2026-05-04:
 - Validation:
   - `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
   - Server startup was tested with `NO_OPEN_BROWSER=1`; it successfully bound to a local `127.0.0.1` URL.
+
+---
+
+## 2026-05-04 — Production Generation Stability + ETA
+
+User showed a production failure toast and asked for unstable relay/API/model behavior to be handled automatically, plus faster perceived generation with an estimated wait/countdown.
+
+Changes made:
+
+- Added `src/lib/model-health.ts`.
+  - Tracks model/provider health in memory.
+  - Cooldown after unstable errors, timeouts, 429, 5xx, upstream/network failures, or access/model errors.
+  - Success resets cooldown so the model can be used again.
+  - Default timeouts: simple 60s, generator 45s, judge 30s.
+- Updated `src/app/api/generate/route.ts`.
+  - SSE now supports `progress` events.
+  - Single-model generation can skip a cooling model and choose a healthy fallback.
+  - If the primary single model fails before streaming text, it retries once with a healthy fallback.
+  - Multi-model and GPT Image 2 routes now stream progress instead of staying silent until the final prompt.
+- Updated `src/lib/prompt-evaluator.ts`.
+  - Skips cooling generator/judge models.
+  - Records successes/failures.
+  - Continues when some models fail.
+  - If all selected generators fail, tries one healthy fallback generator before returning an error.
+- Updated `src/lib/gpt-image-2-ensemble.ts`.
+  - Skips cooling generator/judge models.
+  - Switches to a healthy generator if the chosen one is cooling or fails early.
+  - Judge and synthesis failures no longer kill the whole GPT Image 2 prompt result when a candidate exists.
+- Updated `src/components/PromptGenerator.tsx`.
+  - Shows phase, elapsed time, and estimated remaining time.
+  - Shows a status panel even before text chunks arrive.
+  - Toasts update with backend phase and ETA.
+- Updated `src/components/ResultPanel.tsx`.
+  - Shows when unstable models were cooled/skipped or failed without interrupting output.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npm run build` passed. Note: an earlier parallel build collided with Playwright's dev server cache and failed on `/_document`; rerunning build alone passed.
+- `npm run test:quality` passed: 5/5 Chromium.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 8/8.
+- `npx playwright test --project=mobile` passed: 13/13.
+
+Known boundary:
+
+- No database was added. The cooldown memory is per server process/instance, so it resets on server restart or Vercel instance replacement. This keeps the feature free and safe for now.

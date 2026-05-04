@@ -2,10 +2,28 @@ import { callProvider, GenerateResult } from "@/lib/providers";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
 import { resolveRuntimeApiProvider } from "@/lib/gpt-image-2-ensemble";
 import {
+  ModelHealthIssue,
+  ModelHealthMeta,
+  getTimeoutMs,
+  recordModelFailure,
+  recordModelSuccess,
+  splitCoolingPlans,
+  withTimeout,
+} from "@/lib/model-health";
+import {
   PROMPT_EVALUATION_RUBRIC,
   PROMPT_SOURCE_LIBRARY_COMMITS,
   PROMPT_SOURCE_LIBRARY_STATUS,
 } from "@/lib/prompt-source-library-status";
+
+export interface PromptGenerationProgress {
+  phase: string;
+  current?: number;
+  total?: number;
+  etaSec?: number;
+  elapsedSec?: number;
+  message?: string;
+}
 
 interface PromptTournamentOptions {
   userIdea: string;
@@ -19,6 +37,7 @@ interface PromptTournamentOptions {
   systemPrompt: string;
   userPrompt: string;
   maxTokens: number;
+  onProgress?: (event: PromptGenerationProgress) => void;
 }
 
 interface Candidate {
@@ -73,6 +92,7 @@ export interface PromptTournamentResult {
     judgeModels: string[];
     selectedStrategy: string;
     promptEvaluation: PromptEvaluationReport;
+    modelHealth: ModelHealthMeta;
   };
 }
 
@@ -139,6 +159,50 @@ function modelCost(model: ModelInfo, result: GenerateResult): number {
     result.inputTokens * (model.inputCostPer1M / 1_000_000) +
     result.outputTokens * (model.outputCostPer1M / 1_000_000)
   );
+}
+
+function progress(opts: PromptTournamentOptions, startedAt: number, event: Omit<PromptGenerationProgress, "elapsedSec">) {
+  opts.onProgress?.({
+    elapsedSec: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
+    ...event,
+  });
+}
+
+function estimateTournamentEtaSec(phase: "generators" | "judges" | "final", total: number, current: number): number {
+  if (phase === "generators") return Math.max(10, 45 - Math.floor((current / Math.max(total, 1)) * 24));
+  if (phase === "judges") return Math.max(8, 30 - Math.floor((current / Math.max(total, 1)) * 18));
+  return 5;
+}
+
+function planModels(models: ModelInfo[], opts: PromptTournamentOptions): Array<{ model: ModelInfo; apiProvider: string }> {
+  return models
+    .slice(0, 6)
+    .map((model) => ({
+      model,
+      apiProvider: resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds),
+    }))
+    .filter((plan) => isProviderCallable(plan.apiProvider, opts.userKeys));
+}
+
+function selectFallbackGeneratorPlans(
+  opts: PromptTournamentOptions,
+  existingModelIds: Set<string>,
+  needed: number,
+): { plans: Array<{ model: ModelInfo; apiProvider: string }>; skippedCooling: ModelHealthIssue[] } {
+  if (needed <= 0) return { plans: [], skippedCooling: [] };
+  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
+  const candidates = opts.models
+    .filter((model) => (model.category ?? "text") === "text")
+    .filter((model) => !existingModelIds.has(model.id))
+    .filter((model) => !availableSet || availableSet.has(model.id) || model.apiProvider !== "aihubmix")
+    .sort((a, b) => scoreModel(b, "fast") + scoreModel(b, "accurate") - (scoreModel(a, "fast") + scoreModel(a, "accurate")));
+
+  const rawPlans = planModels(candidates, opts);
+  const split = splitCoolingPlans(rawPlans);
+  return {
+    plans: split.runnable.slice(0, needed),
+    skippedCooling: split.skippedCooling,
+  };
 }
 
 function safeParseJson<T>(text: string): T | null {
@@ -284,56 +348,207 @@ function aggregateCandidates(candidates: Candidate[], judgeOutputs: Array<{ judg
 export async function runPromptTournament(opts: PromptTournamentOptions): Promise<PromptTournamentResult> {
   const startedAt = Date.now();
   const calls: Array<{ model: ModelInfo; result: GenerateResult }> = [];
+  const modelHealth: ModelHealthMeta = {
+    skippedCooling: [],
+    failed: [],
+    successful: [],
+  };
+
+  const selectedGeneratorPlans = planModels(opts.generatorModels, opts);
+  const generatorSplit = splitCoolingPlans(selectedGeneratorPlans);
+  modelHealth.skippedCooling.push(...generatorSplit.skippedCooling);
+  let generatorPlans = generatorSplit.runnable;
+
+  if (generatorPlans.length === 0) {
+    const fallback = selectFallbackGeneratorPlans(
+      opts,
+      new Set(opts.generatorModels.map((model) => model.id)),
+      2,
+    );
+    generatorPlans = fallback.plans;
+    modelHealth.skippedCooling.push(...fallback.skippedCooling);
+  }
+
+  if (generatorPlans.length === 0) {
+    const skippedText = modelHealth.skippedCooling
+      .map((issue) => issue.modelName ?? issue.modelId)
+      .join(", ");
+    throw new Error(
+      skippedText
+        ? `所选生成器模型暂时不稳定，已自动冷却：${skippedText}。请稍后重试或换一个模型。`
+        : "没有可调用的生成器模型 / No callable generator model",
+    );
+  }
+
+  let finishedGenerators = 0;
+  progress(opts, startedAt, {
+    phase: "生成候选提示词",
+    current: 0,
+    total: generatorPlans.length,
+    etaSec: estimateTournamentEtaSec("generators", generatorPlans.length, 0),
+    message: "慢模型会自动超时跳过，不影响其他模型继续完成。",
+  });
 
   const generatorResults = await Promise.allSettled(
-    opts.generatorModels.slice(0, 6).map(async (model, index) => {
-      const apiProvider = resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds);
-      const result = await callProvider({
-        model: model.id,
-        apiProvider,
-        systemPrompt: opts.systemPrompt,
-        userPrompt: opts.userPrompt,
-        maxTokens: opts.maxTokens,
-        temperature: 0.5,
-        userKeys: opts.userKeys,
-      });
-      calls.push({ model, result });
-      return {
-        id: `c${index + 1}`,
-        generatorModelId: model.id,
-        generatorModelName: model.name,
-        prompt: result.text.trim(),
-      } satisfies Candidate;
+    generatorPlans.map(async (plan, index) => {
+      const callStartedAt = Date.now();
+      try {
+        const result = await withTimeout(
+          callProvider({
+            model: plan.model.id,
+            apiProvider: plan.apiProvider,
+            systemPrompt: opts.systemPrompt,
+            userPrompt: opts.userPrompt,
+            maxTokens: opts.maxTokens,
+            temperature: 0.5,
+            userKeys: opts.userKeys,
+          }),
+          getTimeoutMs("generator"),
+          `${plan.model.name} generator`,
+        );
+        calls.push({ model: plan.model, result });
+        modelHealth.successful.push(recordModelSuccess(
+          plan.model,
+          plan.apiProvider,
+          result.latencyMs || Date.now() - callStartedAt,
+        ));
+        return {
+          id: `c${index + 1}`,
+          generatorModelId: plan.model.id,
+          generatorModelName: plan.model.name,
+          prompt: result.text.trim(),
+        } satisfies Candidate;
+      } catch (err) {
+        modelHealth.failed.push(recordModelFailure(plan.model, plan.apiProvider, err));
+        throw err;
+      } finally {
+        finishedGenerators += 1;
+        progress(opts, startedAt, {
+          phase: "生成候选提示词",
+          current: finishedGenerators,
+          total: generatorPlans.length,
+          etaSec: estimateTournamentEtaSec("generators", generatorPlans.length, finishedGenerators),
+        });
+      }
     }),
   );
 
-  const candidates = generatorResults
+  let candidates = generatorResults
     .map((result) => (result.status === "fulfilled" ? result.value : null))
     .filter((candidate): candidate is Candidate => Boolean(candidate?.prompt));
 
   if (candidates.length === 0) {
-    const firstError = generatorResults.find((result) => result.status === "rejected");
-    const reason = firstError && firstError.status === "rejected" ? firstError.reason : null;
-    throw new Error(reason?.message ?? "所有生成器模型都失败了 / All generator models failed");
+    const fallback = selectFallbackGeneratorPlans(
+      opts,
+      new Set([...opts.generatorModels.map((model) => model.id), ...generatorPlans.map((plan) => plan.model.id)]),
+      1,
+    );
+    modelHealth.skippedCooling.push(...fallback.skippedCooling);
+    if (fallback.plans[0]) {
+      const plan = fallback.plans[0];
+      progress(opts, startedAt, {
+        phase: "主生成模型失败，切换备用模型",
+        current: 0,
+        total: 1,
+        etaSec: 35,
+        message: `正在改用 ${plan.model.name} 继续生成。`,
+      });
+      const callStartedAt = Date.now();
+      try {
+        const result = await withTimeout(
+          callProvider({
+            model: plan.model.id,
+            apiProvider: plan.apiProvider,
+            systemPrompt: opts.systemPrompt,
+            userPrompt: opts.userPrompt,
+            maxTokens: opts.maxTokens,
+            temperature: 0.5,
+            userKeys: opts.userKeys,
+          }),
+          getTimeoutMs("generator"),
+          `${plan.model.name} fallback generator`,
+        );
+        calls.push({ model: plan.model, result });
+        modelHealth.successful.push(recordModelSuccess(
+          plan.model,
+          plan.apiProvider,
+          result.latencyMs || Date.now() - callStartedAt,
+        ));
+        candidates = [{
+          id: "c-fallback",
+          generatorModelId: plan.model.id,
+          generatorModelName: plan.model.name,
+          prompt: result.text.trim(),
+        }];
+      } catch (err) {
+        modelHealth.failed.push(recordModelFailure(plan.model, plan.apiProvider, err));
+      }
+    }
   }
 
-  const evaluatorPlans = selectEvaluatorPlans(opts);
+  if (candidates.length === 0) {
+    const firstError = generatorResults.find((result) => result.status === "rejected");
+    const reason = firstError && firstError.status === "rejected" ? firstError.reason : null;
+    const failedText = modelHealth.failed
+      .map((issue) => `${issue.modelName ?? issue.modelId}: ${issue.lastError}`)
+      .join("；");
+    throw new Error(
+      failedText
+        ? `所有生成器模型都失败了，已临时跳过不稳定模型：${failedText}`
+        : reason?.message ?? "所有生成器模型都失败了 / All generator models failed",
+    );
+  }
+
+  const evaluatorSplit = splitCoolingPlans(selectEvaluatorPlans(opts));
+  modelHealth.skippedCooling.push(...evaluatorSplit.skippedCooling);
+  const evaluatorPlans = evaluatorSplit.runnable;
+  let finishedJudges = 0;
+  progress(opts, startedAt, {
+    phase: evaluatorPlans.length > 0 ? "AI 评价打分" : "整理最终结果",
+    current: 0,
+    total: evaluatorPlans.length,
+    etaSec: evaluatorPlans.length > 0 ? estimateTournamentEtaSec("judges", evaluatorPlans.length, 0) : 5,
+  });
+
   const judgeResults = await Promise.allSettled(
     evaluatorPlans.map(async (plan) => {
-      const result = await callProvider({
-        model: plan.model.id,
-        apiProvider: plan.apiProvider,
-        systemPrompt: "You are a strict prompt quality evaluator. Output strict JSON only.",
-        userPrompt: buildJudgePrompt(candidates, opts),
-        maxTokens: 1800,
-        temperature: 0.1,
-        userKeys: opts.userKeys,
-      });
-      calls.push({ model: plan.model, result });
-      return {
-        judgeModel: plan.model.name,
-        payload: safeParseJson<JudgeScorePayload>(result.text) ?? {},
-      };
+      const callStartedAt = Date.now();
+      try {
+        const result = await withTimeout(
+          callProvider({
+            model: plan.model.id,
+            apiProvider: plan.apiProvider,
+            systemPrompt: "You are a strict prompt quality evaluator. Output strict JSON only.",
+            userPrompt: buildJudgePrompt(candidates, opts),
+            maxTokens: 1800,
+            temperature: 0.1,
+            userKeys: opts.userKeys,
+          }),
+          getTimeoutMs("judge"),
+          `${plan.model.name} judge`,
+        );
+        calls.push({ model: plan.model, result });
+        modelHealth.successful.push(recordModelSuccess(
+          plan.model,
+          plan.apiProvider,
+          result.latencyMs || Date.now() - callStartedAt,
+        ));
+        return {
+          judgeModel: plan.model.name,
+          payload: safeParseJson<JudgeScorePayload>(result.text) ?? {},
+        };
+      } catch (err) {
+        modelHealth.failed.push(recordModelFailure(plan.model, plan.apiProvider, err));
+        throw err;
+      } finally {
+        finishedJudges += 1;
+        progress(opts, startedAt, {
+          phase: "AI 评价打分",
+          current: finishedJudges,
+          total: evaluatorPlans.length,
+          etaSec: estimateTournamentEtaSec("judges", evaluatorPlans.length, finishedJudges),
+        });
+      }
     }),
   );
 
@@ -348,10 +563,22 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
   const outputTokens = calls.reduce((sum, call) => sum + call.result.outputTokens, 0);
   const totalCostUsd = calls.reduce((sum, call) => sum + modelCost(call.model, call.result), 0);
   const judgeNames = evaluatorPlans.map((plan) => plan.model.name);
+  progress(opts, startedAt, {
+    phase: "整理最终结果",
+    current: 1,
+    total: 1,
+    etaSec: estimateTournamentEtaSec("final", 1, 1),
+  });
   const scoreText = ranked
     .slice(0, 6)
     .map((candidate) => `${candidate.generatorModelName}:${candidate.averageScore.toFixed(1)}`)
     .join(", ");
+  const skippedText = modelHealth.skippedCooling.length
+    ? ` 自动跳过冷却模型 ${modelHealth.skippedCooling.length} 个。`
+    : "";
+  const failedText = modelHealth.failed.length
+    ? ` 本次失败但未中断的模型 ${modelHealth.failed.length} 个。`
+    : "";
   const summary = judgeOutputs
     .map((output) => output.payload.summary)
     .find((item): item is string => Boolean(item?.trim()))
@@ -364,7 +591,7 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
     latencyMs: Date.now() - startedAt,
     totalCostUsd,
     meta: {
-      reviewSummary: `Prompt tournament used ${opts.generatorModels.length} generator model(s) and ${judgeNames.length || 0} judge model(s). ${scoreText || "No judge scores parsed; selected first successful candidate."}`,
+      reviewSummary: `Prompt tournament used ${generatorPlans.length} active generator model(s) and ${judgeNames.length || 0} judge model(s). ${scoreText || "No judge scores parsed; selected first successful candidate."}${skippedText}${failedText}`,
       judgeModels: judgeNames,
       selectedStrategy: selectedCandidate.generatorModelName,
       promptEvaluation: {
@@ -380,6 +607,7 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
         selectedCandidateId: selectedCandidate.id,
         summary,
       },
+      modelHealth,
     },
   };
 }

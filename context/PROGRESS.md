@@ -883,3 +883,51 @@ Remote verification:
 - Release `desktop-v1.0.0` now includes the Android APK alongside Windows/macOS/Linux desktop assets.
 - Production `/download` contains `下载 Android APK`.
 - Production `/api/download/android` redirects to the GitHub APK asset.
+
+## 2026-05-04 — Generation Stability, Auto Cooldown, Progress ETA
+
+User reported production generation failures and slow waiting with no clear remaining time. Codex added a stability layer for relay/model failures and visible generation progress.
+
+Implemented:
+
+- `src/lib/model-health.ts`
+  - New in-memory model health registry.
+  - Records per-model/per-provider success and failure.
+  - Automatically cools unstable models after timeouts, 429s, 5xx/upstream errors, network resets, access/model errors, or similar relay failures.
+  - Cooldowns retry later automatically; a successful call clears the failure state.
+  - Adds per-call timeouts: generator 45s, judge 30s, simple generation 60s by default, with env overrides.
+- `src/lib/prompt-evaluator.ts`
+  - Multi-generator tournament now skips cooling models before calling them.
+  - Partial model failures no longer fail the whole generation if at least one candidate succeeds.
+  - If every selected generator fails, it tries a healthy fallback model once.
+  - Judge/evaluator calls also use cooldown and timeout handling.
+  - Emits progress events for candidate generation, AI scoring, fallback, and final assembly.
+- `src/lib/gpt-image-2-ensemble.ts`
+  - GPT Image 2 prompt ensemble now uses the same cooldown and timeout handling.
+  - If the main generator is cooling or fails before candidate generation, it switches to a healthy fallback model.
+  - Judge failures no longer kill the output; the best generated candidate or hybrid is still returned.
+  - Synthesis failure falls back to the best existing candidate instead of failing the whole request.
+- `src/app/api/generate/route.ts`
+  - Streaming responses now emit `progress` events before final `chunk`/`done`.
+  - Normal generation, multi-model tournament, and GPT Image 2 ensemble all support progress events.
+  - Single-model generation now detects a cooling primary model and can switch to a healthy text fallback.
+  - If a single model fails before streaming any text, the request retries once with a healthy fallback model.
+- `src/components/PromptGenerator.tsx`
+  - Shows the current generation phase.
+  - Shows elapsed waiting time and estimated remaining time.
+  - Shows status even when tournament/GPT Image 2 paths have not produced final text chunks yet.
+  - Toast text updates with the backend phase and estimated remaining time.
+- `src/components/ResultPanel.tsx`
+  - Displays a small warning note when models were cooled/skipped or failed without interrupting the final answer.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run test:quality` passed: 5/5 Chromium.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 8/8.
+- `npx playwright test --project=mobile` passed: 13/13.
+
+Known boundary:
+
+- The health registry is intentionally free and in-memory. On Vercel it applies per running server instance and resets when the instance restarts. It is still useful for unstable relay/model retries without adding a database.

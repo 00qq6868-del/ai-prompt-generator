@@ -19,6 +19,11 @@ interface Meta {
   reviewSummary?: string;
   judgeModels?: string[];
   selectedStrategy?: string;
+  modelHealth?: {
+    skippedCooling?: Array<{ modelId: string; modelName?: string; cooldownUntil: number; lastError: string }>;
+    failed?: Array<{ modelId: string; modelName?: string; lastError: string }>;
+    successful?: Array<{ modelId: string; modelName?: string; latencyMs: number }>;
+  };
   promptEvaluation?: {
     candidates: Array<{
       id: string;
@@ -174,6 +179,14 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
                 {meta.selectedStrategy && (
                   <span className="text-white/45"> · {meta.selectedStrategy}</span>
                 )}
+              </div>
+            )}
+            {(meta.modelHealth?.skippedCooling?.length || meta.modelHealth?.failed?.length) && (
+              <div className="mx-5 mt-4 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[11px] leading-5 text-amber-100/80">
+                已自动处理不稳定模型：
+                {meta.modelHealth?.skippedCooling?.length ? ` 冷却跳过 ${meta.modelHealth.skippedCooling.length} 个` : ""}
+                {meta.modelHealth?.failed?.length ? `，本次失败但未中断 ${meta.modelHealth.failed.length} 个` : ""}
+                。冷却结束后会自动再试，成功后恢复使用。
               </div>
             )}
             {meta.promptEvaluation && (
