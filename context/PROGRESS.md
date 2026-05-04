@@ -799,3 +799,76 @@ Update — 2026-05-03:
 - Release `desktop-v1.0.0` now has Windows installer, Windows portable EXE, macOS DMG, macOS ZIP, and Linux AppImage.
 - Production `/download` returns HTTP 200.
 - Keep Android as PWA until a native APK packaging flow is implemented.
+
+---
+
+## Model Picker Scroll, Android APK, and Real GPT Image 2 QA — 2026-05-04
+
+User reported that opening the generator model, target model, or evaluator model area could leave the page feeling stuck and unscrollable. Codex fixed and verified the scroll behavior across desktop and mobile.
+
+Implemented:
+
+- `src/components/ModelPicker.tsx`
+  - The full-screen generator/evaluator picker now locks only the document body while preserving/restoring previous body/html overflow and overscroll styles.
+  - The dialog captures vertical wheel events and forwards them into the internal model list.
+  - Search/filter/header areas now live inside the same scroll container as the model cards, with sticky filters, so wheel/touch cannot get trapped in a non-scrollable header.
+  - The internal list uses `overflow-y-auto`, `overscroll-y-contain`, and `touch-pan-y`.
+- `src/components/ModelSelector.tsx`
+  - Target model grid now uses browser `maxHeight: "min(520px, 65vh)"` instead of a Tailwind arbitrary class that did not reliably generate CSS.
+  - Target list is now an explicit scroll container with `data-testid="target-model-scroll"`.
+- `tests/e2e/quality.spec.ts`
+  - Added regression coverage for target model list, generator picker dialog, and evaluator picker dialog scrolling.
+  - Desktop verifies real mouse-wheel scrolling.
+  - Mobile verifies the containers are truly scrollable and can advance scrollTop in touch-device mode.
+- Android APK chain:
+  - Added native Android WebView source under `android/`.
+  - Added `.github/workflows/android-release.yml` to build a debug APK and upload it to the GitHub Release.
+  - Added `/api/download/android` route.
+  - Updated `/download` page to show Android APK + PWA.
+  - Added `android/gradle.properties` with `android.overridePathCheck=true` so the project can build from the current Chinese E-drive path.
+- Real GPT Image 2 QA:
+  - Added `scripts/real-gpt-image2-quality-test.cjs`.
+  - Added `npm run test:gpt-image2:real`.
+  - The script accepts relay keys via env vars only, masks keys in reports, calls the live app `/api/generate`, records the app's internal prompt score, can optionally generate a real `gpt-image-2` image, and can optionally ask a vision model to score the generated image.
+  - Reports/images are written under `reports/gpt-image2-real-tests/` and ignored by Git.
+
+Important usage for real image QA:
+
+```powershell
+cd "E:\AI工作台\项目 Projects\ai-prompt-generator-codex"
+$env:CUSTOM_BASE_URL="https://naapi.cc"
+$env:CUSTOM_API_KEY="sk-你的key"
+npm run test:gpt-image2:real
+```
+
+Generate an actual image:
+
+```powershell
+$env:MAKE_IMAGE="1"
+npm run test:gpt-image2:real
+```
+
+Generate image + AI vision score:
+
+```powershell
+$env:MAKE_IMAGE="1"
+$env:JUDGE_IMAGE="1"
+$env:IMAGE_JUDGE_MODEL="gpt-4o"
+npm run test:gpt-image2:real
+```
+
+Local verification:
+
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run test:quality` passed: 5/5 on Chromium.
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium --project=mobile` passed: 10/10.
+- `npx playwright test --project=chromium` passed: 13/13.
+- `npx playwright test --project=mobile` passed: 13/13.
+- `gradle -p android :app:assembleDebug --no-daemon` passed and produced `android/app/build/outputs/apk/debug/app-debug.apk`.
+- `node --check scripts/real-gpt-image2-quality-test.cjs` passed.
+- Running `node scripts/real-gpt-image2-quality-test.cjs` without a key correctly stops with instructions; no real image generation was run because no API key was provided in this session.
+
+Known boundary:
+
+- The Android APK is currently a debug-signed WebView wrapper for the live site and requires internet. It is useful for free/manual install testing. A production signed APK would require adding a release keystore through GitHub Secrets.

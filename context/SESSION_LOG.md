@@ -1124,3 +1124,59 @@ Remote verification:
 Remember:
 
 - Do not re-add `ELECTRON_MIRROR` to the mac release job unless the dmg-builder download path is also verified.
+
+---
+
+## 2026-05-04 — Scroll Deadlock Fix, Android APK Source, Real GPT Image 2 QA Script
+
+User reported the screenshot problem again: after opening generator model / target model / evaluator model, scrolling could feel stuck. User also asked to finish unfinished work and create a real API-key-based test path for GPT Image 2 prompt quality.
+
+Changes made:
+
+- `src/components/ModelPicker.tsx`
+  - Reworked generator/evaluator full-screen picker scroll behavior.
+  - Filters/search are now inside the same scrollable region as the model cards.
+  - Wheel events from the whole dialog are forwarded to the internal list, including header/filter/search regions.
+  - Body/html overflow and overscroll styles are restored exactly after close.
+- `src/components/ModelSelector.tsx`
+  - Target model grid is now a real scroll container.
+  - Fixed the max-height implementation by using inline `maxHeight: "min(520px, 65vh)"`.
+- `tests/e2e/quality.spec.ts`
+  - Added desktop and mobile scroll regression tests for target/generator/evaluator model areas.
+  - Added Android APK download link assertion.
+- Android:
+  - Added native Android WebView project under `android/`.
+  - Added `android/gradle.properties` to allow the current Chinese path and set UTF-8/JVM memory.
+  - Added GitHub Actions workflow `.github/workflows/android-release.yml`.
+  - Added route `src/app/api/download/android/route.ts`.
+  - Updated `/download` page to include Android APK + PWA.
+- Real GPT Image 2 QA:
+  - Added `scripts/real-gpt-image2-quality-test.cjs`.
+  - Added `npm run test:gpt-image2:real`.
+  - Script supports:
+    - prompt-only live app test through `/api/generate`
+    - optional real `/v1/images/generations`
+    - optional vision-model image scoring
+    - report files under `reports/gpt-image2-real-tests/`
+  - API keys are supplied through environment variables and masked in reports.
+- `.gitignore`
+  - Ignores `reports/`, Android Gradle/build outputs, and `*.apk`.
+
+Validation run locally:
+
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run test:quality` passed: 5/5 Chromium.
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium --project=mobile` passed: 10/10.
+- `npx playwright test --project=chromium` passed: 13/13.
+- `npx playwright test --project=mobile` passed: 13/13.
+- `gradle -p android :app:assembleDebug --no-daemon` passed and generated a debug APK.
+- `node --check scripts/real-gpt-image2-quality-test.cjs` passed.
+- No real image was generated in this session because the user has not provided the relay API key yet.
+
+Next remote steps:
+
+- Commit and push this batch.
+- Run GitHub E2E.
+- Run GitHub Android Release workflow so `/api/download/android` has a real APK asset to redirect to.
+- If the user provides a relay key, run `npm run test:gpt-image2:real`; set `MAKE_IMAGE=1` for a real image and `JUDGE_IMAGE=1` for vision scoring.

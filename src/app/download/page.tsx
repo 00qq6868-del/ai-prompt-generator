@@ -227,11 +227,11 @@ export default function DownloadPage() {
                   <h2 className="text-lg font-bold">Android 手机版</h2>
                 </div>
                 <p className="text-sm leading-6 text-white/65">
-                  当前先提供 PWA 安装：安卓 Chrome 打开本站后可“添加到主屏幕”。原生 APK 会在 Android 打包链完成后加入发布页。
+                  原生 APK 使用系统 WebView 打开完整网站；也保留 PWA 安装入口。安卓端需要联网访问本站和你的 API 服务。
                 </p>
               </div>
               <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-300">
-                PWA
+                APK + PWA
               </span>
             </div>
 
@@ -239,7 +239,7 @@ export default function DownloadPage() {
               {[
                 { icon: <Smartphone size={14} />, label: "安卓可装" },
                 { icon: <RefreshCw size={14} />, label: "离线缓存" },
-                { icon: <Github size={14} />, label: "APK 待构建" },
+                { icon: <Github size={14} />, label: "GitHub APK" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-xs text-white/70">
                   <span className="text-violet-300">{item.icon}</span>
@@ -248,13 +248,22 @@ export default function DownloadPage() {
               ))}
             </div>
 
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
-            >
-              <Smartphone size={16} />
-              打开并安装 PWA
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="/api/download/android"
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+              >
+                <Download size={16} />
+                下载 Android APK
+              </a>
+              <a
+                href="/"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white/70 hover:border-white/20 hover:text-white"
+              >
+                <Smartphone size={16} />
+                打开并安装 PWA
+              </a>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 lg:col-span-2">
@@ -266,7 +275,7 @@ export default function DownloadPage() {
               </div>
               <div className="flex items-center justify-between gap-3 border-b border-white/8 pb-3">
                 <span>平台</span>
-                <span className="text-white/85">Windows x64 / macOS universal / Linux AppImage / Android PWA</span>
+                <span className="text-white/85">Windows x64 / macOS universal / Linux AppImage / Android APK + PWA</span>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span>发布源</span>

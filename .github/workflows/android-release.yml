@@ -1,0 +1,76 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to upload APK into, defaults to desktop-v<package version>
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: Build Android debug APK
+        run: gradle -p android :app:assembleDebug --no-daemon
+
+      - name: Resolve release tag and asset name
+        id: release
+        shell: bash
+        run: |
+          tag="${{ inputs.tag }}"
+          version=$(node -p "require('./package.json').version")
+          if [ -z "$tag" ]; then
+            tag="desktop-v$version"
+          fi
+          asset="AI-Prompt-Generator-Android-$version-debug.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$asset"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          ASSET: ${{ steps.release.outputs.asset }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "AI 提示词生成器 $TAG" --notes "Desktop and Android releases."
+          for asset in $(gh release view "$TAG" --json assets --jq '.assets[].name'); do
+            case "$asset" in
+              *Android*.apk|*.apk)
+                gh release delete-asset "$TAG" "$asset" -y || true
+                ;;
+            esac
+          done
+          gh release upload "$TAG" "$ASSET" --clobber
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-debug-apk
+          path: ${{ steps.release.outputs.asset }}
+          retention-days: 14

@@ -389,7 +389,9 @@ export function ModelSelector({
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            className="grid grid-cols-1 gap-2 sm:grid-cols-2 max-h-[400px] overflow-y-auto pr-1"
+            data-testid="target-model-scroll"
+            className="grid grid-cols-1 gap-2 sm:grid-cols-2 overflow-y-auto overscroll-y-contain touch-pan-y pr-1"
+            style={{ maxHeight: "min(520px, 65vh)", scrollbarGutter: "stable" }}
           >
             {loading
               ? Array.from({ length: 4 }).map((_, i) => (

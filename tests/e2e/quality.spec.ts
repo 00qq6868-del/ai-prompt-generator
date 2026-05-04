@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 async function waitForFiniteAnimations(page: Page) {
   await page.waitForFunction(() => {
@@ -14,6 +14,36 @@ async function waitForFiniteAnimations(page: Page) {
     );
   });
   await page.waitForTimeout(1000);
+}
+
+async function expectScrollable(locator: Locator, page: Page, useWheel: boolean) {
+  await expect(locator).toBeVisible({ timeout: 15_000 });
+  await locator.scrollIntoViewIfNeeded();
+
+  const before = await locator.evaluate((el) => ({
+    scrollTop: el.scrollTop,
+    scrollHeight: el.scrollHeight,
+    clientHeight: el.clientHeight,
+    overflowY: window.getComputedStyle(el).overflowY,
+  }));
+
+  expect(before.scrollHeight).toBeGreaterThan(before.clientHeight + 1);
+  expect(["auto", "scroll"]).toContain(before.overflowY);
+
+  if (useWheel) {
+    await locator.hover();
+    await page.mouse.wheel(0, 900);
+    await expect
+      .poll(() => locator.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(before.scrollTop);
+    return;
+  }
+
+  const after = await locator.evaluate((el) => {
+    el.scrollTop = Math.min(el.scrollTop + 900, el.scrollHeight - el.clientHeight);
+    return el.scrollTop;
+  });
+  expect(after).toBeGreaterThan(before.scrollTop);
 }
 
 test.describe("Quality and accessibility audit", () => {
@@ -112,7 +142,39 @@ test.describe("Quality and accessibility audit", () => {
     }
   });
 
-test("download page exposes desktop and mobile download entries", async ({
+  test("model picker dialogs and target model list remain scrollable", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto("/");
+
+    const targetScroller = page.getByTestId("target-model-scroll");
+    await expect(page.getByText(/显示前 50 个|Showing 50/)).toBeVisible({ timeout: 15_000 });
+    await expectScrollable(targetScroller, page, !isMobile);
+
+    const checkDialogScroll = async (buttonName: RegExp, dialogName: string) => {
+      await page.getByRole("button", { name: buttonName }).click();
+      const dialog = page.getByRole("dialog", { name: dialogName });
+      await expect(dialog).toBeVisible({ timeout: 3000 });
+
+      const scroller = page.getByTestId("model-picker-scroll");
+      await expectScrollable(scroller, page, !isMobile);
+
+      await dialog.getByRole("button", { name: "关闭 Close" }).click();
+      await expect(dialog).toBeHidden();
+    };
+
+    await checkDialogScroll(
+      /选择生成器模型 Open generator model picker/,
+      "选择生成器模型",
+    );
+    await checkDialogScroll(
+      /选择评价模型 Open evaluator model picker/,
+      "选择评价模型",
+    );
+  });
+
+  test("download page exposes desktop and mobile download entries", async ({
     page,
   }) => {
     await page.goto("/download");
@@ -139,6 +201,10 @@ test("download page exposes desktop and mobile download entries", async ({
     await expect(page.getByRole("link", { name: /下载 Linux AppImage/ })).toHaveAttribute(
       "href",
       "/api/download/linux"
+    );
+    await expect(page.getByRole("link", { name: /下载 Android APK/ })).toHaveAttribute(
+      "href",
+      "/api/download/android"
     );
     await expect(page.getByRole("link", { name: /打开并安装 PWA/ })).toHaveAttribute(
       "href",

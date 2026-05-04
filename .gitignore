@@ -5,6 +5,10 @@ node_modules/
 .next/
 dist-electron/
 tsconfig.tsbuildinfo
+android/.gradle/
+android/build/
+android/app/build/
+*.apk
 
 # PWA 生成产物（next-pwa 在构建时自动生成）
 public/sw.js
@@ -25,6 +29,7 @@ Thumbs.db
 *.log
 tunnel.log
 server.log
+reports/
 
 # 编辑器
 .vscode/settings.json

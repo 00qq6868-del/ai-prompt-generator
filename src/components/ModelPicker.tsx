@@ -85,19 +85,23 @@ export function ModelPicker({
       setSearch("");
       setProvider("全部");
       setShowFavoritesOnly(false);
+      const previousBodyOverflow = document.body.style.overflow;
+      const previousBodyOverscroll = document.body.style.overscrollBehavior;
+      const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
       document.body.style.overflow = "hidden";
+      document.body.style.overscrollBehavior = "none";
+      document.documentElement.style.overscrollBehavior = "none";
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") onClose();
       };
       document.addEventListener("keydown", handleKeyDown);
       return () => {
-        document.body.style.overflow = "";
+        document.body.style.overflow = previousBodyOverflow;
+        document.body.style.overscrollBehavior = previousBodyOverscroll;
+        document.documentElement.style.overscrollBehavior = previousHtmlOverscroll;
         document.removeEventListener("keydown", handleKeyDown);
       };
-    } else {
-      document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
   }, [open, onClose]);
 
   const toggleFavorite = useCallback((id: string) => {
@@ -186,12 +190,18 @@ export function ModelPicker({
   };
 
   const forwardWheelToList = (event: React.WheelEvent) => {
-    if (!scrollRef.current) return;
-    const target = event.target as HTMLElement;
-    if (target.closest("input, textarea, select")) return;
+    const scroller = scrollRef.current;
+    if (!scroller) return;
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-    event.preventDefault();
-    scrollRef.current.scrollTop += event.deltaY;
+
+    const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+    if (maxScroll <= 0) return;
+
+    const nextTop = Math.max(0, Math.min(maxScroll, scroller.scrollTop + event.deltaY));
+    if (nextTop !== scroller.scrollTop) {
+      event.preventDefault();
+      scroller.scrollTop = nextTop;
+    }
   };
 
   return (
@@ -201,15 +211,16 @@ export function ModelPicker({
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#08080f]"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden overscroll-none bg-[#08080f]"
           style={{ height: "100dvh" }}
+          onWheelCapture={forwardWheelToList}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {/* Top bar */}
-          <div onWheel={forwardWheelToList} className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 shrink-0">
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 shrink-0">
             <div>
               <h2 className="text-base font-bold text-white">{title}</h2>
               {subtitle && <p className="text-[11px] text-white/65 mt-0.5">{subtitle}</p>}
@@ -223,66 +234,72 @@ export function ModelPicker({
             </button>
           </div>
 
-          {/* Search + filters */}
-          <div onWheel={forwardWheelToList} className="border-b border-white/[0.07] px-6 py-3 space-y-3 shrink-0">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="搜索模型名称、提供商、标签..."
-                aria-label="搜索模型 Search models"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/60 outline-none focus:border-indigo-500/50 transition-all"
-                autoFocus
-              />
-              {search && (
-                <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white/60">
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0
-                  ${showFavoritesOnly
-                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                    : "text-white/70 hover:text-white/50 border border-transparent"
-                  }`}
-              >
-                <Star size={10} fill={showFavoritesOnly ? "currentColor" : "none"} />
-                收藏
-              </button>
-              <div className="h-3 w-px bg-white/10" />
-              <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex flex-wrap gap-1.5 overflow-visible">
-                {PROVIDER_TABS.map(p => {
-                  const count = providerCounts[p] ?? 0;
-                  if (p !== "全部" && count === 0) return null;
-                  return (
-                    <button
-                      key={p}
-                      role="tab"
-                      aria-selected={provider === p}
-                      onClick={() => setProvider(p)}
-                      className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap break-keep transition-all shrink-0
-                        ${provider === p
-                          ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/85 hover:text-white border border-transparent"
-                        }`}
-                    >
-                      {p} {count > 0 && <span className="opacity-50">{count}</span>}
+          {/* Scrollable content: filters and model grid live together so wheel/touch never gets trapped. */}
+          <div
+            ref={scrollRef}
+            data-testid="model-picker-scroll"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y"
+            style={{ scrollbarGutter: "stable" }}
+          >
+            <div className="sticky top-0 z-10 border-b border-white/[0.07] bg-[#08080f]/95 px-6 py-3 backdrop-blur-xl">
+              <div className="mx-auto max-w-5xl space-y-3">
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="搜索模型名称、提供商、标签..."
+                    aria-label="搜索模型 Search models"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/60 outline-none focus:border-indigo-500/50 transition-all"
+                    autoFocus
+                  />
+                  {search && (
+                    <button onClick={() => setSearch("")} aria-label="清除搜索 Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white/60">
+                      <X size={14} />
                     </button>
-                  );
-                })}
+                  )}
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <button
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className={`flex min-h-7 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-all shrink-0
+                      ${showFavoritesOnly
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "text-white/70 hover:text-white/50 border border-transparent"
+                      }`}
+                  >
+                    <Star size={10} fill={showFavoritesOnly ? "currentColor" : "none"} />
+                    收藏
+                  </button>
+                  <div className="mt-2 h-3 w-px shrink-0 bg-white/10" />
+                  <div role="tablist" aria-label="提供商筛选 Provider filter" className="flex flex-wrap gap-1.5 overflow-visible">
+                    {PROVIDER_TABS.map(p => {
+                      const count = providerCounts[p] ?? 0;
+                      if (p !== "全部" && count === 0) return null;
+                      return (
+                        <button
+                          key={p}
+                          role="tab"
+                          aria-selected={provider === p}
+                          onClick={() => setProvider(p)}
+                          className={`min-h-7 px-3 py-1 rounded-full text-[10px] leading-4 font-medium whitespace-nowrap break-keep transition-all shrink-0
+                            ${provider === p
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/85 hover:text-white border border-transparent"
+                            }`}
+                        >
+                          {p} {count > 0 && <span className="opacity-50">{count}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Model grid */}
-          <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-            <div className="mx-auto max-w-5xl px-6 py-4">
+            <div className="mx-auto max-w-5xl px-6 py-4 pb-8">
               {filtered.length === 0 ? (
                 <div className="text-center text-white/70 text-sm py-16">
                   {showFavoritesOnly ? "还没有收藏的模型，点击 ⭐ 收藏常用模型" : "没有匹配的模型"}

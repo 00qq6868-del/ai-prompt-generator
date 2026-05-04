@@ -253,6 +253,71 @@ Remote verification and release are complete:
 - Manual Sync Prompt Sources workflow run `25282673189` passed.
 - Production Smoke Test run `25282673405` passed, including real generation through Groq fallback.
 
+## Latest Local Work — Scroll Fix, Android APK, Real GPT Image 2 QA, 2026-05-04
+
+User's current complaint was that model pages could still feel stuck/unscrollable after opening generator/target/evaluator model areas. This has been fixed locally in the Codex-safe worktree.
+
+Changed locally:
+
+- `src/components/ModelPicker.tsx`
+  - Generator/evaluator full-screen picker now uses one main scroll container containing sticky search/filter controls and model cards.
+  - The dialog forwards vertical wheel events into the model list so the pointer can be over the header/search/filter area without trapping scroll.
+  - Body/html scroll locks are restored to previous values on close.
+- `src/components/ModelSelector.tsx`
+  - Target model grid now has reliable `maxHeight: "min(520px, 65vh)"`, `overflow-y-auto`, `overscroll-y-contain`, and `touch-pan-y`.
+- `tests/e2e/quality.spec.ts`
+  - Scroll regression test covers target model list, generator picker dialog, and evaluator picker dialog.
+  - Desktop path uses real wheel scrolling; mobile path verifies scrollability without relying on a mouse wheel.
+- Android:
+  - Added `android/` native WebView project.
+  - Added `.github/workflows/android-release.yml`.
+  - Added `/api/download/android`.
+  - Download page now lists Android APK + PWA.
+  - Added `android/gradle.properties`; local Gradle build passes from the current Chinese E-drive path.
+- Real API QA:
+  - Added `scripts/real-gpt-image2-quality-test.cjs` and `npm run test:gpt-image2:real`.
+  - The script uses env vars only for keys, masks secrets, calls the live app, records prompt score, optionally generates an actual `gpt-image-2` image, optionally scores the image with a vision model, and writes ignored reports under `reports/gpt-image2-real-tests/`.
+
+Use for the user's NAAPI/relay key:
+
+```powershell
+cd "E:\AI工作台\项目 Projects\ai-prompt-generator-codex"
+$env:CUSTOM_BASE_URL="https://naapi.cc"
+$env:CUSTOM_API_KEY="sk-用户的key"
+npm run test:gpt-image2:real
+```
+
+To create a real image:
+
+```powershell
+$env:MAKE_IMAGE="1"
+npm run test:gpt-image2:real
+```
+
+To also run vision scoring:
+
+```powershell
+$env:JUDGE_IMAGE="1"
+$env:IMAGE_JUDGE_MODEL="gpt-4o"
+npm run test:gpt-image2:real
+```
+
+Local validation already completed:
+
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run test:quality` passed: 5/5 Chromium.
+- `npx playwright test tests/e2e/quality.spec.ts --project=chromium --project=mobile` passed: 10/10.
+- `npx playwright test --project=chromium` passed: 13/13.
+- `npx playwright test --project=mobile` passed: 13/13.
+- `gradle -p android :app:assembleDebug --no-daemon` passed.
+- `node --check scripts/real-gpt-image2-quality-test.cjs` passed.
+
+Known boundary:
+
+- Android APK is currently debug-signed and wraps the live website through WebView. It requires internet and is not yet a production-signed Play Store style release.
+- Do not commit local API keys or generated reports/images.
+
 Next step: when the user gives more GitHub prompt-source projects, follow `context/PROMPT_SOURCE_AUTOSYNC.md`; keep new source groups separate and add their own sync/status/runtime integration.
 
 ## Latest Work — Multi-Generator Evaluation and Cross-Platform Downloads, 2026-05-04
