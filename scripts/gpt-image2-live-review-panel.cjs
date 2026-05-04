@@ -46,16 +46,19 @@ function text(res, status, body) {
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
-    let body = "";
+    const chunks = [];
+    let total = 0;
     req.on("data", (chunk) => {
-      body += chunk;
-      if (body.length > 1_000_000) {
-        reject(new Error("Request body too large"));
+      chunks.push(chunk);
+      total += chunk.length;
+      if (total > 80 * 1024 * 1024) {
+        reject(new Error("Request body too large. Please use fewer or smaller reference images."));
         req.destroy();
       }
     });
     req.on("end", () => {
       try {
+        const body = Buffer.concat(chunks).toString("utf8");
         resolve(body ? JSON.parse(body) : {});
       } catch (error) {
         reject(error);
@@ -248,6 +251,90 @@ async function generateImage({ relayBaseUrl, apiKey, model, prompt, imageSize, q
   });
 }
 
+async function generateImageEdit({
+  relayBaseUrl,
+  apiKey,
+  model,
+  prompt,
+  imageSize,
+  quality,
+  responseFormat,
+  referenceImages,
+}) {
+  const form = new FormData();
+  form.append("model", model);
+  form.append("prompt", prompt);
+  form.append("size", imageSize);
+  form.append("quality", quality);
+  form.append("n", "1");
+  if (responseFormat) form.append("response_format", responseFormat);
+
+  for (const image of referenceImages) {
+    const blob = new Blob([image.buffer], { type: image.mimeType || "image/png" });
+    form.append("image", blob, image.fileName);
+  }
+
+  const res = await fetch(endpoint(relayBaseUrl, "/images/edits"), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: form,
+  });
+  const textBody = await res.text();
+  let data = null;
+  try {
+    data = textBody ? JSON.parse(textBody) : {};
+  } catch {
+    data = null;
+  }
+  if (!res.ok) {
+    const message = data?.error?.message || data?.error || textBody.slice(0, 500);
+    throw new Error(`${res.status} ${res.statusText}: ${message}`);
+  }
+  return data || {};
+}
+
+function decodeReferenceImages(rawImages, run) {
+  const images = Array.isArray(rawImages) ? rawImages.slice(0, 8) : [];
+  const decoded = [];
+  const dir = path.join(REPORT_DIR, `refs-${run.id}`);
+  if (images.length) fs.mkdirSync(dir, { recursive: true });
+
+  for (let i = 0; i < images.length; i += 1) {
+    const item = images[i] || {};
+    const dataUrl = String(item.dataUrl || "");
+    const match = dataUrl.match(/^data:([^;,]+);base64,(.+)$/);
+    if (!match) continue;
+    const mimeType = match[1] || "image/png";
+    const ext = mimeType.includes("jpeg") || mimeType.includes("jpg")
+      ? "jpg"
+      : mimeType.includes("webp")
+        ? "webp"
+        : mimeType.includes("gif")
+          ? "gif"
+          : "png";
+    const buffer = Buffer.from(match[2], "base64");
+    if (!buffer.length) continue;
+    const rawName = String(item.name || `reference-${i + 1}.${ext}`);
+    const safeBase = rawName.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) || `reference-${i + 1}.${ext}`;
+    const fileName = safeBase.includes(".") ? safeBase : `${safeBase}.${ext}`;
+    const filePath = path.join(dir, `${String(i + 1).padStart(2, "0")}-${fileName}`);
+    fs.writeFileSync(filePath, buffer);
+    decoded.push({
+      index: i,
+      fileName,
+      filePath,
+      browserUrl: `/artifact/${run.id}/ref/${i}`,
+      mimeType,
+      buffer,
+      size: buffer.length,
+    });
+  }
+
+  return decoded;
+}
+
 function saveImageArtifact(imageData, run) {
   const first = imageData?.data?.[0];
   if (!first) return null;
@@ -348,6 +435,10 @@ ${report.optimizedPrompt || ""}
 
 ${report.imageArtifact?.fileName ? report.imageArtifact.fileName : report.imageArtifact?.url || "No image artifact."}
 
+## Reference Images
+
+${(report.referenceImages || []).map((image) => `- ${image.fileName}`).join("\n") || "No reference images. This run used text-to-image."}
+
 ## AI Judge Results
 
 ${(report.imageJudges || [])
@@ -380,6 +471,7 @@ async function runFullReview(run, input) {
     const quality = input.quality || "auto";
     const userIdea = input.idea || DEFAULT_IDEA;
     const language = input.language || "zh";
+    const referenceImages = decodeReferenceImages(input.referenceImages, run);
     const requestedGenerators = csv(input.generatorModels || DEFAULT_GENERATORS).slice(0, 6);
     const requestedEvaluators = csv(input.evaluatorModels || DEFAULT_EVALUATORS).slice(0, 6);
     const requestedImageJudges = csv(input.imageJudgeModels || DEFAULT_IMAGE_JUDGES).slice(0, 6);
@@ -423,24 +515,41 @@ async function runFullReview(run, input) {
     addLog(run, `提示词阶段完成，网站内部评分: ${promptScore == null ? "n/a" : `${promptScore.toFixed(1)}/100`}`);
 
     run.phase = "2/3 真实图片生成";
-    addLog(run, `正在调用 ${imageModel} 真实生成图片...`);
+    const imageMode = referenceImages.length ? "image-to-image" : "text-to-image";
+    addLog(
+      run,
+      referenceImages.length
+        ? `检测到 ${referenceImages.length} 张参考图，正在调用 ${imageModel} 做图生图/改图...`
+        : `未上传参考图，正在调用 ${imageModel} 做文生图...`,
+    );
     let imageArtifact = null;
     let imageGeneration = null;
     try {
-      const imageData = await generateImage({
-        relayBaseUrl,
-        apiKey,
-        model: imageModel,
-        prompt: optimizedPrompt,
-        imageSize,
-        quality,
-        responseFormat: "b64_json",
-      });
+      const imageData = referenceImages.length
+        ? await generateImageEdit({
+            relayBaseUrl,
+            apiKey,
+            model: imageModel,
+            prompt: optimizedPrompt,
+            imageSize,
+            quality,
+            responseFormat: "b64_json",
+            referenceImages,
+          })
+        : await generateImage({
+            relayBaseUrl,
+            apiKey,
+            model: imageModel,
+            prompt: optimizedPrompt,
+            imageSize,
+            quality,
+            responseFormat: "b64_json",
+          });
       imageArtifact = saveImageArtifact(imageData, run);
-      imageGeneration = { ok: true, usage: imageData.usage || null };
+      imageGeneration = { ok: true, mode: imageMode, usage: imageData.usage || null };
       addLog(run, `图片生成完成: ${imageArtifact?.fileName || imageArtifact?.url || "response received"}`);
     } catch (error) {
-      imageGeneration = { ok: false, error: error.message };
+      imageGeneration = { ok: false, mode: imageMode, error: error.message };
       addLog(run, `图片生成失败: ${error.message}`);
       throw error;
     }
@@ -489,6 +598,7 @@ async function runFullReview(run, input) {
       optimizedPrompt,
       promptScore,
       promptEvaluation,
+      referenceImages: referenceImages.map(({ buffer, ...image }) => image),
       imageOptions: { imageSize, quality },
       imageGeneration,
       imageArtifact,
@@ -542,6 +652,9 @@ function page() {
     .cols { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 16px; align-items: start; }
     .prompt { max-height: 360px; overflow: auto; white-space: pre-wrap; font-size: 13px; line-height: 1.65; background: rgba(0,0,0,.24); border-radius: 12px; padding: 14px; }
     .judge { border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; margin-top: 12px; }
+    .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
+    .ref-grid img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); }
+    .file-hint { border: 1px dashed rgba(165,180,252,.45); border-radius: 14px; padding: 14px; background: rgba(99,102,241,.08); }
     .danger { color: #fca5a5; }
     .ok { color: #86efac; }
     @media (max-width: 760px) { .grid, .cols { grid-template-columns: 1fr; } }
@@ -572,6 +685,12 @@ function page() {
         <div class="full">
           <label>测试需求，也就是用户原始想法</label>
           <textarea id="idea">${DEFAULT_IDEA}</textarea>
+        </div>
+        <div class="full file-hint">
+          <label>参考图，可选。上传 1 张或多张后会自动做图生图/改图，不上传则做文生图。</label>
+          <input id="referenceImages" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+          <p class="muted">建议每张图片先压到 10MB 以内。多图会一起传给 `/v1/images/edits`，用于测试提示词对参考图的保持、迁移、局部修改和风格优化能力。</p>
+          <div id="referencePreview" class="ref-grid"></div>
         </div>
         <div class="full">
           <label>提示词生成器模型，最多 6 个，逗号分隔</label>
@@ -625,6 +744,9 @@ function page() {
         </div>
         <div>
           <p><strong>网站提示词评分：</strong><span id="promptScore">--</span></p>
+          <p><strong>生成模式：</strong><span id="imageMode">--</span></p>
+          <p><strong>本次参考图</strong></p>
+          <div id="resultRefs" class="ref-grid"></div>
           <p><strong>优化后的 GPT Image 2 提示词</strong></p>
           <div id="prompt" class="prompt"></div>
           <div id="judges"></div>
@@ -637,8 +759,20 @@ function page() {
     let runId = null;
     let pollTimer = null;
     let currentRun = null;
+    let selectedReferenceImages = [];
     const $ = (id) => document.getElementById(id);
     function formValue(id) { return $(id).value.trim(); }
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(reader.error || new Error("读取图片失败"));
+        reader.readAsDataURL(file);
+      });
+    }
     function setLogs(run) {
       $("phase").textContent = run.phase || run.status || "running";
       $("logs").textContent = (run.logs || []).join("\\n");
@@ -652,8 +786,12 @@ function page() {
       const r = run.result;
       $("aiImageScore").textContent = r.imageJudgeAverage == null ? "--" : r.imageJudgeAverage.toFixed(1);
       $("promptScore").textContent = r.promptScore == null ? "--" : r.promptScore.toFixed(1) + "/100";
+      $("imageMode").textContent = r.imageGeneration && r.imageGeneration.mode === "image-to-image" ? "图生图 / 改图" : "文生图";
       $("prompt").textContent = r.optimizedPrompt || "";
       if (r.imageArtifact && r.imageArtifact.browserUrl) $("image").src = r.imageArtifact.browserUrl;
+      $("resultRefs").innerHTML = (r.referenceImages || []).length
+        ? r.referenceImages.map(img => "<div><img src='" + img.browserUrl + "' alt='" + escapeHtml(img.fileName) + "' /><div class='muted'>" + escapeHtml(img.fileName) + "</div></div>").join("")
+        : "<div class='muted'>未上传参考图，本次为文生图。</div>";
       $("judges").innerHTML = (r.imageJudges || []).map(j => {
         const body = j.ok
           ? "<div><strong>" + j.model + "</strong>: " + (j.score ?? "n/a") + "/100</div><div class='muted'>" + ((j.result && j.result.verdict) || "") + "</div>"
@@ -690,6 +828,7 @@ function page() {
         imageModel: formValue("imageModel"),
         imageSize: formValue("imageSize"),
         quality: formValue("quality"),
+        referenceImages: selectedReferenceImages,
         openFolder: $("openFolder").checked
       };
       if (!payload.apiKey) {
@@ -708,6 +847,23 @@ function page() {
       runId = data.runId;
       pollTimer = setInterval(poll, 1400);
       poll();
+    };
+    $("referenceImages").onchange = async () => {
+      const files = Array.from($("referenceImages").files || []).slice(0, 8);
+      selectedReferenceImages = [];
+      $("referencePreview").innerHTML = files.map(file => "<div><div class='muted'>读取中...</div><div class='muted'>" + escapeHtml(file.name) + "</div></div>").join("");
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 15 * 1024 * 1024) {
+          alert(file.name + " 超过 15MB，建议先压缩后再测。");
+          continue;
+        }
+        const dataUrl = await readFileAsDataUrl(file);
+        selectedReferenceImages.push({ name: file.name, type: file.type, size: file.size, dataUrl });
+      }
+      $("referencePreview").innerHTML = selectedReferenceImages.length
+        ? selectedReferenceImages.map(item => "<div><img src='" + item.dataUrl + "' alt='" + escapeHtml(item.name) + "' /><div class='muted'>" + escapeHtml(item.name) + "</div></div>").join("")
+        : "<div class='muted'>未选择参考图。</div>";
     };
     $("saveReview").onclick = async () => {
       if (!currentRun) return;
@@ -779,6 +935,19 @@ async function handle(req, res) {
       if (!filePath || !fs.existsSync(filePath)) return text(res, 404, "Image not found");
       res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
       fs.createReadStream(filePath).pipe(res);
+      return;
+    }
+
+    const refMatch = url.pathname.match(/^\/artifact\/([^/]+)\/ref\/(\d+)$/);
+    if (req.method === "GET" && refMatch) {
+      const run = runs.get(decodeURIComponent(refMatch[1]));
+      const index = Number(refMatch[2]);
+      const reference = run?.result?.referenceImages?.find((image) => image.index === index);
+      if (!reference?.filePath || !fs.existsSync(reference.filePath)) {
+        return text(res, 404, "Reference image not found");
+      }
+      res.writeHead(200, { "Content-Type": reference.mimeType || "image/png", "Cache-Control": "no-store" });
+      fs.createReadStream(reference.filePath).pipe(res);
       return;
     }
 
