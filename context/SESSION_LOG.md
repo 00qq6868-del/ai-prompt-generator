@@ -1646,3 +1646,69 @@ Regression validation:
 - GitHub Actions run `25345151965` passed:
   - Build app passed.
   - 14 E2E tests passed.
+
+---
+
+## 2026-05-05 — Main Website Feedback Loop And Relay Model Selection Fix
+
+User request:
+
+- Fix the main prompt generator selecting/reselecting target models incorrectly.
+- Let the user rate and review generated prompts.
+- Use user feedback and GPT Image 2 test-panel learning as optimization material.
+- Make scoring stricter because previous AI scores were too high.
+
+Changes:
+
+- `src/lib/relay-models.ts`
+  - new helper for case-insensitive relay model matching
+  - creates temporary `ModelInfo` entries for relay-only model ids returned by `/api/probe`
+  - infers provider/category/speed/accuracy from model id patterns
+- `src/components/PromptGenerator.tsx`
+  - persists target model under `ai_prompt_target_model_id`
+  - locks manual/history target choices under `ai_prompt_target_model_locked`
+  - auto-selects recommended target only while not manually locked
+  - sends local feedback memory into `/api/generate`
+  - saves user prompt feedback locally and posts it to `/api/feedback`
+- `src/components/ModelSelector.tsx`
+  - merges relay-only model ids into the UI
+  - shows a persistent selected-target panel
+  - category follows the selected target so the selected model remains visible
+- `src/components/ModelPicker.tsx`
+  - relay `/models` list is a hint, not a hard selector lock
+  - relay-only ids can be selected from searchable cards
+- `src/components/ResultPanel.tsx`
+  - added prompt score slider, feedback notes, and preference buttons
+  - previous prompt preview appears when available
+- `src/lib/prompt-feedback.ts`
+  - localStorage feedback history, previous-prompt lookup, and feedback-memory builder
+- `src/app/api/feedback/route.ts`
+  - sanitized feedback endpoint with optional GitHub JSONL append
+- `src/app/api/generate/route.ts`
+  - merges relay-only model ids before resolving target/generator/evaluator models
+  - summarizes feedback memory for prompt builders and GPT Image 2 ensemble
+- `src/lib/prompt-evaluator.ts`, `src/lib/gpt-image-2-ensemble.ts`, `scripts/gpt-image2-live-review-panel.cjs`
+  - stricter score calibration for prompt and image judging
+
+New/updated tests:
+
+- image request auto-selects GPT Image 2 and persists after reload
+- relay-only probed model ids are selectable
+- user can save strict prompt feedback after generation
+
+Validation:
+
+- `npx tsc --noEmit`
+- `node --check scripts\gpt-image2-live-review-panel.cjs`
+- `git diff --check`
+- `npm run build`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` -> 12 passed
+- `npm run test:quality` -> 5 passed
+
+Important deployment note:
+
+- GitHub feedback sync requires a server-side token on Vercel or the hosting environment:
+  - `PROMPT_FEEDBACK_GITHUB_TOKEN` or `GITHUB_TOKEN`
+  - optional `PROMPT_FEEDBACK_GITHUB_REPO`
+  - optional `PROMPT_FEEDBACK_GITHUB_BRANCH`
+- Without the token, feedback is still saved in the user's browser and used by that browser for later generations, but the API response reports GitHub sync as not configured.

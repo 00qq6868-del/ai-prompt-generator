@@ -1,10 +1,11 @@
 "use client";
 
 import { ModelInfo, ModelCategory } from "@/lib/models-registry";
+import { mergeRelayModelIds } from "@/lib/relay-models";
 import { useModels } from "@/hooks/useModels";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, RefreshCw, Cpu, Type, Image, Film, Mic, Headphones, Database, ScanSearch, ChevronRight, Search, X, ArrowUpDown } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ModelPicker } from "./ModelPicker";
 
 interface Props {
@@ -73,6 +74,10 @@ export function ModelSelector({
   availableModelIds,
 }: Props) {
   const { models, loading, source, updatedAt, refresh } = useModels("accurate");
+  const allModels = useMemo(
+    () => mergeRelayModelIds(models, availableModelIds),
+    [models, availableModelIds],
+  );
   const [category, setCategory] = useState<ModelCategory | "all">("text");
   const [provider, setProvider] = useState("全部");
   const [search, setSearch] = useState("");
@@ -82,22 +87,33 @@ export function ModelSelector({
 
   const selectedGenerators = useMemo(
     () => selectedGeneratorIds
-      .map(id => models.find(m => m.id === id))
+      .map(id => allModels.find(m => m.id === id))
       .filter((m): m is ModelInfo => Boolean(m)),
-    [models, selectedGeneratorIds]
+    [allModels, selectedGeneratorIds]
   );
 
   const selectedEvaluators = useMemo(
     () => selectedEvaluatorIds
-      .map(id => models.find(m => m.id === id))
+      .map(id => allModels.find(m => m.id === id))
       .filter((m): m is ModelInfo => Boolean(m)),
-    [models, selectedEvaluatorIds]
+    [allModels, selectedEvaluatorIds]
   );
 
   const targetModel = useMemo(
-    () => models.find(m => m.id === selectedTargetId),
-    [models, selectedTargetId]
+    () => allModels.find(m => m.id === selectedTargetId),
+    [allModels, selectedTargetId]
   );
+
+  useEffect(() => {
+    if (!targetModel) return;
+    const nextCategory = targetModel.category ?? "text";
+    if (category !== nextCategory) {
+      setCategory(nextCategory);
+      setProvider("全部");
+      setSearch("");
+    }
+  }, [targetModel?.id]);
+
   const targetCategory = targetModel?.category ?? "text";
   const generatorSubtitle = targetCategory === "image"
     ? "目标是图像模型 — 推荐选质量高的生成器 / Target is image model"
@@ -108,17 +124,17 @@ export function ModelSelector({
 
   // Category counts (across all models, unaffected by filters)
   const catCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: models.length };
-    for (const m of models) {
+    const counts: Record<string, number> = { all: allModels.length };
+    for (const m of allModels) {
       const c = m.category ?? "text";
       counts[c] = (counts[c] ?? 0) + 1;
     }
     return counts;
-  }, [models]);
+  }, [allModels]);
 
   // Provider counts (within selected category)
   const provCounts = useMemo(() => {
-    let list = models;
+    let list = allModels;
     if (category !== "all") {
       list = list.filter((m) => (m.category ?? "text") === category);
     }
@@ -127,11 +143,11 @@ export function ModelSelector({
       counts[m.provider] = (counts[m.provider] ?? 0) + 1;
     }
     return counts;
-  }, [models, category]);
+  }, [allModels, category]);
 
   // Filter + search + sort
   const filtered = useMemo(() => {
-    let list = models;
+    let list = allModels;
 
     if (category !== "all") {
       list = list.filter((m) => (m.category ?? "text") === category);
@@ -168,7 +184,7 @@ export function ModelSelector({
     }
 
     return sorted;
-  }, [models, category, provider, search, sortBy]);
+  }, [allModels, category, provider, search, sortBy]);
 
   return (
     <div className="space-y-5">
@@ -210,7 +226,7 @@ export function ModelSelector({
         </button>
 
         <ModelPicker
-          models={models}
+          models={allModels}
           selectedIds={selectedGeneratorIds}
           onMultiChange={onGeneratorChange}
           multiple
@@ -260,7 +276,7 @@ export function ModelSelector({
         </button>
 
         <ModelPicker
-          models={models}
+          models={allModels}
           selectedIds={selectedEvaluatorIds}
           onMultiChange={onEvaluatorChange}
           multiple
@@ -290,6 +306,29 @@ export function ModelSelector({
             </button>
           </div>
         </div>
+
+        {targetModel && (
+          <div className="mb-3 rounded-2xl border border-indigo-400/25 bg-indigo-500/10 p-3">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-indigo-300/80">
+                  当前已选目标模型 Selected target
+                </div>
+                <div className="mt-1 truncate text-sm font-semibold text-white">
+                  {targetModel.name}
+                </div>
+              </div>
+              <div className="shrink-0 rounded-full border border-indigo-400/30 bg-indigo-500/15 px-2.5 py-1 text-[10px] text-indigo-200">
+                {targetModel.provider}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 text-[10px] text-white/55">
+              <span>ID: {targetModel.id}</span>
+              <span>分类: {targetModel.category ?? "text"}</span>
+              <span>{ACC_LABEL[targetModel.accuracy] ?? targetModel.accuracy}</span>
+            </div>
+          </div>
+        )}
 
         {/* ── Search input ── */}
         <div className="relative mb-3">

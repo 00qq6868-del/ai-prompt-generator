@@ -1310,3 +1310,46 @@ Validation:
 - GitHub Actions run `25345151965` passed:
   - Build app passed.
   - 14 E2E tests passed.
+
+## 2026-05-05 — Main Site Model Persistence And Feedback Learning Loop
+
+User asked to fix the main AI prompt website's old model-selection problem and add a human feedback loop after prompt generation.
+
+Implemented:
+
+- Target model persistence:
+  - selected target model is stored in browser localStorage
+  - manual/history selection locks the target so auto-recommendation will not overwrite it
+  - automatic recommendation can still switch target models while the user has not manually locked a target
+  - selected target is shown in a persistent `当前已选目标模型 Selected target` panel
+- Relay-only model support:
+  - added `src/lib/relay-models.ts`
+  - relay `/models` results are merged into the UI and backend as temporary selectable models
+  - model id matching is case-insensitive where relay availability matters
+  - generator/evaluator picker no longer blocks selection merely because a model is absent from the relay `/models` list
+  - this fixes aliases such as `ZhipuAI/GLM-5.1` or `ac-claude-opus-4-6-thinking` being invisible/unselectable
+- Prompt feedback learning:
+  - added `src/lib/prompt-feedback.ts`
+  - `ResultPanel` now lets the user score the optimized prompt 0-100 and leave notes
+  - preference choices: new better, old better, blend, both bad
+  - previous same-idea/same-target prompt is shown when available
+  - selecting old better swaps the displayed result back to the previous prompt
+  - browser feedback memory is injected into future `/api/generate` calls to avoid repeated failures
+- GitHub feedback API:
+  - added `POST /api/feedback`
+  - feedback is accepted and sanitized
+  - if `PROMPT_FEEDBACK_GITHUB_TOKEN` or `GITHUB_TOKEN` is configured server-side, it appends JSONL to `data/prompt-feedback/YYYY-MM.jsonl`
+  - if no token is configured, the site clearly saves browser-local feedback only
+- Stricter scoring:
+  - prompt tournament judge now uses harsher calibration
+  - GPT Image 2 ensemble judge now penalizes fake faces, bad hands, unreadable text, weak layout, missing reference preservation, and prompt score inflation
+  - local GPT Image 2 panel image judge prompt is stricter too
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `node --check scripts\gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed with line-ending warnings only.
+- `npm run build` passed.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 12/12.
+- `npm run test:quality` passed: 5/5.

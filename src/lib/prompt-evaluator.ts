@@ -1,6 +1,7 @@
 import { callProvider, GenerateResult } from "@/lib/providers";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
 import { resolveRuntimeApiProvider } from "@/lib/gpt-image-2-ensemble";
+import { isRelayModelListed } from "@/lib/relay-models";
 import {
   ModelHealthIssue,
   ModelHealthMeta,
@@ -195,11 +196,10 @@ function selectFallbackGeneratorPlans(
   needed: number,
 ): { plans: Array<{ model: ModelInfo; apiProvider: string }>; skippedCooling: ModelHealthIssue[] } {
   if (needed <= 0) return { plans: [], skippedCooling: [] };
-  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
   const candidates = opts.models
     .filter((model) => (model.category ?? "text") === "text")
     .filter((model) => !existingModelIds.has(model.id))
-    .filter((model) => !availableSet || availableSet.has(model.id) || model.apiProvider !== "aihubmix")
+    .filter((model) => !opts.availableModelIds?.length || isRelayModelListed(opts.availableModelIds, model.id) || model.apiProvider !== "aihubmix")
     .sort((a, b) => scoreModel(b, "fast") + scoreModel(b, "accurate") - (scoreModel(a, "fast") + scoreModel(a, "accurate")));
 
   const rawPlans = planModels(candidates, opts);
@@ -227,7 +227,6 @@ function safeParseJson<T>(text: string): T | null {
 }
 
 function selectEvaluatorPlans(opts: PromptTournamentOptions): Array<{ model: ModelInfo; apiProvider: string }> {
-  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
   const chosen: Array<{ model: ModelInfo; apiProvider: string }> = [];
   const seen = new Set<string>();
 
@@ -235,7 +234,7 @@ function selectEvaluatorPlans(opts: PromptTournamentOptions): Array<{ model: Mod
     if (!model || seen.has(model.id)) return;
     if ((model.category ?? "text") !== "text") return;
     const apiProvider = resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds);
-    if (availableSet && (apiProvider === "custom" || apiProvider === "aihubmix") && !availableSet.has(model.id)) return;
+    if (opts.availableModelIds?.length && (apiProvider === "custom" || apiProvider === "aihubmix") && !isRelayModelListed(opts.availableModelIds, model.id)) return;
     if (!isProviderCallable(apiProvider, opts.userKeys)) return;
     chosen.push({ model, apiProvider });
     seen.add(model.id);
@@ -251,7 +250,7 @@ function selectEvaluatorPlans(opts: PromptTournamentOptions): Array<{ model: Mod
 
   const fallback = opts.models
     .filter((model) => (model.category ?? "text") === "text")
-    .filter((model) => !availableSet || availableSet.has(model.id) || model.apiProvider !== "aihubmix")
+    .filter((model) => !opts.availableModelIds?.length || isRelayModelListed(opts.availableModelIds, model.id) || model.apiProvider !== "aihubmix")
     .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"));
 
   for (const model of fallback) {
@@ -294,6 +293,14 @@ Important safety boundary:
 
 Scoring rubric totals 100 points:
 ${rubric}
+
+Strict score calibration:
+- 95-100: production-ready prompt with no important missing detail, clear checks, and strong target-model fit.
+- 85-94: strong prompt with only minor low-risk gaps.
+- 70-84: usable draft, but missing notable constraints, examples, edge cases, or failure-mode controls.
+- 50-69: significant user details, target-model behavior, safety, or output usability are under-specified.
+- below 50: likely fails the user's intent.
+- Penalize score inflation. Do not reward long prompts that merely restate the user without adding control, verifiability, or failure prevention.
 
 Candidate prompts:
 ${JSON.stringify(candidates, null, 2)}

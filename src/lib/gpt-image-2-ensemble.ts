@@ -1,5 +1,6 @@
 import { callProvider, GenerateResult } from "@/lib/providers";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
+import { isRelayModelListed } from "@/lib/relay-models";
 import { GPT_IMAGE_2_SOURCE_COMMITS } from "@/lib/gpt-image-2-source-status";
 import {
   ModelHealthMeta,
@@ -37,6 +38,7 @@ interface GptImage2EnsembleOptions {
   userKeys: Record<string, string>;
   availableModelIds?: string[];
   evaluatorModelIds?: string[];
+  feedbackMemory?: string;
   maxTokens: number;
   onProgress?: (event: GptImage2Progress) => void;
 }
@@ -188,8 +190,7 @@ export function resolveRuntimeApiProvider(
   userKeys: Record<string, string>,
   availableModelIds?: string[],
 ): string {
-  const availableSet = availableModelIds?.length ? new Set(availableModelIds) : null;
-  if (hasCustomRelay(userKeys) && availableSet?.has(model.id)) return "aihubmix";
+  if (hasCustomRelay(userKeys) && isRelayModelListed(availableModelIds, model.id)) return "aihubmix";
   if (hasCustomRelay(userKeys) && (model.apiProvider === "custom" || model.apiProvider === "aihubmix")) return "aihubmix";
   return model.apiProvider;
 }
@@ -247,7 +248,6 @@ function selectHealthyGeneratorFallback(
   opts: GptImage2EnsembleOptions,
   excludeModelIds: Set<string>,
 ): { model: ModelInfo; apiProvider: string } | null {
-  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
   const candidates = opts.models
     .filter((model) => !excludeModelIds.has(model.id))
     .filter((model) => (model.category ?? "text") === "text")
@@ -255,7 +255,7 @@ function selectHealthyGeneratorFallback(
 
   for (const model of candidates) {
     const apiProvider = resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds);
-    if (availableSet && (apiProvider === "custom" || apiProvider === "aihubmix") && !availableSet.has(model.id)) continue;
+    if (opts.availableModelIds?.length && (apiProvider === "custom" || apiProvider === "aihubmix") && !isRelayModelListed(opts.availableModelIds, model.id)) continue;
     if (!isProviderCallable(apiProvider, opts.userKeys)) continue;
     if (getModelCooldown(model, apiProvider)) continue;
     return { model, apiProvider };
@@ -265,7 +265,6 @@ function selectHealthyGeneratorFallback(
 }
 
 function planGeneratorModels(opts: GptImage2EnsembleOptions): Array<{ model: ModelInfo; apiProvider: string }> {
-  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
   const seen = new Set<string>();
   const selected = [...(opts.generatorModels?.length ? opts.generatorModels : [opts.generatorModel]), opts.generatorModel]
     .filter((model) => {
@@ -281,7 +280,7 @@ function planGeneratorModels(opts: GptImage2EnsembleOptions): Array<{ model: Mod
       apiProvider: resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds),
     }))
     .filter((plan) => (plan.model.category ?? "text") === "text")
-    .filter((plan) => !availableSet || availableSet.has(plan.model.id) || (plan.apiProvider !== "custom" && plan.apiProvider !== "aihubmix"))
+    .filter((plan) => !opts.availableModelIds?.length || isRelayModelListed(opts.availableModelIds, plan.model.id) || (plan.apiProvider !== "custom" && plan.apiProvider !== "aihubmix"))
     .filter((plan) => isProviderCallable(plan.apiProvider, opts.userKeys));
 }
 
@@ -301,15 +300,18 @@ function safeParseJson<T>(text: string): T | null {
   }
 }
 
-function buildCandidatePrompt(userIdea: string, language: "zh" | "en"): string {
+function buildCandidatePrompt(userIdea: string, language: "zh" | "en", feedbackMemory?: string): string {
   const outputLanguage = language === "zh" ? "Chinese" : "English";
   return `User idea:
 ${userIdea}
+${buildFeedbackBlock(feedbackMemory)}
 
 Create GPT Image 2.0 prompt candidates using four independent source strategies plus one hybrid.
 
 Rules:
 - Preserve every user detail exactly.
+- Apply previous human/test feedback if present. If old/new prompt comparisons exist, preserve what the human preferred and remove what they rejected.
+- Be stricter than previous versions: add concrete checks for face identity, hand anatomy, text readability, clothing/story accuracy, lighting, camera realism, and commercial finish when relevant.
 - Do not mix the four strategies inside the four source candidates.
 - The fifth candidate is the only hybrid.
 - GPT Image 2 uses natural language and structured visual specs; do not add Midjourney flags, SD weights, or unsupported negative-prompt sections.
@@ -332,6 +334,11 @@ Return STRICT JSON only:
 }`;
 }
 
+function buildFeedbackBlock(feedbackMemory?: string): string {
+  if (!feedbackMemory?.trim()) return "";
+  return `\n\nPrevious human/test feedback to obey strictly:\n${feedbackMemory.trim()}\n`;
+}
+
 function buildJudgePrompt(candidates: GptImage2Candidate[], userIdea: string, language: "zh" | "en"): string {
   const outputLanguage = language === "zh" ? "Chinese" : "English";
   return `You are judging GPT Image 2.0 prompts.
@@ -344,6 +351,14 @@ ${JSON.stringify(candidates, null, 2)}
 
 Score every candidate from 0 to 100 using these weighted criteria:
 ${GPT_IMAGE_2_RUBRIC.map((item) => `- ${item.label} / ${item.labelZh} (${item.weight}): ${item.guide}`).join("\n")}
+
+Strict score calibration:
+- 95-100: ready for paid commercial use, no visible ambiguity, all details controlled.
+- 85-94: strong, but only minor low-risk issues.
+- 70-84: usable draft with clear missing controls or possible image defects.
+- 50-69: important user details or realism/typography/layout controls are missing.
+- below 50: likely fails the user's visual intent.
+- Penalize aggressively for fake-looking faces, wrong identity, bad anatomy/hands, unreadable text, weak composition, generic style, missing reference-image preservation, or vague prompts.
 
 If the top single-source candidate and the hybrid are close in quality, set shouldSynthesize=true.
 
@@ -412,13 +427,12 @@ function normalizeCandidates(
 function selectJudgeModels(opts: GptImage2EnsembleOptions): Array<{ model: ModelInfo; apiProvider: string }> {
   const chosen: Array<{ model: ModelInfo; apiProvider: string }> = [];
   const seen = new Set<string>();
-  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
 
   const add = (model: ModelInfo | undefined) => {
     if (!model || seen.has(model.id)) return;
     if ((model.category ?? "text") !== "text") return;
     const apiProvider = resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds);
-    if (availableSet && (apiProvider === "custom" || apiProvider === "aihubmix") && !availableSet.has(model.id)) return;
+    if (opts.availableModelIds?.length && (apiProvider === "custom" || apiProvider === "aihubmix") && !isRelayModelListed(opts.availableModelIds, model.id)) return;
     if (!isProviderCallable(apiProvider, opts.userKeys)) return;
     chosen.push({ model, apiProvider });
     seen.add(model.id);
@@ -437,7 +451,7 @@ function selectJudgeModels(opts: GptImage2EnsembleOptions): Array<{ model: Model
 
   const fallback = opts.models
     .filter((m) => (m.category ?? "text") === "text")
-    .filter((m) => !availableSet || availableSet.has(m.id) || m.apiProvider !== "aihubmix")
+    .filter((m) => !opts.availableModelIds?.length || isRelayModelListed(opts.availableModelIds, m.id) || m.apiProvider !== "aihubmix")
     .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"));
 
   for (const model of fallback) {
@@ -539,7 +553,7 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
         model: plan.model.id,
         apiProvider: plan.apiProvider,
         systemPrompt: "You generate candidate prompts for GPT Image 2. Output strict JSON only.",
-        userPrompt: buildCandidatePrompt(opts.userIdea, opts.language),
+        userPrompt: buildCandidatePrompt(opts.userIdea, opts.language, opts.feedbackMemory),
         maxTokens: Math.min(opts.maxTokens, 4096),
         temperature: 0.45,
         userKeys: opts.userKeys,

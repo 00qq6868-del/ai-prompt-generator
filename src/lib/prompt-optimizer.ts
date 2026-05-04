@@ -10,6 +10,7 @@ interface PromptBuilderOptions {
   targetProvider: string;
   targetCategory?: string;
   language: "zh" | "en";
+  feedbackMemory?: string;
 }
 
 const SYSTEM_PROMPT = `# IDENTITY
@@ -901,10 +902,12 @@ export function buildUserPrompt(opts: PromptBuilderOptions): string {
 
   return (
     `<user_idea>\n${opts.userIdea}\n</user_idea>\n\n` +
+    (opts.feedbackMemory ? `<feedback_memory>\n${opts.feedbackMemory}\n</feedback_memory>\n\n` : "") +
     `Transform this into an optimized prompt for ${opts.targetModel}.\n\n` +
     (hint ? `${hint}\n` : "") +
     `Remember:\n` +
     `- Preserve EVERY detail the user mentioned (言出法随)\n` +
+    `- Use feedback_memory to avoid previous failures and calibrate quality more strictly\n` +
     `- Add structure, constraints, and format specs the user implied but didn't state\n` +
     `- Make implicit requirements explicit\n` +
     `- Match prompt complexity to task complexity\n\n` +

@@ -71,6 +71,23 @@ async function mockAPIs(page: Page) {
             tags: ["image-gen"],
             releaseDate: "2023-10-01",
           },
+          {
+            id: "gpt-image-2",
+            name: "GPT Image 2",
+            provider: "OpenAI",
+            apiProvider: "openai",
+            category: "image",
+            contextWindow: 32768,
+            maxOutput: 4096,
+            inputCostPer1M: 5,
+            outputCostPer1M: 40,
+            speed: "medium",
+            accuracy: "supreme",
+            supportsStreaming: false,
+            isLatest: true,
+            tags: ["image-gen", "editing"],
+            releaseDate: "2025-08-01",
+          },
         ],
       }),
     })
@@ -91,6 +108,14 @@ async function mockAPIs(page: Page) {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({ ok: true }),
+    })
+  );
+
+  await page.route("**/api/feedback", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, feedbackId: "feedback-e2e", github: { synced: false } }),
     })
   );
 }
@@ -392,5 +417,116 @@ test.describe("PromptGenerator E2E", () => {
     await expect(page.getByText("评分标准 Scoring Criteria")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/意图保真 Intent fidelity/)).toBeVisible();
     await expect(page.getByText(/保留用户需求/)).toBeVisible();
+  });
+
+  test("10. image request auto-selects and persists the recommended target model", async ({ page }) => {
+    await page.locator("textarea").fill("生成一张高端科技产品海报");
+
+    await expect(page.getByText("当前已选目标模型 Selected target")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("GPT Image 2").first()).toBeVisible();
+
+    await page.reload();
+    await mockAPIs(page);
+    await expect(page.getByText("当前已选目标模型 Selected target")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("GPT Image 2").first()).toBeVisible();
+  });
+
+  test("11. relay-only probed models are selectable in the generator picker", async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "ai_prompt_user_keys",
+        JSON.stringify({
+          CUSTOM_BASE_URL: "https://relay.example.com/v1",
+          CUSTOM_API_KEY: "sk-test-fake-custom-relay",
+        })
+      );
+    });
+
+    await page.route("**/api/probe", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          models: ["gpt-5.5", "ac-claude-opus-4-6-thinking", "ZhipuAI/GLM-5.1"],
+          total: 3,
+          baseUrl: "https://relay.example.com/v1",
+        }),
+      })
+    );
+
+    await page.reload();
+    await page.getByRole("button", { name: "选择生成器模型 Open generator model picker" }).click();
+    const dialog = page.getByRole("dialog", { name: "选择生成器模型" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel("搜索模型 Search models").fill("ZhipuAI");
+    await dialog.getByRole("button", { name: /ZhipuAI\/GLM-5\.1/ }).click();
+    await dialog.getByRole("button", { name: "完成 Done" }).click();
+
+    const generatorTrigger = page.getByRole("button", { name: "选择生成器模型 Open generator model picker" });
+    await expect(generatorTrigger).toContainText("已选 2");
+    await expect(generatorTrigger).toContainText("智谱AI");
+  });
+
+  test("12. user can save strict prompt feedback after generation", async ({ page }) => {
+    let feedbackBody: any = null;
+    await page.route("**/api/feedback", async (route) => {
+      feedbackBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, feedbackId: "feedback-e2e", github: { synced: false } }),
+      });
+    });
+
+    await page.route("**/api/generate", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(MOCK_OPTIMIZED),
+      })
+    );
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "ai_prompt_user_keys",
+        JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" })
+      );
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/feedback", async (route) => {
+      feedbackBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, feedbackId: "feedback-e2e", github: { synced: false } }),
+      });
+    });
+    await page.route("**/api/generate", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(MOCK_OPTIMIZED),
+      })
+    );
+
+    await page.locator("textarea").fill("生成一张 GPT Image 2 产品海报提示词");
+    await page.getByRole("button", { name: /生成优化提示词/ }).click();
+    await expect(page.getByText("给这条 AI 提示词打分 Feedback")).toBeVisible({ timeout: 10_000 });
+
+    await page.getByLabel("提示词评分 Prompt score").fill("42");
+    await page.getByRole("button", { name: /两版都不好/ }).click();
+    await page.getByLabel("提示词评价 Prompt feedback notes").fill("评分虚高，文字和手部要更严格，参考图身份不能漂移。");
+    await page.getByRole("button", { name: /保存评分与评价/ }).click();
+
+    await expect.poll(() => feedbackBody?.userScore).toBe(42);
+    expect(feedbackBody.userNotes).toContain("评分虚高");
+    expect(feedbackBody.preference).toBe("both_bad");
+    expect(feedbackBody.optimizedPrompt).toContain("senior poet");
+    expect(feedbackBody.selectedPrompt).toContain("senior poet");
+    expect(feedbackBody.targetModel).toBeTruthy();
+    expect(feedbackBody.generatorModels.length).toBeGreaterThan(0);
   });
 });

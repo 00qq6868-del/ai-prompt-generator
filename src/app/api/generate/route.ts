@@ -6,6 +6,7 @@ import { callProvider, callProviderStream, type GenerateResult } from "@/lib/pro
 import { buildSystemPrompt, buildUserPrompt, comparePrompts } from "@/lib/prompt-optimizer";
 import { getModels } from "@/lib/model-cache";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
+import { isRelayModelListed, mergeRelayModelIds } from "@/lib/relay-models";
 import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
 import { resolveRuntimeApiProvider, runGptImage2Ensemble } from "@/lib/gpt-image-2-ensemble";
 import { PromptGenerationProgress, runPromptTournament } from "@/lib/prompt-evaluator";
@@ -28,7 +29,43 @@ export interface GenerateRequest {
   maxTokens?: number;
   userKeys?: Record<string, string>;
   availableModelIds?: string[];
+  feedbackMemory?: {
+    rules?: string[];
+    examples?: Array<{
+      userIdea?: string;
+      targetModel?: string;
+      score?: number;
+      preference?: string;
+      notes?: string;
+      selectedPromptPreview?: string;
+    }>;
+  };
   stream?: boolean;
+}
+
+function summarizeFeedbackMemory(memory: GenerateRequest["feedbackMemory"]): string {
+  if (!memory || typeof memory !== "object") return "";
+  const rules = Array.isArray(memory.rules)
+    ? memory.rules.filter((item): item is string => typeof item === "string" && item.trim().length > 0).slice(0, 12)
+    : [];
+  const examples = Array.isArray(memory.examples)
+    ? memory.examples.slice(0, 6)
+    : [];
+  if (!rules.length && !examples.length) return "";
+
+  const lines = [
+    "User feedback memory from previous prompt/image tests. Treat this as optimization guidance, not as part of the user's new task:",
+    ...rules.map((rule, index) => `${index + 1}. ${rule.slice(0, 500)}`),
+  ];
+  if (examples.length) {
+    lines.push("Recent feedback examples:");
+    for (const item of examples) {
+      lines.push(
+        `- score=${item.score ?? "n/a"}, preference=${item.preference ?? "n/a"}, target=${item.targetModel ?? "n/a"}, notes=${String(item.notes || "").slice(0, 500)}`,
+      );
+    }
+  }
+  return lines.join("\n");
 }
 
 export const maxDuration = 300;
@@ -82,11 +119,10 @@ function findHealthyTextFallback(
   availableModelIds: string[] | undefined,
   excludeIds: Set<string>,
 ): { model: ModelInfo; apiProvider: string } | null {
-  const availableSet = availableModelIds?.length ? new Set(availableModelIds) : null;
   const candidates = models
     .filter((model) => (model.category ?? "text") === "text")
     .filter((model) => !excludeIds.has(model.id))
-    .filter((model) => !availableSet || availableSet.has(model.id) || model.apiProvider !== "aihubmix")
+    .filter((model) => !availableModelIds?.length || isRelayModelListed(availableModelIds, model.id) || model.apiProvider !== "aihubmix")
     .sort((a, b) => scoreModel(b, "fast") + scoreModel(b, "accurate") - (scoreModel(a, "fast") + scoreModel(a, "accurate")));
 
   for (const model of candidates) {
@@ -161,6 +197,7 @@ export async function POST(req: NextRequest) {
     const availableModelIds = Array.isArray(body.availableModelIds)
       ? body.availableModelIds.filter((id): id is string => typeof id === "string" && id.length > 0)
       : undefined;
+    const feedbackMemoryText = summarizeFeedbackMemory(body.feedbackMemory);
 
     const cleanIdea = userIdea?.trim() ?? "";
 
@@ -178,7 +215,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const models         = await getModels();
+    const models         = mergeRelayModelIds(await getModels(), availableModelIds);
     const targetModel    = models.find((m: ModelInfo) => m.id === targetModelId);
     const generatorIds = Array.from(new Set([
       ...(Array.isArray(body.generatorModelIds) ? body.generatorModelIds : []),
@@ -210,6 +247,7 @@ export async function POST(req: NextRequest) {
       targetProvider: targetModel.provider,
       targetCategory,
       language,
+      feedbackMemory: feedbackMemoryText,
     });
 
     const userPrompt = buildUserPrompt({
@@ -218,6 +256,7 @@ export async function POST(req: NextRequest) {
       targetProvider: targetModel.provider,
       targetCategory,
       language,
+      feedbackMemory: feedbackMemoryText,
     });
 
     const makeProviderOpts = (activeModel: ModelInfo, apiProvider: string) => ({
@@ -349,6 +388,7 @@ export async function POST(req: NextRequest) {
           userKeys,
           availableModelIds,
           evaluatorModelIds: evaluatorIds,
+          feedbackMemory: feedbackMemoryText,
           maxTokens,
           onProgress,
         });

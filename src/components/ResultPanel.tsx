@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Copy, Check, Coins, Clock, Zap, TrendingDown, TrendingUp, Minus, ArrowLeftRight } from "lucide-react";
+import { Copy, Check, Coins, Clock, Zap, TrendingDown, TrendingUp, Minus, ArrowLeftRight, Star, MessageSquare } from "lucide-react";
 import { useState } from "react";
+import type { PromptPreference } from "@/lib/prompt-feedback";
 
 interface Stats {
   inputTokens: number;
@@ -54,11 +55,23 @@ interface Props {
   meta: Meta;
   generatorModelCost: { input: number; output: number };
   originalPrompt?: string;
+  previousPrompt?: string;
+  onSubmitFeedback?: (payload: {
+    userScore: number;
+    userNotes: string;
+    preference: PromptPreference;
+    selectedPrompt: string;
+  }) => Promise<void>;
 }
 
-export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalPrompt }: Props) {
+export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalPrompt, previousPrompt, onSubmitFeedback }: Props) {
   const [copied, setCopied] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
+  const [userScore, setUserScore] = useState(70);
+  const [userNotes, setUserNotes] = useState("");
+  const [preference, setPreference] = useState<PromptPreference>("new");
+  const [savingFeedback, setSavingFeedback] = useState(false);
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
 
   const copy = async () => {
     await navigator.clipboard.writeText(prompt);
@@ -88,6 +101,23 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
     : "text-amber-400";
 
   const ChangeIcon = isShorter ? TrendingDown : isLonger ? TrendingUp : Minus;
+  const selectedPrompt = preference === "old" && previousPrompt ? previousPrompt : prompt;
+
+  const submitFeedback = async () => {
+    if (!onSubmitFeedback) return;
+    setSavingFeedback(true);
+    try {
+      await onSubmitFeedback({
+        userScore,
+        userNotes,
+        preference,
+        selectedPrompt,
+      });
+      setFeedbackSaved(true);
+    } finally {
+      setSavingFeedback(false);
+    }
+  };
 
   return (
     <motion.div
@@ -271,6 +301,96 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
           </>
         )}
       </div>
+
+      {onSubmitFeedback && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
+                <Star size={15} className="text-amber-300" />
+                给这条 AI 提示词打分 Feedback
+              </div>
+              <p className="mt-1 text-xs leading-5 text-white/55">
+                你的评分会进入本机反馈记忆；如果服务器配置了 GitHub token，也会作为优化材料同步到 GitHub。
+              </p>
+            </div>
+            <div className="font-mono text-lg font-bold text-indigo-300">{userScore}/100</div>
+          </div>
+
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={userScore}
+            onChange={(event) => setUserScore(Number(event.target.value))}
+            aria-label="提示词评分 Prompt score"
+            className="w-full accent-indigo-500"
+          />
+
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-4">
+            {[
+              { id: "new" as const, label: "新版更好", hint: "采用新版" },
+              { id: "old" as const, label: "旧版更好", hint: previousPrompt ? "保留旧版" : "暂无旧版" },
+              { id: "blend" as const, label: "折中改进", hint: "融合新旧优点" },
+              { id: "both_bad" as const, label: "两版都不好", hint: "重做方向" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                disabled={item.id === "old" && !previousPrompt}
+                onClick={() => setPreference(item.id)}
+                className={`rounded-xl border px-3 py-2 text-left transition-all
+                  ${preference === item.id
+                    ? "border-indigo-400/50 bg-indigo-500/15 text-white"
+                    : "border-white/10 bg-white/[0.03] text-white/65 hover:bg-white/[0.06]"
+                  }
+                  ${item.id === "old" && !previousPrompt ? "cursor-not-allowed opacity-45" : ""}
+                `}
+              >
+                <div className="text-xs font-semibold">{item.label}</div>
+                <div className="mt-0.5 text-[10px] text-white/45">{item.hint}</div>
+              </button>
+            ))}
+          </div>
+
+          {previousPrompt && (
+            <div className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/55">
+                旧版提示词 Previous version
+              </div>
+              <pre className="max-h-28 overflow-y-auto whitespace-pre-wrap font-sans text-xs leading-5 text-white/45">
+                {previousPrompt}
+              </pre>
+            </div>
+          )}
+
+          <label className="mt-3 block text-xs font-medium text-white/60">
+            你的评价：哪里好、哪里不好、哪里虚高、哪里要更抠细节
+          </label>
+          <div className="mt-2 flex gap-2">
+            <div className="mt-3 hidden shrink-0 text-white/35 sm:block">
+              <MessageSquare size={16} />
+            </div>
+            <textarea
+              value={userNotes}
+              onChange={(event) => setUserNotes(event.target.value)}
+              rows={3}
+              placeholder="例如：评分太高，手部不自然，文字不清楚，提示词没有保留参考图五官，服装不符合角色，商业感不足..."
+              aria-label="提示词评价 Prompt feedback notes"
+              className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-indigo-500/50"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={submitFeedback}
+            disabled={savingFeedback}
+            className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {savingFeedback ? "保存中..." : feedbackSaved ? "已保存，可继续修改再保存" : "保存评分与评价"}
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -869,3 +869,57 @@ Result:
 - GitHub Actions run `25345151965` passed:
   - Build app passed.
   - 14 E2E tests passed.
+
+## Current Handoff — 2026-05-05 Main Site Feedback And Model Persistence
+
+Latest user request:
+
+- Main site should auto-pick the correct target model and stop forcing the user to reselect after choosing.
+- After generation, the user should score the prompt and leave feedback.
+- Feedback should become future optimization material and sync to GitHub when possible.
+- GPT Image 2 test-panel data and human scoring should make prompt/image scoring stricter.
+
+Implemented locally:
+
+- Target model persistence and lock:
+  - `ai_prompt_target_model_id`
+  - `ai_prompt_target_model_locked`
+  - automatic target recommendation only changes the target while not manually locked
+  - selected target is always visible above target search/filter controls
+- Relay-only model support:
+  - new `src/lib/relay-models.ts`
+  - front end and `/api/generate` merge custom relay `/models` ids into the model registry
+  - case-insensitive matching for relay availability
+  - generator/evaluator picker allows user-selected ids even when not returned by `/models`
+- Prompt feedback:
+  - new `src/lib/prompt-feedback.ts`
+  - `ResultPanel` score slider, notes, and preference choices:
+    - new better
+    - old better
+    - blend
+    - both bad
+  - previous prompt lookup from prompt feedback/history
+  - feedback memory is sent into `/api/generate`
+- GitHub feedback endpoint:
+  - new `src/app/api/feedback/route.ts`
+  - appends sanitized JSONL to `data/prompt-feedback/YYYY-MM.jsonl` only if server token is configured
+  - no API keys are written
+- Stricter judging:
+  - prompt tournament and GPT Image 2 ensemble scoring use harsher calibration
+  - local GPT Image 2 panel judge prompt now penalizes pretty-but-wrong images, identity drift, bad hands, unreadable text, weak composition, missing reference-photo preservation, and generic prompt inflation
+
+Validation passed:
+
+- `npx tsc --noEmit`
+- `node --check scripts\gpt-image2-live-review-panel.cjs`
+- `git diff --check`
+- `npm run build`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` -> 12 passed
+- `npm run test:quality` -> 5 passed
+
+Still needed after commit:
+
+- Push this feature commit.
+- Watch GitHub Actions.
+- If deployment succeeds, run production smoke.
+- Configure `PROMPT_FEEDBACK_GITHUB_TOKEN` in Vercel if real GitHub feedback upload is desired. Without it, feedback remains browser-local and still helps future generations in that same browser.

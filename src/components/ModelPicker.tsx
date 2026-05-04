@@ -186,8 +186,6 @@ export function ModelPicker({
   }, [multiple, selectedId, selectedIds]);
 
   const handleSelect = (id: string) => {
-    if (availableSet && !availableSet.has(id)) return;
-
     if (multiple) {
       const current = selectedIds ?? [];
       if (current.includes(id)) {
@@ -398,7 +396,7 @@ export function ModelPicker({
                       isSelected={selectedSet.has(m.id)}
                       isFavorite={favorites.has(m.id)}
                       isTop={topIds.has(m.id)}
-                      isAvailable={availableSet ? availableSet.has(m.id) : true}
+                      isAvailable
                       multiple={multiple}
                       onSelect={() => handleSelect(m.id)}
                       onToggleFavorite={() => toggleFavorite(m.id)}
@@ -418,7 +416,7 @@ export function ModelPicker({
               </span>
               {availableSet && (
                 <span className="text-emerald-400/70">
-                  中转站可用: {availableSet.size} 个
+                  中转站列出: {availableSet.size} 个（未列出的模型也允许手动测试）
                 </span>
               )}
               {multiple && (

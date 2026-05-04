@@ -636,6 +636,14 @@ Score every candidate from 0 to 100 using these criteria:
 - layout controllability: aspect ratio, panels, zones, UI/diagram structure when relevant
 - commercial usability: polished, practical, avoids watermarks/logos unless user supplied them
 
+Strict score calibration:
+- 95-100: paid commercial-ready; no vague controls or obvious visual failure risks.
+- 85-94: strong but only minor low-risk gaps.
+- 70-84: usable draft but missing important controls or likely image defects.
+- 50-69: significant missing user details, realism, identity, anatomy, text, or layout controls.
+- below 50: likely fails the user's visual intent.
+- Penalize aggressively for fake-looking faces, wrong identity, bad anatomy/hands, unreadable text, generic clothing, weak composition, missing reference-image preservation, or prompts that merely repeat the user's words.
+
 If the top single-source candidate and the hybrid are close in quality, set shouldSynthesize=true.
 
 Return STRICT JSON only in ${outputLanguage}:
@@ -1014,7 +1022,7 @@ async function judgeImageWithModel({ relayBaseUrl, apiKey, judgeModel, userIdea,
         {
           role: "system",
           content:
-            "You are a strict commercial AI image evaluator. Return JSON only. Use scores from 0 to 100.",
+            "You are a strict commercial AI image evaluator. Return JSON only. Use scores from 0 to 100. Calibrate harshly: 90+ means paid commercial-ready with almost no visible defects; 70-84 means usable draft; below 70 means important visual/user-intent problems.",
         },
         {
           role: "user",
@@ -1025,7 +1033,8 @@ async function judgeImageWithModel({ relayBaseUrl, apiKey, judgeModel, userIdea,
                 "Evaluate this generated image against the user's original request and the optimized GPT Image 2 prompt. Return exactly this JSON shape: {\"overall\":0,\"intentFidelity\":0,\"promptAdherence\":0,\"composition\":0,\"textRendering\":0,\"visualQuality\":0,\"commercialQuality\":0,\"issues\":[\"...\"],\"strengths\":[\"...\"],\"verdict\":\"...\"}\n\nOriginal request:\n" +
                 userIdea +
                 "\n\nOptimized prompt:\n" +
-                optimizedPrompt,
+                optimizedPrompt +
+                "\n\nStrict scoring rules: Do not give high scores for pretty images that miss identity, reference-photo preservation, face realism, hand anatomy, clothing/story accuracy, readable text, camera realism, composition, or commercial usability. List concrete defects in issues.",
             },
             { type: "image_url", image_url: { url: imageUrl } },
           ],

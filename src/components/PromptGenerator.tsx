@@ -8,13 +8,18 @@ import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
 import toast from "react-hot-toast";
 import { scoreModel, ModelInfo, OptimizationMode, GENERATOR_AFFINITY } from "@/lib/models-registry";
+import { isRelayModelListed, mergeRelayModelIds } from "@/lib/relay-models";
 import { recommendModel } from "@/lib/model-recommender";
 import { saveHistory } from "@/lib/history";
+import { buildPromptFeedbackMemory, findPreviousPrompt, savePromptFeedback } from "@/lib/prompt-feedback";
+import type { PromptPreference } from "@/lib/prompt-feedback";
 import { HistoryPanel } from "./HistoryPanel";
 import { trackApiCall, trackError, trackTTFT } from "@/lib/analytics";
 
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
+const TARGET_STORAGE_KEY = "ai_prompt_target_model_id";
+const TARGET_LOCK_STORAGE_KEY = "ai_prompt_target_model_locked";
 
 const PROVIDER_KEY_MAP: Record<string, string> = {
   custom:    "CUSTOM_API_KEY",
@@ -139,7 +144,14 @@ function estimateTotalSeconds(targetModelId: string, generatorCount: number, eva
 export function PromptGenerator() {
   const [idea, setIdea]           = useState("");
   const [language, setLanguage]   = useState<"zh" | "en">("zh");
-  const [targetModelId, setTargetModelId]       = useState(DEFAULT_TARGET);
+  const [targetModelId, setTargetModelId]       = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_TARGET;
+    return localStorage.getItem(TARGET_STORAGE_KEY) || DEFAULT_TARGET;
+  });
+  const [targetManuallyLocked, setTargetManuallyLocked] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(TARGET_LOCK_STORAGE_KEY) === "1";
+  });
   const [generatorModelIds, setGeneratorModelIds] = useState<string[]>([]);
   const [evaluatorModelIds, setEvaluatorModelIds] = useState<string[]>([]);
   const [loading, setLoading]     = useState(false);
@@ -148,7 +160,21 @@ export function PromptGenerator() {
   const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [result, setResult]       = useState<GenerateResult | null>(null);
+  const [previousPromptForResult, setPreviousPromptForResult] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  const setTargetModel = (id: string, source: "manual" | "auto" | "history" = "manual") => {
+    setTargetModelId(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TARGET_STORAGE_KEY, id);
+      if (source !== "auto") {
+        localStorage.setItem(TARGET_LOCK_STORAGE_KEY, "1");
+      } else {
+        localStorage.setItem(TARGET_LOCK_STORAGE_KEY, "0");
+      }
+    }
+    setTargetManuallyLocked(source !== "auto");
+  };
 
   useEffect(() => {
     if (!loading) return;
@@ -235,9 +261,9 @@ export function PromptGenerator() {
         return r.json();
       })
       .then(data => {
-        const allModels: ModelInfo[] = data.models ?? [];
+        const allModels: ModelInfo[] = mergeRelayModelIds(data.models ?? [], probeModelIds);
         const available = allModels.filter(
-          m => probeModelIds.includes(m.id) && (m.category ?? "text") === "text"
+          m => isRelayModelListed(probeModelIds, m.id) && (m.category ?? "text") === "text"
         );
         if (available.length === 0) {
           setGeneratorModelIds(["gpt-4o-mini"]);
@@ -245,10 +271,10 @@ export function PromptGenerator() {
         }
 
         const tid = targetId ?? targetModelId;
-        const affinity = GENERATOR_AFFINITY.find(a => tid.startsWith(a.prefix));
+        const targetKey = tid.toLowerCase();
+        const affinity = GENERATOR_AFFINITY.find(a => targetKey.startsWith(a.prefix.toLowerCase()));
         if (affinity) {
-          const availableIds = new Set(available.map(m => m.id));
-          const match = affinity.recommended.find(id => availableIds.has(id));
+          const match = affinity.recommended.find(id => available.some(model => model.id.toLowerCase() === id.toLowerCase()));
           if (match) {
             setGeneratorModelIds([match]);
             setEvaluatorModelIds(prev => prev.length ? prev : available
@@ -300,6 +326,7 @@ export function PromptGenerator() {
     setLoading(true);
     setResult(null);
     setStreamingText("");
+    setPreviousPromptForResult(findPreviousPrompt(idea, targetModelId));
     const estimatedTotalSec = estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length);
     setElapsedSec(0);
     setGenerationProgress({
@@ -335,6 +362,7 @@ export function PromptGenerator() {
 
     try {
       const userKeys = loadUserKeys();
+      const feedbackMemory = buildPromptFeedbackMemory(idea, targetModelId);
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -348,6 +376,7 @@ export function PromptGenerator() {
           maxTokens: 4096,
           userKeys,
           availableModelIds,
+          feedbackMemory,
           stream: true,
         }),
       });
@@ -467,6 +496,69 @@ export function PromptGenerator() {
   const approxTokens = Math.ceil(charCount / (language === "zh" ? 1.8 : 4));
   const recommendation = recommendModel(idea);
 
+  useEffect(() => {
+    if (!recommendation || targetManuallyLocked) return;
+    if (targetModelId === recommendation.modelId) return;
+    setTargetModel(recommendation.modelId, "auto");
+  }, [recommendation?.modelId, targetManuallyLocked, targetModelId]);
+
+  const submitPromptFeedback = async (payload: {
+    userScore: number;
+    userNotes: string;
+    preference: PromptPreference;
+    selectedPrompt: string;
+  }) => {
+    if (!result) return;
+    const item = savePromptFeedback({
+      userIdea: idea,
+      originalPrompt: idea,
+      previousPrompt: previousPromptForResult || undefined,
+      optimizedPrompt: result.optimizedPrompt,
+      selectedPrompt: payload.selectedPrompt,
+      targetModel: targetModelId,
+      generatorModels: generatorModelIds,
+      evaluatorModels: evaluatorModelIds,
+      language,
+      userScore: payload.userScore,
+      userNotes: payload.userNotes,
+      preference: payload.preference,
+      aiPromptScore: result.meta.promptEvaluation?.candidates.find(
+        candidate => candidate.id === result.meta.promptEvaluation?.selectedCandidateId,
+      )?.averageScore ?? null,
+      aiSummary: result.meta.promptEvaluation?.summary || result.meta.reviewSummary,
+      sourceCommits: result.meta.promptEvaluation?.sourceCommits,
+    });
+
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || "GitHub feedback sync failed");
+      if (data.github?.synced) {
+        toast.success("反馈已保存并同步到 GitHub / Feedback saved and synced");
+      } else {
+        toast.success("反馈已保存到本机；GitHub 未配置同步令牌 / Saved locally; GitHub sync not configured");
+      }
+    } catch (error: any) {
+      toast.success("反馈已保存到本机 / Feedback saved locally");
+      toast.error(error?.message || "GitHub 同步失败，稍后可再导出 / GitHub sync failed");
+    }
+
+    if (payload.preference === "old" && previousPromptForResult) {
+      setResult({
+        ...result,
+        optimizedPrompt: previousPromptForResult,
+        meta: {
+          ...result.meta,
+          selectedStrategy: "用户选择旧版 / User preferred previous prompt",
+        },
+      });
+    }
+  };
+
   const renderEstimatedTotalSec = estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length);
   const remainingSec =
     typeof generationProgress?.etaSec === "number"
@@ -489,7 +581,7 @@ export function PromptGenerator() {
             <HistoryPanel
               onReuse={(item) => {
                 setIdea(item.userIdea);
-                setTargetModelId(item.targetModel);
+                setTargetModel(item.targetModel, "history");
                 setGeneratorModelIds(item.generatorModel.split(",").map(id => id.trim()).filter(Boolean));
                 setLanguage(item.language);
               }}
@@ -529,7 +621,7 @@ export function PromptGenerator() {
         >
           <span className="text-xs text-white/65">推荐模型 Suggested:</span>
           <button
-            onClick={() => setTargetModelId(recommendation.modelId)}
+            onClick={() => setTargetModel(recommendation.modelId, "manual")}
             className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/25 transition-all"
           >
             {recommendation.label} →
@@ -542,7 +634,7 @@ export function PromptGenerator() {
         selectedTargetId={targetModelId}
         selectedGeneratorIds={generatorModelIds}
         selectedEvaluatorIds={evaluatorModelIds}
-        onTargetChange={setTargetModelId}
+        onTargetChange={(id) => setTargetModel(id, "manual")}
         onGeneratorChange={setGeneratorModelIds}
         onEvaluatorChange={setEvaluatorModelIds}
         availableModelIds={availableModelIds}
@@ -652,6 +744,8 @@ export function PromptGenerator() {
               meta={result.meta}
               generatorModelCost={result.generatorModelCost}
               originalPrompt={idea}
+              previousPrompt={previousPromptForResult || undefined}
+              onSubmitFeedback={submitPromptFeedback}
             />
           </motion.div>
         )}
