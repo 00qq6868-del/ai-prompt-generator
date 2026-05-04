@@ -8,6 +8,7 @@ const { spawn } = require("node:child_process");
 const ROOT = process.cwd();
 const REPORT_DIR = path.join(ROOT, "reports", "gpt-image2-live-review");
 const HOST = "127.0.0.1";
+const PORT = Number(process.env.GPT_IMAGE2_PANEL_PORT || 61994);
 const DEFAULT_IDEA =
   "为一款名叫「PromptForge」的 AI 提示词生成器制作一张高端科技感官网首屏海报。画面需要有深色背景、发光的提示词卡片、中文标题「让 AI 听懂你的想法」、清晰可读的小字说明、玻璃拟态界面、蓝紫色霓虹光、商业级构图。";
 const DEFAULT_GENERATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,deepseek-v4-pro,gpt-4o";
@@ -689,7 +690,7 @@ function page() {
         <div class="full file-hint">
           <label>参考图，可选。上传 1 张或多张后会自动做图生图/改图，不上传则做文生图。</label>
           <input id="referenceImages" type="file" accept="image/png,image/jpeg,image/webp" multiple />
-          <p class="muted">建议每张图片先压到 10MB 以内。多图会一起传给 `/v1/images/edits`，用于测试提示词对参考图的保持、迁移、局部修改和风格优化能力。</p>
+          <p class="muted">建议每张图片先压到 10MB 以内。多图会一起传给 /v1/images/edits，用于测试提示词对参考图的保持、迁移、局部修改和风格优化能力。</p>
           <div id="referencePreview" class="ref-grid"></div>
         </div>
         <div class="full">
@@ -961,9 +962,20 @@ const server = http.createServer((req, res) => {
   handle(req, res);
 });
 
-server.listen(0, HOST, () => {
-  const address = server.address();
-  const url = `http://${HOST}:${address.port}/`;
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    const url = `http://${HOST}:${PORT}/`;
+    console.log("");
+    console.log(`GPT Image 2 live review panel is already running: ${url}`);
+    console.log("Opening the existing single panel instead of starting another one.");
+    if (process.env.NO_OPEN_BROWSER !== "1") openBrowser(url);
+    process.exit(0);
+  }
+  throw error;
+});
+
+server.listen(PORT, HOST, () => {
+  const url = `http://${HOST}:${PORT}/`;
   console.log("");
   console.log("GPT Image 2 live review panel is ready:");
   console.log(url);
