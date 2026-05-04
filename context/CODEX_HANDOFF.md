@@ -654,6 +654,37 @@ PWA registration follow-up:
 - `src/components/PWAPrompts.tsx` manually registers `/sw.js` only in production and inside guarded browser capability checks.
 - Production-mode local check on `http://127.0.0.1:3100/` passed with no page errors, no console errors, and successful model picker drag-scroll.
 
+Status:
+
+- The guarded PWA registration follow-up was committed and pushed before the later model-picker selection regression was reported.
+
+## Current Handoff — Model Picker Selection Regression
+
+User reported that model picker dialogs could now scroll but model cards could not be selected.
+
+Root causes:
+
+- Invalid nested buttons in `PickerCard`: the card was a button and the favorite star was another button inside it.
+- Pointer capture was started on every pointer down for drag scrolling, which could redirect ordinary clicks to the scroll container.
+
+Fix:
+
+- `src/components/ModelPicker.tsx`
+  - Picker cards are now `motion.div role="button"` rather than outer buttons.
+  - Cards keep accessible activation with `tabIndex`, `aria-pressed`, `aria-disabled`, and Enter/Space key support.
+  - Favorite star remains a child `<button>` and stops click propagation.
+  - Pointer capture now starts only after actual drag movement begins.
+- `tests/e2e/quality.spec.ts`
+  - The model picker test now verifies card selection after scrolling/dragging, not just scrollability.
+
+Validation already run:
+
+- `npx tsc --noEmit`
+- `git diff --check`
+- `npm run test:quality` passed 5/5.
+- `npm run build` passed.
+- Production-mode local check on port `3100` selected one generator and one evaluator card successfully, with `aria-pressed="true"` and no page errors.
+
 Next step:
 
-- Commit and push the guarded PWA registration follow-up, then watch GitHub/Vercel deployment and retest `https://www.myprompt.asia` with a cache-busting URL. Do not tell the user production is clean until the deployed site confirms model picker drag-scroll works and the `waiting` page error is gone.
+- Commit and push this selection fix, watch GitHub Actions, then retest `https://www.myprompt.asia` after deployment. Do not claim the user-facing site is fixed until online Playwright confirms generator/evaluator selection works.

@@ -80,6 +80,7 @@ export function ModelPicker({
     startY: 0,
     lastY: 0,
     active: false,
+    captured: false,
   });
   const suppressClickRef = useRef(false);
   const [search, setSearch] = useState("");
@@ -224,13 +225,14 @@ export function ModelPicker({
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || !canDragFrom(event.target)) return;
+    suppressClickRef.current = false;
     dragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
       lastY: event.clientY,
       active: false,
+      captured: false,
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -242,6 +244,10 @@ export function ModelPicker({
     const frameDelta = event.clientY - drag.lastY;
     if (!drag.active && Math.abs(totalDelta) < 6) return;
 
+    if (!drag.captured) {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      drag.captured = true;
+    }
     drag.active = true;
     drag.lastY = event.clientY;
     scroller.scrollTop -= frameDelta;
@@ -258,8 +264,16 @@ export function ModelPicker({
         suppressClickRef.current = false;
       }, 0);
     }
-    dragRef.current = { pointerId: -1, startY: 0, lastY: 0, active: false };
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    dragRef.current = {
+      pointerId: -1,
+      startY: 0,
+      lastY: 0,
+      active: false,
+      captured: false,
+    };
+    if (drag.captured && event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
   };
 
   const handleClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -448,21 +462,36 @@ function PickerCard({
   onToggleFavorite: () => void;
 }) {
   const avgCost = ((m.inputCostPer1M + m.outputCostPer1M) / 2).toFixed(2);
+  const handleActivate = () => {
+    if (!isAvailable) return;
+    onSelect();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isAvailable) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onSelect();
+  };
 
   return (
-    <motion.button
+    <motion.div
       whileTap={{ scale: 0.98 }}
-      onClick={onSelect}
+      role="button"
+      tabIndex={isAvailable ? 0 : -1}
+      onClick={handleActivate}
+      onKeyDown={handleKeyDown}
       aria-label={`${m.name} — ${m.provider}`}
       aria-pressed={isSelected}
-      disabled={!isAvailable}
+      aria-disabled={!isAvailable}
       className={`relative text-left rounded-2xl border p-4 transition-all duration-200
         ${isSelected
           ? "border-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30"
           : isAvailable
             ? "border-white/10 bg-white/[0.025] hover:border-white/20 hover:bg-white/5"
             : "border-white/5 bg-white/[0.01] opacity-40"
-        }`}
+        }
+        ${isAvailable ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       {/* Top-right badges */}
       <div className="flex items-center gap-1.5 absolute top-3 right-3">
@@ -537,6 +566,6 @@ function PickerCard({
           ))}
         </div>
       )}
-    </motion.button>
+    </motion.div>
   );
 }

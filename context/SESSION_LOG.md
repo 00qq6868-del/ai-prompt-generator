@@ -1428,3 +1428,29 @@ PWA error follow-up:
 - Changed `next.config.js` to `register: false`.
 - Added guarded manual service-worker registration in `src/components/PWAPrompts.tsx`.
 - Verified with production `next start` on port `3100`: no page errors, no console errors, and model picker drag-scroll still worked.
+
+---
+
+## 2026-05-04 — Fixed Model Picker Selection Regression
+
+User screenshot showed generator/evaluator model picker dialogs open and scrollable, but model cards could not be reliably selected.
+
+Root causes:
+
+- `PickerCard` used an outer button with an inner favorite button. Nested buttons are invalid HTML and Chromium can rewrite the DOM, causing clicks on card content to miss the selection handler.
+- The drag-scroll code captured the pointer on every pointer down, so regular clicks could be delivered to the scroll container instead of the model card.
+
+Fixes:
+
+- Converted picker cards to `motion.div role="button"` with `aria-pressed`, `aria-disabled`, `tabIndex`, and keyboard Enter/Space activation.
+- Kept the favorite star as a normal child button with click propagation stopped.
+- Moved `setPointerCapture` so it only runs after actual drag movement begins.
+- Extended Playwright quality coverage to click-select a card after scroll/drag behavior is exercised.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run test:quality` passed: 5/5.
+- `npm run build` passed.
+- Production-mode local check confirmed generator and evaluator model cards can be selected and no page errors occur.

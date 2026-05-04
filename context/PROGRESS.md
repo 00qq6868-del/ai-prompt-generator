@@ -1104,3 +1104,35 @@ Additional bug fixed in the same user report:
   - no page errors
   - no console errors
   - model picker drag-scroll still working
+
+## 2026-05-04 — Fixed Model Picker Click Selection Regression
+
+User reported a new bug where model picker cards could be scrolled but models could not be selected.
+
+Root causes:
+
+- `PickerCard` rendered an outer `<button>` while also rendering a nested favorite `<button>`, which is invalid HTML. Edge/Chromium can rewrite that DOM so clicks on card content no longer reach the model selection button.
+- The drag-scroll implementation called `setPointerCapture` immediately on pointer down. That made ordinary mouse clicks target the scroll container instead of the model card.
+
+Implemented:
+
+- Changed `PickerCard` to a valid `motion.div role="button"` with `tabIndex`, `aria-pressed`, `aria-disabled`, and Enter/Space keyboard activation.
+- Kept the favorite star as a real nested button and stopped propagation there.
+- Delayed pointer capture until movement exceeds the drag threshold, so normal clicks remain normal clicks while real drags still scroll the list.
+- Updated `tests/e2e/quality.spec.ts` so the model picker regression test now verifies:
+  - target model list scrolls
+  - generator/evaluator picker dialogs scroll
+  - drag-scroll works
+  - a model card can be selected after scrolling
+  - selected card changes to `aria-pressed="true"`
+
+Validation:
+
+- Manual Playwright click check in dev mode passed: selected count changed from `已选 1/6` to `已选 2/6`.
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run test:quality` passed: 5/5 Chromium.
+- `npm run build` passed.
+- Production-mode local check on `http://127.0.0.1:3100/` passed for both generator and evaluator pickers:
+  - clicked card `aria-pressed="true"`
+  - no page errors

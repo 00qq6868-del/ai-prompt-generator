@@ -180,7 +180,18 @@ test.describe("Quality and accessibility audit", () => {
       await expectScrollable(scroller, page, !isMobile);
       await expectDragScrollable(scroller, page);
 
-      await dialog.getByRole("button", { name: "关闭 Close" }).click();
+      const selectableCard = dialog
+        .locator('[role="button"][aria-pressed="false"][aria-disabled="false"]')
+        .first();
+      await expect(selectableCard).toBeVisible({ timeout: 15_000 });
+      const selectableLabel = await selectableCard.getAttribute("aria-label");
+      expect(selectableLabel).toBeTruthy();
+      await selectableCard.click();
+      await expect(
+        dialog.getByRole("button", { name: selectableLabel ?? "" })
+      ).toHaveAttribute("aria-pressed", "true");
+
+      await dialog.getByRole("button", { name: "完成 Done" }).click();
       await expect(dialog).toBeHidden();
     };
 
