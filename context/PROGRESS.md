@@ -1184,3 +1184,83 @@ Validation:
 Note:
 
 - No real relay API key was used in this pass, so live GPT Image 2 multi-model generation still needs an API-key-backed smoke run before claiming production generation quality.
+
+## 2026-05-05 — Local GPT Image 2 Panel Relaunch And Model Dropdown
+
+User reported that reopening `http://127.0.0.1:61994` later showed a refused-connection page. This is expected when the local Node panel server has been closed; `127.0.0.1` is not a permanent hosted site.
+
+Changes:
+
+- Workbench launcher added/updated:
+  - `E:\AI工作台\工具 Tools\gpt-image2-panel-launcher.ps1`
+  - `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
+  - `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel`
+  - `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel-status`
+  - `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel-stop`
+- The launcher starts the local panel server first, waits for `http://127.0.0.1:61994/` to respond, then opens the browser. This avoids the user opening a dead localhost address.
+- `scripts/gpt-image2-live-review-panel.cjs` now makes the top image model field a dropdown selector with model options from `public/models.json`, so the user does not need to type image model ids manually.
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `AI-CHAIN.cmd gpt-image2-panel` started the local panel.
+- `AI-CHAIN.cmd gpt-image2-panel-status` reported the panel reachable.
+- HTTP check returned 200 for `http://127.0.0.1:61994/`.
+- Playwright verified populated selectors:
+  - image model options: 7
+  - target model options: 266
+  - generator model options: 245
+  - evaluator model options: 245
+  - no page errors.
+
+## 2026-05-05 — Local GPT Image 2 Panel Click Selectors And Robust Multi-Model Skip
+
+User reported the local GPT Image 2 test panel still required awkward manual model entry/multi-selects, and a single relay failure such as `gemini-3.1-pro-preview: 502 Bad Gateway` could abort the whole test even though other selected models should keep running.
+
+Changes:
+
+- Replaced visible native multi-select boxes with clickable/searchable model cards:
+  - target model single-select
+  - image model single-select
+  - prompt generator multi-select, max 6
+  - prompt evaluator multi-select, max 6
+  - image judge multi-select, max 6
+- Kept comma-separated custom model inputs only inside a collapsed advanced section.
+- Added quick actions for generator/evaluator/image-judge roles:
+  - recommended strong models
+  - Key-available models after relay probing
+  - clear selection
+- Changed relay model-list behavior:
+  - `/models` is now only a sorting/availability hint
+  - user-selected model ids are still tried even when absent from the relay model list
+- Changed local direct prompt generation:
+  - tries all selected generator models concurrently
+  - waits up to 120 seconds per prompt generator
+  - logs and skips 502/524/timeout per model
+  - fails only if every selected generator fails before producing a usable candidate
+  - namespaces each successful generator's candidates by model id
+- Added bilingual scoring criteria display in the local panel.
+- Added local learning export:
+  - panel button `生成同步建议`
+  - `AI-CHAIN.cmd gpt-image2-export-learning`
+  - writes `context/GPT_IMAGE2_LOCAL_LEARNING_SUMMARY.md`
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed with line-ending warnings only.
+- Restarted the local panel with `AI-CHAIN.cmd gpt-image2-panel`.
+- `AI-CHAIN.cmd gpt-image2-panel-status` passed.
+- HTTP check returned 200 for `http://127.0.0.1:61994/`.
+- Playwright verified:
+  - target model cards: 120 rendered
+  - image model cards: 7 rendered
+  - generator/evaluator/image-judge cards: 160 rendered each
+  - no visible legacy multi-select boxes
+  - clicking model cards updates hidden payload fields
+  - no browser/page errors
+- `AI-CHAIN.cmd gpt-image2-export-learning` generated the learning summary successfully.
+
+Note:
+
+- A real relay-key run was not executed in the shell. The browser panel is ready for the user to paste their API key locally and run the live image test.

@@ -1500,3 +1500,96 @@ Important:
 
 - The earlier parallel `npm run build` + Playwright run caused a temporary `.next` chunk mismatch in dev server (`Cannot find module './276.js'`). This was an environment/test-order issue. After stopping the stale dev server and rerunning sequentially, tests passed.
 - Real multi-model generation was not run because no relay API key was available in the shell.
+
+---
+
+## 2026-05-05 — Local GPT Image 2 Panel Relaunch And Workbench Rules
+
+User showed `127.0.0.1:61994` refusing connection after reopening the browser. Clarified and fixed the root cause: localhost requires the local Node server to be running; the browser address alone cannot resurrect it.
+
+Implemented:
+
+- Added workbench panel launcher:
+  - `E:\AI工作台\工具 Tools\gpt-image2-panel-launcher.ps1`
+  - starts/stops/status-checks the panel
+  - writes PID/logs under `E:\AI工作台\日志 Logs\gpt-image2-panel`
+  - waits for HTTP readiness before opening browser
+- Updated:
+  - `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
+  - `E:\AI工作台\工具 Tools\ai-chain.ps1`
+- Added AI-CHAIN commands:
+  - `gpt-image2-panel`
+  - `gpt-image2-panel-status`
+  - `gpt-image2-panel-stop`
+- Updated `scripts/gpt-image2-live-review-panel.cjs`:
+  - top image model field is now a dropdown selector
+  - dropdown is populated from synced project model options
+  - saved image model setting is preserved while model options load
+- Added workbench docs:
+  - `GPT_IMAGE2_LOCAL_PANEL_WORKFLOW.md`
+  - `GITHUB_SITE_CONTROL.md`
+  - `UNIVERSAL_PROJECT_R_AND_D_WORKFLOW.md`
+  - `MULTI_AI_COLLABORATION_RULES.md`
+  - `UNIVERSAL-PROJECT-CHAIN.cmd`
+  - `工具 Tools\universal-project-chain.ps1`
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- PowerShell parser checks passed for:
+  - `ai-chain.ps1`
+  - `gpt-image2-panel-launcher.ps1`
+  - `universal-project-chain.ps1`
+- `UNIVERSAL-PROJECT-CHAIN.cmd help` passed.
+- Local panel started and returned HTTP 200.
+- Playwright verified:
+  - title: `GPT Image 2 共同真实测试面板`
+  - image model dropdown options: 7
+  - target model options: 266
+  - generator/evaluator model options: 245 each
+  - no browser errors.
+
+---
+
+## 2026-05-05 — Fixed Local Panel Model UX And 502 Abort Behavior
+
+User showed the local GPT Image 2 panel still had awkward model entry and a relay `502 Bad Gateway` from one selected model stopped the test.
+
+Implemented:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - visible native multi-select controls are hidden
+  - model selection now uses searchable click cards
+  - generator/evaluator/image-judge roles have recommended / Key-available / clear actions
+  - advanced comma model input remains collapsed for custom ids
+  - relay `/models` is no longer a hard filter; selected ids are still attempted
+  - local direct optimization now calls all selected generators concurrently and skips only the failed model
+  - generator timeout default raised to 120s, judge timeout to 75s, image timeout to 300s
+  - candidate IDs are namespaced by generator model
+  - bilingual prompt/image scoring criteria are shown in the panel
+  - added `/api/export-learning-summary`
+- Workbench:
+  - added `AI-CHAIN.cmd gpt-image2-export-learning`
+  - updated GPT Image 2 workflow docs and startup docs
+- Added generated project memory:
+  - `context/GPT_IMAGE2_LOCAL_LEARNING_SUMMARY.md`
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs`
+- `git diff --check`
+- PowerShell parse check for `工具 Tools\ai-chain.ps1`
+- `AI-CHAIN.cmd gpt-image2-panel-stop`
+- `AI-CHAIN.cmd gpt-image2-panel`
+- `AI-CHAIN.cmd gpt-image2-panel-status`
+- HTTP 200 from `http://127.0.0.1:61994/`
+- Playwright page test:
+  - target cards 120
+  - image cards 7
+  - generator cards 160
+  - evaluator cards 160
+  - image judge cards 160
+  - legacy selects hidden
+  - card clicks update payload fields
+  - no page errors
+- `AI-CHAIN.cmd gpt-image2-export-learning` wrote `context/GPT_IMAGE2_LOCAL_LEARNING_SUMMARY.md`.

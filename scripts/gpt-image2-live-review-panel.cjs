@@ -13,12 +13,12 @@ const HOST = "127.0.0.1";
 const PORT = Number(process.env.GPT_IMAGE2_PANEL_PORT || 61994);
 const DEFAULT_IDEA =
   "为一款名叫「PromptForge」的 AI 提示词生成器制作一张高端科技感官网首屏海报。画面需要有深色背景、发光的提示词卡片、中文标题「让 AI 听懂你的想法」、清晰可读的小字说明、玻璃拟态界面、蓝紫色霓虹光、商业级构图。";
-const DEFAULT_GENERATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,deepseek-v4-pro,gpt-4o";
-const DEFAULT_EVALUATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,o3,gpt-4o";
-const DEFAULT_IMAGE_JUDGES = "gpt-4o,gemini-3.1-pro-preview,claude-opus-4-7,gpt-5.5";
-const PROMPT_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_PROMPT_TIMEOUT_MS || 55_000);
-const JUDGE_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_JUDGE_TIMEOUT_MS || 35_000);
-const IMAGE_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_IMAGE_TIMEOUT_MS || 180_000);
+const DEFAULT_GENERATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,ac-claude-opus-4-6-thinking,deepseek-v4-pro,ZhipuAI/GLM-5.1";
+const DEFAULT_EVALUATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,ac-claude-opus-4-6-thinking,deepseek-v4-pro,ZhipuAI/GLM-5.1";
+const DEFAULT_IMAGE_JUDGES = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,ac-claude-opus-4-6-thinking,deepseek-v4-pro,ZhipuAI/GLM-5.1";
+const PROMPT_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_PROMPT_TIMEOUT_MS || 120_000);
+const JUDGE_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_JUDGE_TIMEOUT_MS || 75_000);
+const IMAGE_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_IMAGE_TIMEOUT_MS || 300_000);
 
 const SOURCE_STRATEGIES = [
   {
@@ -165,10 +165,12 @@ async function fetchJson(url, options = {}) {
 }
 
 function chooseAvailable(requested, availableIds, fallback) {
-  if (!availableIds.length) return requested.length ? requested : fallback;
+  const base = requested.length ? requested : fallback;
+  if (!availableIds.length) return base;
   const available = new Set(availableIds);
-  const chosen = requested.filter((id) => available.has(id));
-  return chosen.length ? chosen : fallback.filter((id) => available.has(id));
+  const listed = base.filter((id) => available.has(id));
+  const unlisted = base.filter((id) => !available.has(id));
+  return [...listed, ...unlisted];
 }
 
 function averagePromptScore(promptEvaluation) {
@@ -594,6 +596,26 @@ function normalizeDirectCandidates(payload) {
   return candidates;
 }
 
+function modelSlug(modelId) {
+  return String(modelId || "model")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 42) || "model";
+}
+
+function namespaceDirectCandidates(candidates, modelId) {
+  const slug = modelSlug(modelId);
+  return candidates.map((candidate) => ({
+    ...candidate,
+    id: `${slug}:${candidate.id}`,
+    sourceId: candidate.id,
+    sourceLabel: candidate.label,
+    generatorModel: modelId,
+    label: `${candidate.label} · ${modelId}`,
+  }));
+}
+
 function buildDirectJudgePrompt(candidates, userIdea, language) {
   const outputLanguage = language === "zh" ? "Chinese" : "English";
   return `You are judging GPT Image 2.0 prompts.
@@ -647,7 +669,15 @@ Output only the final prompt in ${outputLanguage}.`;
 function aggregateDirectPromptScores(candidates, judgeOutputs) {
   const buckets = new Map(candidates.map((candidate) => [
     candidate.id,
-    { id: candidate.id, generatorModelId: candidate.id, generatorModelName: candidate.label, averageScore: 0, rank: 0, scores: [] },
+    {
+      id: candidate.id,
+      sourceId: candidate.sourceId || candidate.id,
+      generatorModelId: candidate.generatorModel || candidate.id,
+      generatorModelName: candidate.label,
+      averageScore: 0,
+      rank: 0,
+      scores: [],
+    },
   ]));
 
   let synthesizeVotes = 0;
@@ -682,13 +712,13 @@ async function runDirectPromptOptimization({ relayBaseUrl, apiKey, idea, languag
   const startedAt = Date.now();
   const calls = [];
   let generatorModel = null;
-  let candidateText = "";
   let candidates = [];
   const generatorErrors = [];
 
-  for (const model of generatorModelIds) {
+  addLog(`将尝试 ${generatorModelIds.length} 个提示词生成器；单个模型失败会跳过，其他模型继续等待 / Trying ${generatorModelIds.length} generator model(s); failed models will be skipped.`);
+  const generatorResults = await Promise.all(generatorModelIds.map(async (model) => {
     try {
-      addLog(`本地直连生成候选提示词: ${model}`);
+      addLog(`本地直连生成候选提示词，等待模型输出 / Generating candidates: ${model}`);
       const result = await callChatCompletion({
         relayBaseUrl,
         apiKey,
@@ -700,26 +730,42 @@ async function runDirectPromptOptimization({ relayBaseUrl, apiKey, idea, languag
         timeoutMs: PROMPT_TIMEOUT_MS,
       });
       calls.push({ model, usage: result.usage });
-      candidateText = result.text.trim();
+      const candidateText = result.text.trim();
       const parsed = extractJsonMaybe(candidateText);
-      candidates = normalizeDirectCandidates(parsed);
-      if (candidates.length >= 2) {
-        generatorModel = model;
-        break;
+      const normalized = normalizeDirectCandidates(parsed);
+      if (normalized.length >= 2) {
+        addLog(`${model} 已输出 ${normalized.length} 个候选提示词 / ${model} generated ${normalized.length} candidate prompt(s).`);
+        return { ok: true, model, candidates: namespaceDirectCandidates(normalized, model) };
       }
-      generatorErrors.push(`${model}: 候选 JSON 解析失败`);
+      if (candidateText) {
+        addLog(`${model} 返回了非标准 JSON，作为备用候选保留 / Non-JSON output kept as fallback candidate.`);
+        return {
+          ok: true,
+          model,
+          candidates: namespaceDirectCandidates([
+            { id: "raw", label: "raw fallback route", prompt: candidateText },
+          ], model),
+        };
+      }
+      throw new Error("候选 JSON 解析失败，且返回为空");
     } catch (error) {
-      generatorErrors.push(`${model}: ${error.message}`);
       addLog(`${model} 生成失败，自动跳过: ${error.message}`);
+      return { ok: false, model, error: error.message };
+    }
+  }));
+
+  for (const result of generatorResults) {
+    if (result.ok) {
+      if (!generatorModel) generatorModel = result.model;
+      candidates.push(...result.candidates);
+    } else {
+      generatorErrors.push(`${result.model}: ${result.error}`);
     }
   }
+  addLog(`提示词生成器完成: ${generatorResults.filter((result) => result.ok).length}/${generatorResults.length} 成功 / Generator phase finished.`);
 
   if (!candidates.length) {
-    if (candidateText.trim()) {
-      candidates = [{ id: "fallback", label: generatorModel || "fallback", prompt: candidateText.trim() }];
-    } else {
-      throw new Error(`本地直连提示词生成失败。${generatorErrors.join("；")}`);
-    }
+    throw new Error(`本地直连提示词生成失败。所有选择的生成器都失败 / All selected generator models failed. ${generatorErrors.join("；")}`);
   }
 
   const judgeOutputs = [];
@@ -750,21 +796,24 @@ async function runDirectPromptOptimization({ relayBaseUrl, apiKey, idea, languag
     averageScore: 0,
   };
   const topCandidate = candidates.find((candidate) => candidate.id === top.id) || fallbackWinner;
-  const hybrid = candidates.find((candidate) => candidate.id === "hybrid");
-  const bestSingleRow = rows.find((row) => row.id !== "hybrid") || top;
+  const hybridRows = rows.filter((row) => row.sourceId === "hybrid");
+  const hybridRow = hybridRows[0];
+  const hybrid = hybridRow ? candidates.find((candidate) => candidate.id === hybridRow.id) : null;
+  const bestSingleRow = rows.find((row) => row.sourceId !== "hybrid") || top;
   const bestSingle = candidates.find((candidate) => candidate.id === bestSingleRow.id) || topCandidate;
-  const hybridScore = rows.find((row) => row.id === "hybrid")?.averageScore || 0;
+  const hybridScore = hybridRow?.averageScore || 0;
   const shouldSynthesize = Boolean(hybrid) && (synthesizeVotes > 0 || Math.abs((bestSingleRow.averageScore || 0) - hybridScore) <= 3);
 
   let optimizedPrompt = topCandidate.prompt;
   let selectedStrategy = topCandidate.id;
-  if (shouldSynthesize && hybrid && generatorModel) {
+  const synthesisModel = bestSingle.generatorModel || topCandidate.generatorModel || generatorModel;
+  if (shouldSynthesize && hybrid && synthesisModel) {
     try {
-      addLog(`本地直连融合最终提示词: ${generatorModel}`);
+      addLog(`本地直连融合最终提示词: ${synthesisModel}`);
       const result = await callChatCompletion({
         relayBaseUrl,
         apiKey,
-        model: generatorModel,
+        model: synthesisModel,
         systemPrompt: "You synthesize the final GPT Image 2 prompt. Output only the final prompt.",
         userPrompt: buildDirectSynthesisPrompt(idea, bestSingle, hybrid, language),
         maxTokens: 2048,
@@ -1039,6 +1088,51 @@ ${(report.imageJudges || [])
   if (run.result.userReview) updateLearningMemory(run.result);
 }
 
+function exportLearningSummary() {
+  const entries = loadHistoryEntries();
+  const learning = readJsonFile(LEARNING_PATH, { rules: [], examples: [] });
+  const latestEntries = entries.slice(0, 30);
+  const latestExamples = Array.isArray(learning.examples) ? learning.examples.slice(0, 20) : [];
+  const rules = Array.isArray(learning.rules) ? learning.rules.slice(0, 30) : [];
+  const md = `# GPT Image 2 Local Learning Summary
+
+Generated at: ${new Date().toISOString()}
+
+This file is generated by the local GPT Image 2 review panel. It is safe to commit because it contains summaries, scores, user feedback, and local artifact paths only. Do not commit API keys. Raw images remain under ignored reports/gpt-image2-live-review unless the user explicitly asks to publish them.
+
+## How Future AI Should Use This
+
+- Read this file before changing GPT Image 2 prompt optimization logic.
+- Treat low human scores and high AI-human score gaps as priority bugs.
+- Keep the four-source strategy separation: EvoLinkAI, YouMind, Anil-matcha, wuyoscar, plus one hybrid candidate.
+- When model calls fail with relay errors such as 502/524, skip that model and keep the rest of the selected models running.
+- Do not assume the relay /models list is complete. User-selected model IDs may still work even if absent from the list.
+
+## Learned Rules
+
+${rules.length ? rules.map((rule, index) => `${index + 1}. **${rule.label}** (count ${rule.count || 1}): ${rule.rule}`).join("\n") : "No learned rules yet. Save user scores and notes in the local panel first."}
+
+## Recent Human Feedback Examples
+
+${latestExamples.length ? latestExamples.map((item, index) => `${index + 1}. Run ${item.runId}: user ${item.userScore ?? "n/a"}, AI ${item.aiScore ?? "n/a"}, delta ${item.delta ?? "n/a"}\n   - Idea: ${String(item.idea || "").replace(/\s+/g, " ").slice(0, 260)}\n   - Notes: ${String(item.notes || "").replace(/\s+/g, " ").slice(0, 360)}`).join("\n") : "No saved human feedback examples yet."}
+
+## Recent Runs
+
+${latestEntries.length ? latestEntries.map((item, index) => `${index + 1}. ${item.runId} | user ${item.userScore ?? "not scored"} | AI image ${item.imageJudgeAverage ?? "n/a"} | prompt ${item.promptScore ?? "n/a"} | ${item.mode}\n   - Request: ${String(item.userIdea || "").replace(/\s+/g, " ").slice(0, 260)}\n   - Image artifact: ${item.imageFileName || item.imageBrowserUrl || "none"}`).join("\n") : "No run history yet."}
+`;
+  const filePath = path.join(ROOT, "context", "GPT_IMAGE2_LOCAL_LEARNING_SUMMARY.md");
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, md, "utf8");
+  return {
+    ok: true,
+    filePath,
+    runCount: entries.length,
+    ruleCount: rules.length,
+    exampleCount: latestExamples.length,
+    message: "已生成可提交到 GitHub 的 GPT Image 2 本地学习摘要。网站/软件要吸收这些经验，需要后续把该文件与相关代码一起提交并部署。",
+  };
+}
+
 function safeRunView(run) {
   return {
     id: run.id,
@@ -1085,6 +1179,9 @@ async function runFullReview(run, input) {
       relayModels.ids,
       [...requestedImageJudges, ...requestedEvaluators, ...requestedGenerators],
     ).slice(0, 6);
+    if (relayModels.ids.length) {
+      addLog("中转站模型列表只作为排序提示；你手动选择但未出现在列表里的模型仍会尝试调用 / Relay model list is only a hint; manually selected unlisted models will still be tried.");
+    }
 
     if (!generatorModelIds.length) throw new Error("没有可用的生成器模型。请检查模型名称或中转站模型权限。");
 
@@ -1355,8 +1452,23 @@ function page() {
     .ref-grid img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); }
     .file-hint { border: 1px dashed rgba(165,180,252,.45); border-radius: 14px; padding: 14px; background: rgba(99,102,241,.08); }
     .toolbox { border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px; background: rgba(255,255,255,.035); }
-    .model-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .model-grid select { min-height: 190px; padding: 8px; }
+    .model-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .legacy-select { display: none; }
+    .model-picker { border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 12px; background: rgba(0,0,0,.14); min-height: 250px; }
+    .model-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .model-actions { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+    .model-search { padding: 9px 10px; border-radius: 10px; font-size: 13px; }
+    .model-card-list { display: grid; grid-template-columns: 1fr; gap: 7px; max-height: 250px; overflow: auto; padding-right: 2px; }
+    .model-chip { width: 100%; text-align: left; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.045); color: rgba(255,255,255,.86); border-radius: 10px; padding: 9px 10px; font-weight: 650; }
+    .model-chip:hover { border-color: rgba(165,180,252,.62); background: rgba(99,102,241,.13); }
+    .model-chip.selected { border-color: rgba(129,140,248,.88); background: rgba(99,102,241,.24); box-shadow: inset 0 0 0 1px rgba(129,140,248,.18); }
+    .model-chip.unavailable { opacity: .62; }
+    .model-chip-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .model-chip-id { display: block; margin-top: 3px; font-size: 11px; color: rgba(255,255,255,.55); overflow-wrap: anywhere; }
+    .model-count { font-size: 11px; color: rgba(255,255,255,.56); white-space: nowrap; }
+    details.advanced { margin-top: 12px; }
+    details.advanced summary { cursor: pointer; color: rgba(255,255,255,.68); font-size: 12px; }
+    details.advanced input { margin-top: 8px; }
     .small-btn { padding: 8px 10px; border-radius: 10px; font-size: 12px; background: rgba(99,102,241,.72); }
     .secondary { background: rgba(255,255,255,.11); }
     .history-list { display: grid; gap: 10px; max-height: 360px; overflow: auto; }
@@ -1392,8 +1504,10 @@ function page() {
           </select>
         </div>
         <div>
-          <label>图片模型</label>
-          <input id="imageModel" value="gpt-image-2" />
+          <label>图片模型，点击小三角选择</label>
+          <select id="imageModel">
+            <option value="gpt-image-2" selected>GPT Image 2 · gpt-image-2</option>
+          </select>
         </div>
         <div class="full">
           <label>网站地址，仅在“调用网站 API”模式使用</label>
@@ -1404,39 +1518,79 @@ function page() {
             <strong>同步模型选择器</strong>
             <span id="modelSyncStatus" class="muted">读取项目模型注册表中...</span>
           </div>
-          <p class="muted">这里同步主项目的 public/models.json；填入 Key 后可再探测中转站真实可用模型。下面可手动多选，仍然保留逗号输入作为高级自定义。</p>
+          <p class="muted">这里同步主项目的 public/models.json；填入 Key 后可再探测中转站真实可用模型。直接点卡片就能选模型，不用手打。单个模型失败会自动跳过，其他模型继续等待输出。</p>
           <div class="row" style="justify-content:flex-start">
             <button id="loadModelsBtn" type="button" class="small-btn secondary">同步项目模型</button>
             <button id="probeModelsBtn" type="button" class="small-btn">探测中转站可用模型</button>
-            <button id="applyModelSelectBtn" type="button" class="small-btn secondary">把选择写入输入框</button>
+            <button id="exportLearningBtn" type="button" class="small-btn secondary">生成同步建议</button>
           </div>
           <div class="model-grid" style="margin-top:12px">
-            <div>
-              <label>目标模型 Target，同步全部模型</label>
-              <select id="targetModelSelect"></select>
-              <input id="targetModel" value="gpt-image-2" style="margin-top:8px" />
+            <div class="model-picker">
+              <div class="model-picker-head"><strong>目标模型 Target</strong><span id="targetModelCount" class="model-count"></span></div>
+              <input id="targetModelSearch" class="model-search" placeholder="搜索目标模型..." />
+              <div id="targetModelCards" class="model-card-list"></div>
+              <select id="targetModelSelect" class="legacy-select"></select>
             </div>
-            <div>
-              <label>生图模型 Image，只显示图片模型</label>
-              <select id="imageModelSelect"></select>
+            <div class="model-picker">
+              <div class="model-picker-head"><strong>图片模型 Image</strong><span id="imageModelCount" class="model-count"></span></div>
+              <input id="imageModelSearch" class="model-search" placeholder="搜索图片模型..." />
+              <div id="imageModelCards" class="model-card-list"></div>
+              <select id="imageModelSelect" class="legacy-select"></select>
             </div>
-            <div>
-              <label>图片评价模型 Image Judges，多选</label>
-              <select id="imageJudgeModelSelect" multiple></select>
+            <div class="model-picker">
+              <div class="model-picker-head"><strong>提示词生成器 Generators</strong><span id="generatorModelCount" class="model-count"></span></div>
+              <input id="generatorModelSearch" class="model-search" placeholder="搜索生成器模型..." />
+              <div class="model-actions">
+                <button type="button" class="small-btn" data-model-action="recommended" data-role="generator">推荐强模型</button>
+                <button type="button" class="small-btn secondary" data-model-action="available" data-role="generator">Key 可用</button>
+                <button type="button" class="small-btn secondary" data-model-action="clear" data-role="generator">清空</button>
+              </div>
+              <div id="generatorModelCards" class="model-card-list"></div>
+              <select id="generatorModelSelect" class="legacy-select" multiple></select>
             </div>
-            <div>
-              <label>提示词生成器模型 Generators，多选</label>
-              <select id="generatorModelSelect" multiple></select>
+            <div class="model-picker">
+              <div class="model-picker-head"><strong>提示词评价模型 Evaluators</strong><span id="evaluatorModelCount" class="model-count"></span></div>
+              <input id="evaluatorModelSearch" class="model-search" placeholder="搜索评价模型..." />
+              <div class="model-actions">
+                <button type="button" class="small-btn" data-model-action="recommended" data-role="evaluator">推荐强模型</button>
+                <button type="button" class="small-btn secondary" data-model-action="available" data-role="evaluator">Key 可用</button>
+                <button type="button" class="small-btn secondary" data-model-action="clear" data-role="evaluator">清空</button>
+              </div>
+              <div id="evaluatorModelCards" class="model-card-list"></div>
+              <select id="evaluatorModelSelect" class="legacy-select" multiple></select>
             </div>
-            <div>
-              <label>提示词评价模型 Evaluators，多选</label>
-              <select id="evaluatorModelSelect" multiple></select>
+            <div class="model-picker">
+              <div class="model-picker-head"><strong>图片评价模型 Image Judges</strong><span id="imageJudgeModelCount" class="model-count"></span></div>
+              <input id="imageJudgeModelSearch" class="model-search" placeholder="搜索图片评价模型..." />
+              <div class="model-actions">
+                <button type="button" class="small-btn" data-model-action="recommended" data-role="imageJudge">推荐强模型</button>
+                <button type="button" class="small-btn secondary" data-model-action="available" data-role="imageJudge">Key 可用</button>
+                <button type="button" class="small-btn secondary" data-model-action="clear" data-role="imageJudge">清空</button>
+              </div>
+              <div id="imageJudgeModelCards" class="model-card-list"></div>
+              <select id="imageJudgeModelSelect" class="legacy-select" multiple></select>
             </div>
-            <div>
+            <div class="model-picker">
               <label>本地学习记忆</label>
               <div id="learningSummary" class="muted logs" style="height:190px"></div>
             </div>
           </div>
+          <details class="advanced">
+            <summary>高级自定义模型 ID，通常不用打开</summary>
+            <label>目标模型 ID</label>
+            <input id="targetModel" value="gpt-image-2" />
+            <label>提示词生成器模型，最多 6 个，逗号分隔</label>
+            <input id="generatorModels" value="${DEFAULT_GENERATORS}" />
+            <label>提示词评价模型，最多 6 个，逗号分隔</label>
+            <input id="evaluatorModels" value="${DEFAULT_EVALUATORS}" />
+            <label>图片评价模型，最多 6 个，逗号分隔</label>
+            <input id="imageJudgeModels" value="${DEFAULT_IMAGE_JUDGES}" />
+          </details>
+          <details class="advanced">
+            <summary>评分标准 Evaluation Criteria，中英文</summary>
+            <p class="muted">提示词评分 Prompt: 意图保真 intent fidelity、参考图控制 reference-image control、GPT Image 2 兼容性 model fit、视觉细节 visual specificity、文字可读 typography reliability、版式可控 layout controllability、商业可用 commercial usability。</p>
+            <p class="muted">图片评分 Image: 需求符合度 intent fidelity、提示词遵循 prompt adherence、构图 composition、文字渲染 text rendering、视觉质量 visual quality、商业完成度 commercial quality、问题与优点 issues and strengths。</p>
+          </details>
         </div>
         <div class="full">
           <label>测试需求，也就是用户原始想法</label>
@@ -1447,18 +1601,6 @@ function page() {
           <input id="referenceImages" type="file" accept="image/png,image/jpeg,image/webp" multiple />
           <p class="muted">建议每张图片先压到 10MB 以内。多图会一起传给 /v1/images/edits，用于测试提示词对参考图的保持、迁移、局部修改和风格优化能力。</p>
           <div id="referencePreview" class="ref-grid"></div>
-        </div>
-        <div class="full">
-          <label>提示词生成器模型，最多 6 个，逗号分隔</label>
-          <input id="generatorModels" value="${DEFAULT_GENERATORS}" />
-        </div>
-        <div class="full">
-          <label>提示词评价模型，最多 6 个，逗号分隔</label>
-          <input id="evaluatorModels" value="${DEFAULT_EVALUATORS}" />
-        </div>
-        <div class="full">
-          <label>图片评价模型，最多 6 个，逗号分隔。你的 Key 里没有的会自动跳过。</label>
-          <input id="imageJudgeModels" value="${DEFAULT_IMAGE_JUDGES}" />
         </div>
         <div>
           <label>图片尺寸</label>
@@ -1544,6 +1686,7 @@ function page() {
     let currentRun = null;
     let selectedReferenceImages = [];
     let modelOptions = { imageModels: [], textModels: [], visionTextModels: [] };
+    let savedPanelSettings = {};
     const $ = (id) => document.getElementById(id);
     function formValue(id) { return $(id).value.trim(); }
     function escapeHtml(value) {
@@ -1559,48 +1702,143 @@ function page() {
       const wanted = new Set(values);
       Array.from($(id).options || []).forEach(option => { option.selected = wanted.has(option.value); });
     }
+    const roleConfig = {
+      target: { inputId: "targetModel", selectId: "targetModelSelect", cardsId: "targetModelCards", searchId: "targetModelSearch", countId: "targetModelCount", single: true, limit: 1, defaultId: "gpt-image-2" },
+      image: { inputId: "imageModel", selectId: "imageModelSelect", cardsId: "imageModelCards", searchId: "imageModelSearch", countId: "imageModelCount", single: true, limit: 1, defaultId: "gpt-image-2" },
+      generator: { inputId: "generatorModels", selectId: "generatorModelSelect", cardsId: "generatorModelCards", searchId: "generatorModelSearch", countId: "generatorModelCount", single: false, limit: 6, defaultId: "" },
+      evaluator: { inputId: "evaluatorModels", selectId: "evaluatorModelSelect", cardsId: "evaluatorModelCards", searchId: "evaluatorModelSearch", countId: "evaluatorModelCount", single: false, limit: 6, defaultId: "" },
+      imageJudge: { inputId: "imageJudgeModels", selectId: "imageJudgeModelSelect", cardsId: "imageJudgeModelCards", searchId: "imageJudgeModelSearch", countId: "imageJudgeModelCount", single: false, limit: 6, defaultId: "" },
+    };
     function optionLabel(model) {
-      const status = model.available === true ? "✓ " : model.available === false ? "· " : "";
+      const status = model.available === true ? "OK " : model.available === false ? "unlisted " : "";
       const tags = (model.tags || []).slice(0, 3).join("/");
       return status + model.name + " · " + model.id + " · " + model.provider + (tags ? " · " + tags : "");
+    }
+    function roleModels(role) {
+      if (role === "target") return modelOptions.targetModels || modelOptions.models || [];
+      if (role === "image") return modelOptions.imageModels && modelOptions.imageModels.length ? modelOptions.imageModels : modelOptions.models || [];
+      if (role === "generator") return modelOptions.generatorModels || modelOptions.textModels || [];
+      if (role === "evaluator") return modelOptions.evaluatorModels || modelOptions.textModels || [];
+      if (role === "imageJudge") return modelOptions.visionTextModels || modelOptions.evaluatorModels || modelOptions.textModels || [];
+      return modelOptions.models || [];
+    }
+    function roleSelected(role) {
+      const config = roleConfig[role];
+      if (!config) return [];
+      const value = formValue(config.inputId);
+      return config.single ? [value || config.defaultId].filter(Boolean) : csv(value).slice(0, config.limit);
+    }
+    function ensureSelectedModels(models, selectedIds) {
+      const known = new Set(models.map(model => model.id));
+      const custom = selectedIds
+        .filter(id => id && !known.has(id))
+        .map(id => ({ id, name: id, provider: "手动选择", category: "text", tags: [], speed: "medium", accuracy: "medium", available: null }));
+      return [...custom, ...models];
     }
     function fillSelect(id, models, selectedIds, limit) {
       const select = $(id);
       const selected = new Set(selectedIds);
-      select.innerHTML = models.slice(0, limit || 260).map(model =>
+      const options = ensureSelectedModels(models, selectedIds).slice(0, limit || 260);
+      select.innerHTML = options.map(model =>
         "<option value='" + escapeHtml(model.id) + "'" + (selected.has(model.id) ? " selected" : "") + ">" + escapeHtml(optionLabel(model)) + "</option>"
       ).join("");
     }
+    function setRoleSelected(role, ids) {
+      const config = roleConfig[role];
+      const unique = Array.from(new Set((ids || []).filter(Boolean))).slice(0, config.limit);
+      $(config.inputId).value = config.single ? (unique[0] || config.defaultId || "") : unique.join(",");
+      setSelectedValues(config.selectId, unique);
+      if (role === "image") {
+        $("imageModel").value = unique[0] || "gpt-image-2";
+        setSelectedValues("imageModelSelect", [formValue("imageModel") || "gpt-image-2"]);
+      }
+      renderRoleCards(role);
+    }
     function syncInputsFromSelects() {
-      if (selectedValues("targetModelSelect")[0]) $("targetModel").value = selectedValues("targetModelSelect")[0];
+      for (const role of Object.keys(roleConfig)) {
+        const config = roleConfig[role];
+        const values = selectedValues(config.selectId).slice(0, config.limit);
+        $(config.inputId).value = config.single ? (values[0] || config.defaultId || "") : values.join(",");
+      }
       if (selectedValues("imageModelSelect")[0]) $("imageModel").value = selectedValues("imageModelSelect")[0];
-      const generators = selectedValues("generatorModelSelect").slice(0, 6);
-      const evaluators = selectedValues("evaluatorModelSelect").slice(0, 6);
-      const imageJudges = selectedValues("imageJudgeModelSelect").slice(0, 6);
-      if (generators.length) $("generatorModels").value = generators.join(",");
-      if (evaluators.length) $("evaluatorModels").value = evaluators.join(",");
-      if (imageJudges.length) $("imageJudgeModels").value = imageJudges.join(",");
+      renderAllModelCards();
     }
     function syncSelectsFromInputs() {
-      setSelectedValues("targetModelSelect", [formValue("targetModel") || "gpt-image-2"]);
-      setSelectedValues("imageModelSelect", [formValue("imageModel") || "gpt-image-2"]);
-      setSelectedValues("generatorModelSelect", csv(formValue("generatorModels")));
-      setSelectedValues("evaluatorModelSelect", csv(formValue("evaluatorModels")));
-      setSelectedValues("imageJudgeModelSelect", csv(formValue("imageJudgeModels")));
+      for (const role of Object.keys(roleConfig)) {
+        const config = roleConfig[role];
+        setSelectedValues(config.selectId, roleSelected(role));
+      }
+    }
+    function modelMetaLine(model) {
+      const bits = [];
+      if (model.provider) bits.push(model.provider);
+      if (model.accuracy) bits.push(model.accuracy);
+      if (model.speed) bits.push(model.speed);
+      if (model.available === true) bits.push("Key 可用");
+      if (model.available === false) bits.push("未在 Key 列表");
+      return bits.join(" · ");
+    }
+    function renderRoleCards(role) {
+      const config = roleConfig[role];
+      const selected = roleSelected(role);
+      const selectedSet = new Set(selected);
+      const query = ($(config.searchId)?.value || "").trim().toLowerCase();
+      const models = ensureSelectedModels(roleModels(role), selected);
+      const filtered = models
+        .filter(model => !query || (model.id + " " + model.name + " " + model.provider + " " + (model.tags || []).join(" ")).toLowerCase().includes(query))
+        .slice(0, role === "target" ? 120 : 160);
+      $(config.countId).textContent = config.single ? (selected[0] || "未选") : (selected.length + "/" + config.limit);
+      $(config.cardsId).innerHTML = filtered.map(model => {
+        const isSelected = selectedSet.has(model.id);
+        const unavailable = model.available === false ? " unavailable" : "";
+        const mark = isSelected ? "已选" : model.available === true ? "可用" : "选择";
+        return "<button type='button' class='model-chip" + (isSelected ? " selected" : "") + unavailable + "' data-role='" + role + "' data-model-id='" + escapeHtml(model.id) + "'>" +
+          "<span class='model-chip-title'><span>" + escapeHtml(model.name || model.id) + "</span><span class='model-count'>" + mark + "</span></span>" +
+          "<span class='model-chip-id'>" + escapeHtml(model.id) + "</span>" +
+          "<span class='model-chip-id'>" + escapeHtml(modelMetaLine(model)) + "</span>" +
+          "</button>";
+      }).join("") || "<div class='muted'>没有匹配模型。可以打开高级输入粘贴模型 ID。</div>";
+    }
+    function renderAllModelCards() {
+      Object.keys(roleConfig).forEach(renderRoleCards);
+    }
+    function toggleRoleModel(role, modelId) {
+      const config = roleConfig[role];
+      if (config.single) {
+        setRoleSelected(role, [modelId]);
+        return;
+      }
+      const current = roleSelected(role);
+      const exists = current.includes(modelId);
+      const next = exists ? current.filter(id => id !== modelId) : [...current, modelId].slice(0, config.limit);
+      setRoleSelected(role, next);
+    }
+    function applyRoleQuickAction(role, action) {
+      const config = roleConfig[role];
+      if (!config || config.single) return;
+      if (action === "clear") {
+        setRoleSelected(role, []);
+        return;
+      }
+      let candidates = roleModels(role);
+      if (action === "available") candidates = candidates.filter(model => model.available === true);
+      setRoleSelected(role, candidates.slice(0, config.limit).map(model => model.id));
     }
     function renderModelOptions() {
-      const targetId = formValue("targetModel") || "gpt-image-2";
-      const imageId = formValue("imageModel") || "gpt-image-2";
+      const targetId = formValue("targetModel") || savedPanelSettings.targetModel || "gpt-image-2";
+      const imageId = formValue("imageModel") || savedPanelSettings.imageModel || "gpt-image-2";
       const targetModels = modelOptions.targetModels || modelOptions.models || [];
       const imageModels = modelOptions.imageModels && modelOptions.imageModels.length ? modelOptions.imageModels : modelOptions.models || [];
       const generatorModels = modelOptions.generatorModels || modelOptions.textModels || [];
       const evaluatorModels = modelOptions.evaluatorModels || modelOptions.textModels || [];
       fillSelect("targetModelSelect", targetModels, [targetId], 320);
+      fillSelect("imageModel", imageModels, [imageId], 220);
       fillSelect("imageModelSelect", imageModels, [imageId], 220);
       fillSelect("generatorModelSelect", generatorModels, csv(formValue("generatorModels")), 260);
       fillSelect("evaluatorModelSelect", evaluatorModels, csv(formValue("evaluatorModels")), 260);
       fillSelect("imageJudgeModelSelect", modelOptions.visionTextModels || evaluatorModels, csv(formValue("imageJudgeModels")), 260);
       syncSelectsFromInputs();
+      renderAllModelCards();
     }
     async function loadModelOptions(probeRelay) {
       $("modelSyncStatus").textContent = probeRelay ? "正在探测中转站模型..." : "正在同步项目模型...";
@@ -1640,6 +1878,7 @@ function page() {
     function loadLocalSettings() {
       try {
         const data = JSON.parse(localStorage.getItem("gpt_image2_panel_settings") || "{}");
+        savedPanelSettings = data;
         for (const id of ["baseUrl", "appUrl", "promptMode", "targetModel", "imageModel", "generatorModels", "evaluatorModels", "imageJudgeModels", "imageSize", "quality", "background", "responseFormat"]) {
           if (data[id] && $(id)) $(id).value = data[id];
         }
@@ -1847,12 +2086,34 @@ function page() {
       saveLocalSettings();
       loadModelOptions(true).catch(error => alert(error.message));
     };
-    $("applyModelSelectBtn").onclick = syncInputsFromSelects;
+    $("exportLearningBtn").onclick = async () => {
+      const res = await fetch("/api/export-learning-summary", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) return alert(data.error || "生成同步建议失败");
+      alert(data.message + "\\n\\n" + data.filePath);
+      loadHistory();
+    };
     $("targetModelSelect").onchange = syncInputsFromSelects;
+    $("imageModel").onchange = () => setRoleSelected("image", [formValue("imageModel") || "gpt-image-2"]);
     $("imageModelSelect").onchange = syncInputsFromSelects;
     $("generatorModelSelect").onchange = syncInputsFromSelects;
     $("evaluatorModelSelect").onchange = syncInputsFromSelects;
     $("imageJudgeModelSelect").onchange = syncInputsFromSelects;
+    for (const role of Object.keys(roleConfig)) {
+      const search = $(roleConfig[role].searchId);
+      if (search) search.oninput = () => renderRoleCards(role);
+      const input = $(roleConfig[role].inputId);
+      if (input && role !== "image") input.onchange = () => { syncSelectsFromInputs(); renderAllModelCards(); };
+    }
+    document.addEventListener("click", (event) => {
+      const card = event.target.closest(".model-chip[data-role][data-model-id]");
+      if (card) {
+        toggleRoleModel(card.dataset.role, card.dataset.modelId);
+        return;
+      }
+      const action = event.target.closest("[data-model-action][data-role]");
+      if (action) applyRoleQuickAction(action.dataset.role, action.dataset.modelAction);
+    });
     $("refreshHistoryBtn").onclick = loadHistory;
     loadLocalSettings();
     loadModelOptions(false).catch(error => { $("modelSyncStatus").textContent = error.message; });
@@ -1888,6 +2149,10 @@ async function handle(req, res) {
         entries: loadHistoryEntries(),
         learning: currentLearning.rules?.length ? currentLearning : rebuildLearningMemoryFromReports(),
       });
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/export-learning-summary") {
+      return json(res, 200, exportLearningSummary());
     }
 
     const historyMatch = url.pathname.match(/^\/api\/history\/(.+)$/);

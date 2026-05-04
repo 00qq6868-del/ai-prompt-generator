@@ -728,3 +728,93 @@ Testing note:
 Next step:
 
 - If the user provides a local API key in the browser/panel, run a real GPT Image 2 multi-generator + multi-judge test and compare the generated image quality with the user's manual score.
+
+## Current Handoff — Local GPT Image 2 Panel Relaunch And Workbench Expansion
+
+User wants `127.0.0.1:61994` to be easy to reopen without typing and without hitting a dead localhost page, and wants the AI workbench to support any future project type and multi-AI collaboration.
+
+Important clarification:
+
+- `127.0.0.1:61994` is a local server address. It only works while the local Node panel server is running.
+- Start it with:
+  - `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
+  - or `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel`
+- Check/stop it with:
+  - `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel-status`
+  - `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel-stop`
+
+Files changed outside repo:
+
+- `E:\AI工作台\工具 Tools\gpt-image2-panel-launcher.ps1`
+- `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
+- `E:\AI工作台\工具 Tools\ai-chain.ps1`
+- `E:\AI工作台\GPT_IMAGE2_LOCAL_PANEL_WORKFLOW.md`
+- `E:\AI工作台\GITHUB_SITE_CONTROL.md`
+- `E:\AI工作台\UNIVERSAL_PROJECT_R_AND_D_WORKFLOW.md`
+- `E:\AI工作台\MULTI_AI_COLLABORATION_RULES.md`
+- `E:\AI工作台\UNIVERSAL-PROJECT-CHAIN.cmd`
+- `E:\AI工作台\工具 Tools\universal-project-chain.ps1`
+
+Repo file changed:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - top image model is now a dropdown selector
+  - image model dropdown is populated from project model options
+  - saved image model preference is preserved while options load
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs`
+- PowerShell parser checks for changed workbench PS scripts
+- `UNIVERSAL-PROJECT-CHAIN.cmd help`
+- `AI-CHAIN.cmd gpt-image2-panel`
+- `AI-CHAIN.cmd gpt-image2-panel-status`
+- HTTP 200 at `http://127.0.0.1:61994/`
+- Playwright selector verification:
+  - image model options: 7
+  - target model options: 266
+  - generator/evaluator options: 245 each
+  - no page errors
+
+Not yet pushed:
+
+- Repo currently has local modifications to `scripts/gpt-image2-live-review-panel.cjs` and context files.
+- Push only after the user confirms or after normal project validation if requested.
+
+## Current Handoff — 2026-05-05 Local Panel Multi-Model Fix
+
+Latest user issue:
+
+- Local GPT Image 2 panel still felt hard to use because model IDs had to be typed or selected with native multi-select boxes.
+- With selected models such as `gpt-5.5`, `claude-opus-4-7`, `gemini-3.1-pro-preview`, `ac-claude-opus-4-6-thinking`, `deepseek-v4-pro`, and `ZhipuAI/GLM-5.1`, one relay failure like `502 Bad Gateway` could stop the whole generation stage.
+- User expects all selected live models to be tried, slow but responsive models to be waited for, dead models to be skipped, and results/feedback to be saved for future GitHub/site optimization.
+
+Implemented:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - Searchable clickable model cards for target, image, generator, evaluator, and image-judge roles.
+  - Advanced comma-separated inputs are collapsed by default.
+  - Relay `/models` list is a hint only; manual ids are still tried.
+  - Local direct prompt generation runs all selected generators concurrently and skips per-model failures.
+  - Prompt timeout default: 120s; judge timeout: 75s; image timeout: 300s.
+  - Successful generator candidates are namespaced by model id.
+  - Bilingual scoring criteria are displayed.
+  - Added `/api/export-learning-summary`.
+- `context/GPT_IMAGE2_LOCAL_LEARNING_SUMMARY.md`
+  - Generated Git-safe summary of local run history, human feedback, AI-human score gap, and learned rules.
+- Workbench:
+  - `AI-CHAIN.cmd gpt-image2-export-learning`
+  - updated `GPT_IMAGE2_LOCAL_PANEL_WORKFLOW.md`, `AI_AGENT_START_HERE.md`, `AI_TOOLCHAIN.md`, `RESTORE_ON_NEW_PC.md`, and workbench operations memory.
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed with line-ending warnings only.
+- `AI-CHAIN.cmd gpt-image2-panel` started the panel; status and HTTP check returned 200.
+- Playwright verified clickable card UI, hidden legacy selects, payload updates, and no page errors.
+- `AI-CHAIN.cmd gpt-image2-export-learning` generated the learning summary.
+
+Still not done:
+
+- No real API-key-backed live generation was run from shell. The user should paste the key into the browser panel and run the live test.
+- Local changes are not yet pushed to GitHub in this handoff.
