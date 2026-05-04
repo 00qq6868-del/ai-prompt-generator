@@ -1188,3 +1188,18 @@ Remote verification:
 Remaining user-key step:
 
 - If the user provides a relay key, run `npm run test:gpt-image2:real`; set `MAKE_IMAGE=1` for a real image and `JUDGE_IMAGE=1` for vision scoring.
+
+Update — 2026-05-04:
+
+- Added `scripts/gpt-image2-live-review-panel.cjs`.
+- Added `npm run test:gpt-image2:panel`.
+- Added shared launcher command `E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel`.
+- Added one-click local entry outside the repo: `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`.
+- The panel opens `127.0.0.1` in the browser, accepts the relay API Key in a password field, then runs all three stages together:
+  - prompt generation and prompt scoring
+  - real GPT Image 2 image generation
+  - multi-AI image scoring
+- The panel then lets the user enter a human score and notes, saving the comparison into the ignored report files.
+- Validation:
+  - `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+  - Server startup was tested with `NO_OPEN_BROWSER=1`; it successfully bound to a local `127.0.0.1` URL.

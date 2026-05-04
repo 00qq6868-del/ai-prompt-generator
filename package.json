@@ -23,6 +23,7 @@
     "sources:prompt-library": "node scripts/sync-prompt-library-sources.cjs",
     "sources:all": "npm run sources:gpt-image2 && npm run sources:prompt-library",
     "test:gpt-image2:real": "node scripts/real-gpt-image2-quality-test.cjs",
+    "test:gpt-image2:panel": "node scripts/gpt-image2-live-review-panel.cjs",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
     "test:quality": "npx playwright test tests/e2e/quality.spec.ts --project=chromium"

@@ -26,6 +26,7 @@ Important commands:
 - `test-all` — typecheck + build + E2E.
 - `smoke-prod` — real production smoke test for `https://www.myprompt.asia`.
 - `gpt-image2-real` — real relay/API quality test for GPT Image 2 prompts; requires an API key in env vars and can optionally generate an image.
+- `gpt-image2-panel` — opens a local browser panel for shared GPT Image 2 testing: prompt score, real image generation, multi-AI image judging, and user score comparison.
 - `android-apk` — build the local Android debug APK for this project.
 - `ci` — recent GitHub Actions.
 - `watch-ci` — watch latest or `-RunId <id>`.
@@ -67,6 +68,18 @@ Equivalent shared launcher command:
 
 ```cmd
 E:\AI工作台\AI-CHAIN.cmd gpt-image2-real
+```
+
+One-click shared review panel:
+
+```cmd
+E:\AI工作台\GPTImage2一键共同真实测试面板.cmd
+```
+
+or:
+
+```cmd
+E:\AI工作台\AI-CHAIN.cmd gpt-image2-panel
 ```
 
 Add `$env:MAKE_IMAGE="1"` to generate a real image and `$env:JUDGE_IMAGE="1"` to request vision-model scoring. Reports go to `reports/gpt-image2-real-tests/` and are ignored by Git.
