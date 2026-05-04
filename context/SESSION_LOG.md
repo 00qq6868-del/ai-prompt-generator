@@ -1327,3 +1327,43 @@ Validation:
 - Restarted local panel at `http://127.0.0.1:61994/`.
 - API verification returned `models=266 target=266 image=7 text=245 generators=245 evaluators=245 visionText=245`.
 - History/learning verification returned `history=1 learningRules=5`.
+
+---
+
+## 2026-05-04 — Added Workbench Anti-Hallucination Guard
+
+User complained that AI-generated scripts and workbench automation keep failing, and requested a complete free hallucination/toolchain workflow based on 9 GitHub projects.
+
+Actions:
+
+- Cloned/synced all 9 repos into `E:\AI工作台\资料 Sources\hallucination-guard\repos`.
+- Created `E:\AI工作台\HALLUCINATION-GUARD.cmd`.
+- Created `E:\AI工作台\工具 Tools\hallucination-guard.ps1`.
+- Created `E:\AI工作台\HALLUCINATION_GUARD_WORKFLOW.md`.
+- Added commands to `E:\AI工作台\工具 Tools\ai-chain.ps1`:
+  - `hallucination`
+  - `hallucination-sync`
+  - `hallucination-check`
+  - `hallucination-phoenix`
+- Updated workbench memory docs:
+  - `AI自我改进工作流.md`
+  - `AI大项目记忆规则.md`
+  - `AI_TOOLCHAIN.md`
+- Created isolated Python 3.11 environments:
+  - `.venv-core`
+  - `.venv-lettuce`
+- Registered scheduled task `AIWorkbenchHallucinationGuardSync` to sync every 6 hours.
+
+Important debugging notes:
+
+- The first PowerShell version hardcoded Chinese folder names and produced mojibake paths like `璧勬枡 Sources`. Fixed by discovering `*Sources`, `*Logs`, and `*Projects` directories dynamically, then safely removed the mojibake directories.
+- Git writes normal fetch progress to stderr, which PowerShell can treat as an error when `$ErrorActionPreference = Stop`. Fixed `Invoke-Logged` to judge native command success by exit code instead of stderr text.
+- One shared Python environment caused dependency conflicts: UQLM requires `numpy<2`, while LettuceDetect requires `numpy>=2.2`. Fixed by splitting into two isolated environments.
+
+Validation:
+
+- `HALLUCINATION-GUARD.cmd sync` succeeded for all 9 repos.
+- `HALLUCINATION-GUARD.cmd status` showed both environments compatible.
+- `HALLUCINATION-GUARD.cmd imports` imported all target libraries.
+- `HALLUCINATION-GUARD.cmd check-script -Path "E:\AI工作台\工具 Tools\hallucination-guard.ps1"` passed.
+- `AI-CHAIN.cmd hallucination` and `AI-CHAIN.cmd hallucination-sync` both ran successfully.

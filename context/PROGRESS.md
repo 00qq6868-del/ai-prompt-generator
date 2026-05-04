@@ -1014,3 +1014,36 @@ Validation:
   - text/generator/evaluator models: 245
   - history entries: 1
   - learning rules: 5
+
+## 2026-05-04 — Workbench Anti-Hallucination Guard
+
+User asked for a full free toolchain/workflow to reduce hallucinations and script failures across all future AI work.
+
+Implemented outside the repo in the shared E-drive workbench:
+
+- `E:\AI工作台\HALLUCINATION-GUARD.cmd`
+- `E:\AI工作台\工具 Tools\hallucination-guard.ps1`
+- `E:\AI工作台\HALLUCINATION_GUARD_WORKFLOW.md`
+- `E:\AI工作台\资料 Sources\hallucination-guard`
+
+Synced 9 external sources:
+
+- deepeval, Phoenix, TruLens, UpTrain, WikiChat, UQLM, SelfCheckGPT, LettuceDetect, VCD.
+
+Installed isolated Python 3.11 environments:
+
+- `.venv-core` for deepeval, Phoenix, TruLens, UpTrain, UQLM, SelfCheckGPT.
+- `.venv-lettuce` for LettuceDetect because of incompatible numpy requirements.
+
+Validation:
+
+- All 9 repos synced successfully and `source-status.json` records commit IDs.
+- `uv pip check` passed in both environments.
+- Import smoke passed for all installed libraries.
+- Script checker passed for `hallucination-guard.ps1`.
+- `AI-CHAIN.cmd hallucination-sync` works through the universal launcher.
+- Scheduled task `AIWorkbenchHallucinationGuardSync` registered every 6 hours.
+
+Boundary:
+
+- This reduces hallucination risk with source sync, evidence gates, script checks, evals, and logs. It does not guarantee hallucination rate is mathematically zero.

@@ -33,6 +33,10 @@ Important commands:
 - `memory` — print handoff/context files.
 - `compare-claude` — read-only status comparison with Claude workspace.
 - `security` — Gitleaks secret scan.
+- `hallucination` — run the shared anti-hallucination workflow/status.
+- `hallucination-sync` — sync the 9 external hallucination/eval GitHub sources.
+- `hallucination-check -Path FILE` — syntax/static-check a generated script before running it.
+- `hallucination-phoenix` — open local Phoenix observability dashboard.
 - `new-session` — prompt for another AI window.
 
 Concurrency rule:
@@ -54,6 +58,30 @@ E:\AI工作台\AI工具链说明.md
 ```
 
 Free VS Code quality extensions installed in the shared IDE include Tailwind CSS IntelliSense, axe Accessibility Linter, SonarQube/SonarLint, Vitest Explorer, Code Spell Checker, Pretty TypeScript Errors, TODO Tree, Path Intellisense, and Edge DevTools.
+
+Anti-hallucination / script reliability toolchain:
+
+```cmd
+E:\AI工作台\HALLUCINATION-GUARD.cmd
+E:\AI工作台\AI-CHAIN.cmd hallucination
+E:\AI工作台\AI-CHAIN.cmd hallucination-sync
+E:\AI工作台\AI-CHAIN.cmd hallucination-check -Path E:\path\to\script.ps1
+E:\AI工作台\AI-CHAIN.cmd hallucination-phoenix
+```
+
+Sources and workflow:
+
+```text
+E:\AI工作台\资料 Sources\hallucination-guard
+E:\AI工作台\HALLUCINATION_GUARD_WORKFLOW.md
+```
+
+Installed isolated environments:
+
+- `E:\AI工作台\工具 Tools\hallucination-guard\.venv-core` for deepeval, Phoenix, TruLens, UpTrain, UQLM, and SelfCheckGPT.
+- `E:\AI工作台\工具 Tools\hallucination-guard\.venv-lettuce` for LettuceDetect, isolated because it requires a different numpy range.
+
+Rule for future AI windows: when factuality, hallucination risk, auto-installation, generated scripts, RAG, or long-form answer reliability matters, run `AI-CHAIN.cmd hallucination` first and `AI-CHAIN.cmd hallucination-check -Path FILE` before executing generated scripts.
 
 GPT Image 2 real QA example:
 

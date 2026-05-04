@@ -554,3 +554,50 @@ Validation already run:
 Suggested next product step:
 
 - Port the stable parts of this local panel into the main website/desktop app: image generation UI, reference image upload, history, human scoring, and feedback-to-prompt optimization.
+
+## Current Handoff — Workbench Anti-Hallucination Guard
+
+User asked to reduce hallucinations and script failures by adding a full free toolchain around the AI workbench and syncing 9 GitHub sources:
+
+- confident-ai/deepeval
+- arize-ai/phoenix
+- truera/trulens
+- uptrain-ai/uptrain
+- stanford-oval/WikiChat
+- cvs-health/uqlm
+- potsawee/selfcheckgpt
+- KRLabsOrg/LettuceDetect
+- DAMO-NLP-SG/VCD
+
+Workbench-level files outside this repository:
+
+- `E:\AI工作台\HALLUCINATION-GUARD.cmd`
+- `E:\AI工作台\打开反幻觉工具链控制台.cmd`
+- `E:\AI工作台\工具 Tools\hallucination-guard.ps1`
+- `E:\AI工作台\HALLUCINATION_GUARD_WORKFLOW.md`
+- `E:\AI工作台\资料 Sources\hallucination-guard\README.md`
+- `E:\AI工作台\资料 Sources\hallucination-guard\source-status.json`
+
+Installed isolated Python 3.11 environments:
+
+- `E:\AI工作台\工具 Tools\hallucination-guard\.venv-core`
+  - deepeval, arize-phoenix, trulens, uptrain, uqlm, selfcheckgpt
+- `E:\AI工作台\工具 Tools\hallucination-guard\.venv-lettuce`
+  - lettucedetect
+
+Reason for isolation:
+
+- `uqlm` needs `numpy<2`, while `lettucedetect` needs `numpy>=2.2`; forcing one environment caused dependency conflicts, so the final workflow uses two clean environments.
+
+Validation already run:
+
+- All 9 source repos synced successfully.
+- `uv pip check` passed for both environments.
+- Import smoke passed for deepeval, phoenix, trulens, uptrain, uqlm, selfcheckgpt, and lettucedetect.
+- `HALLUCINATION-GUARD.cmd check-script -Path "E:\AI工作台\工具 Tools\hallucination-guard.ps1"` passed.
+- `AI-CHAIN.cmd hallucination-sync` successfully called the new guard from the universal launcher.
+- Windows Scheduled Task `AIWorkbenchHallucinationGuardSync` registered to sync every 6 hours.
+
+Important caution:
+
+- This toolchain reduces hallucination risk through source sync, evidence gates, script checks, eval tooling, and logs. It does not make hallucination mathematically impossible. Future AI windows must not promise a 0% hallucination rate.
