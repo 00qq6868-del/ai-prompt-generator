@@ -466,3 +466,38 @@ Remote verification:
 Important limitation:
 
 - `model-health.ts` uses in-memory state. It is free and simple, but not shared across Vercel instances and resets on server restart. A persistent Redis/Vercel KV health registry would be the next upgrade if the user wants cross-instance memory.
+
+## Current Handoff — GPT Image 2 Panel 524 Fix
+
+Problem observed:
+
+- User's local `127.0.0.1:61994` GPT Image 2 test panel failed at step `1/3 提示词生成和评分`.
+- Error was production Cloudflare HTML: `myprompt.asia | 524: A timeout occurred`.
+
+Fix:
+
+- `scripts/gpt-image2-live-review-panel.cjs` now defaults to local direct relay prompt optimization.
+- It no longer depends on `www.myprompt.asia/api/generate` unless the user explicitly selects website API mode.
+- Website API mode falls back to local direct mode on failure.
+- Direct mode includes:
+  - four GPT Image 2 source strategies
+  - hybrid candidate
+  - multi-AI prompt scoring
+  - best candidate selection
+  - optional final synthesis
+  - real text-to-image or image-to-image generation
+  - multi-AI image judging
+- E-drive launchers now kill stale port `61994` panel processes before starting, so a new launch does not reopen the old server.
+
+Local state:
+
+- Old panel process was stopped.
+- New panel process was started on `http://127.0.0.1:61994/`.
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- Local GET returned HTTP 200 and new UI text.
+
+Files outside Git also changed:
+
+- `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
+- `E:\AIWB\GPTImage2_PANEL.cmd`
+- `E:\AI工作台\工具 Tools\ai-chain.ps1`

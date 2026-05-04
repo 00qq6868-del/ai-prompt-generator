@@ -14,6 +14,36 @@ const DEFAULT_IDEA =
 const DEFAULT_GENERATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,deepseek-v4-pro,gpt-4o";
 const DEFAULT_EVALUATORS = "gpt-5.5,claude-opus-4-7,gemini-3.1-pro-preview,o3,gpt-4o";
 const DEFAULT_IMAGE_JUDGES = "gpt-4o,gemini-3.1-pro-preview,claude-opus-4-7,gpt-5.5";
+const PROMPT_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_PROMPT_TIMEOUT_MS || 55_000);
+const JUDGE_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_JUDGE_TIMEOUT_MS || 35_000);
+const IMAGE_TIMEOUT_MS = Number(process.env.GPT_IMAGE2_PANEL_IMAGE_TIMEOUT_MS || 180_000);
+
+const SOURCE_STRATEGIES = [
+  {
+    id: "evolink",
+    label: "EvoLinkAI case-pattern route",
+    guide:
+      "Use task-specific gallery thinking. First identify whether the request is e-commerce, ad creative, portrait, poster, character, UI/social mockup, or comparison. Write a polished natural-language production prompt with concrete scene assets, commercial lighting, visible layout hierarchy, exact readable text, and style-consistency constraints. Strong for product ads, posters, UI cards, portraits, and storyboard-like boards.",
+  },
+  {
+    id: "youmind",
+    label: "YouMind taxonomy/config route",
+    guide:
+      "Use broad taxonomy and config-style structure. Put artifact type, canvas, aspect ratio, and layout before subject. For complex outputs, use a clean JSON-like visual spec with type, subject, style, layout, text, materials, lighting, and rendering fields. Preserve dynamic user slots as quoted literal copy when needed. Strong for multi-language typography, grids, product series, maps, UI overlays, stickers, diagrams, and structured prompts.",
+  },
+  {
+    id: "anil",
+    label: "Anil-matcha concise API route",
+    guide:
+      "Use direct OpenAI Images API prompt style: copy-pasteable, concise but rich, no unsupported negative-prompt syntax, no Midjourney flags. Emphasize photorealism, style fidelity, prompt adherence, screenshots/mockups, portraits, posters, game/UI/infographic use cases, and clear final image intent. Strong when the user wants a clean ready-to-call API prompt without overengineering.",
+  },
+  {
+    id: "wuyoscar",
+    label: "wuyoscar craft/skill route",
+    guide:
+      "Use the craft checklist: exact text in quotes, canvas/layout first, fixed-region schemas for infographics, diagram grammar for research/data figures, UI prompts as product specs, multi-panel consistency, capture context for photorealism, scene density over empty adjectives, bounded style anchors, and edit/reference-image invariants. Strong for typography, scientific boards, app screens, infographics, character sheets, and prompt debugging.",
+  },
+];
 
 fs.mkdirSync(REPORT_DIR, { recursive: true });
 
@@ -100,8 +130,24 @@ function endpoint(baseUrl, suffix) {
   return `${baseUrl.replace(/\/+$/, "")}/${suffix.replace(/^\/+/, "")}`;
 }
 
-async function fetchJson(url, options) {
-  const res = await fetch(url, options);
+function htmlErrorSummary(textBody) {
+  const title = String(textBody || "").match(/<title>(.*?)<\/title>/i)?.[1];
+  if (title) return title.replace(/\s+/g, " ").trim();
+  return String(textBody || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 500);
+}
+
+async function fetchJson(url, options = {}) {
+  const { timeoutMs, ...fetchOptions } = options;
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = controller
+    ? setTimeout(() => controller.abort(new Error(`请求超时 ${Math.round(timeoutMs / 1000)} 秒`)), timeoutMs)
+    : null;
+  let res;
+  try {
+    res = await fetch(url, controller ? { ...fetchOptions, signal: controller.signal } : fetchOptions);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
   const textBody = await res.text();
   let data = null;
   try {
@@ -215,6 +261,7 @@ async function generateOptimizedPrompt(options) {
   } = options;
   return fetchJson(endpoint(appUrl, "/api/generate"), {
     method: "POST",
+    timeoutMs: PROMPT_TIMEOUT_MS,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       userIdea: idea,
@@ -234,9 +281,308 @@ async function generateOptimizedPrompt(options) {
   });
 }
 
+async function callChatCompletion({ relayBaseUrl, apiKey, model, systemPrompt, userPrompt, maxTokens, temperature, timeoutMs }) {
+  const data = await fetchJson(endpoint(relayBaseUrl, "/chat/completions"), {
+    method: "POST",
+    timeoutMs,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      temperature,
+      max_tokens: maxTokens,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  return {
+    text: data?.choices?.[0]?.message?.content || "",
+    usage: data?.usage || null,
+  };
+}
+
+function buildDirectCandidatePrompt(userIdea, language) {
+  const outputLanguage = language === "zh" ? "Chinese" : "English";
+  return `User idea:
+${userIdea}
+
+Create GPT Image 2.0 prompt candidates using four independent source strategies plus one hybrid.
+
+Rules:
+- Preserve every user detail exactly.
+- If reference images will be used, write the prompt as an image-edit/image-to-image instruction: preserve identity, pose-critical features, and useful visual traits from the reference while applying the requested changes.
+- Do not mix the four strategies inside the four source candidates.
+- The fifth candidate is the only hybrid.
+- GPT Image 2 uses natural language and structured visual specs; do not add Midjourney flags, SD weights, or unsupported negative-prompt sections.
+- Exact visible text must be wrapped in quotes and placed with font, size, color, and position.
+- If the image has panels, UI, infographic, product layout, or typography, define canvas/aspect ratio/layout first.
+- Output language for the final prompts: ${outputLanguage}.
+
+Source strategies:
+${SOURCE_STRATEGIES.map((source, index) => `${index + 1}. ${source.id} (${source.label}): ${source.guide}`).join("\n")}
+
+Return STRICT JSON only:
+{
+  "candidates": [
+    { "id": "evolink", "label": "EvoLinkAI case-pattern route", "prompt": "..." },
+    { "id": "youmind", "label": "YouMind taxonomy/config route", "prompt": "..." },
+    { "id": "anil", "label": "Anil-matcha concise API route", "prompt": "..." },
+    { "id": "wuyoscar", "label": "wuyoscar craft/skill route", "prompt": "..." }
+  ],
+  "hybrid": { "id": "hybrid", "label": "four-source hybrid", "prompt": "..." }
+}`;
+}
+
+function normalizeDirectCandidates(payload) {
+  const candidates = [];
+  for (const source of SOURCE_STRATEGIES) {
+    const found = payload?.candidates?.find((candidate) => candidate?.id === source.id);
+    if (found?.prompt?.trim()) {
+      candidates.push({
+        id: source.id,
+        label: found.label?.trim() || source.label,
+        prompt: found.prompt.trim(),
+      });
+    }
+  }
+  if (payload?.hybrid?.prompt?.trim()) {
+    candidates.push({
+      id: "hybrid",
+      label: payload.hybrid.label?.trim() || "four-source hybrid",
+      prompt: payload.hybrid.prompt.trim(),
+    });
+  }
+  return candidates;
+}
+
+function buildDirectJudgePrompt(candidates, userIdea, language) {
+  const outputLanguage = language === "zh" ? "Chinese" : "English";
+  return `You are judging GPT Image 2.0 prompts.
+
+Original user idea:
+${userIdea}
+
+Candidates:
+${JSON.stringify(candidates, null, 2)}
+
+Score every candidate from 0 to 100 using these criteria:
+- intent fidelity: preserves every explicit and implicit user detail
+- reference-image control: if images are used, preserves identity/important visual traits and clearly describes what changes
+- GPT Image 2 fit: natural-language/structured prompt style, no unsupported flags
+- visual specificity: subject, layout, lighting, material, camera, palette, mood
+- typography reliability: exact quoted text, readable placement, no garbled text
+- layout controllability: aspect ratio, panels, zones, UI/diagram structure when relevant
+- commercial usability: polished, practical, avoids watermarks/logos unless user supplied them
+
+If the top single-source candidate and the hybrid are close in quality, set shouldSynthesize=true.
+
+Return STRICT JSON only in ${outputLanguage}:
+{
+  "scores": [
+    { "id": "evolink", "score": 0, "reason": "short reason" }
+  ],
+  "winnerId": "candidate id",
+  "shouldSynthesize": true,
+  "summary": "short summary"
+}`;
+}
+
+function buildDirectSynthesisPrompt(userIdea, bestSingle, hybrid, language) {
+  const outputLanguage = language === "zh" ? "Chinese" : "English";
+  return `Synthesize the best final GPT Image 2.0 prompt.
+
+Original user idea:
+${userIdea}
+
+Best single-source prompt (${bestSingle.label}):
+${bestSingle.prompt}
+
+Hybrid prompt:
+${hybrid.prompt}
+
+Create one final prompt that beats both. Keep only the strongest compatible parts. Preserve every user detail. Use GPT Image 2 compatible natural language or a clean JSON-like visual spec. Do not include explanations, scores, source names, markdown fences, Midjourney flags, or SD negative-prompt sections.
+
+Output only the final prompt in ${outputLanguage}.`;
+}
+
+function aggregateDirectPromptScores(candidates, judgeOutputs) {
+  const buckets = new Map(candidates.map((candidate) => [
+    candidate.id,
+    { id: candidate.id, generatorModelId: candidate.id, generatorModelName: candidate.label, averageScore: 0, rank: 0, scores: [] },
+  ]));
+
+  let synthesizeVotes = 0;
+  for (const output of judgeOutputs) {
+    if (output.payload?.shouldSynthesize) synthesizeVotes += 1;
+    for (const item of output.payload?.scores || []) {
+      if (!item?.id || typeof item.score !== "number") continue;
+      const bucket = buckets.get(item.id);
+      if (!bucket) continue;
+      bucket.scores.push({
+        judgeModel: output.model,
+        score: Math.max(0, Math.min(100, item.score)),
+        reason: String(item.reason || ""),
+      });
+    }
+  }
+
+  const rows = [...buckets.values()].map((candidate) => ({
+    ...candidate,
+    averageScore: candidate.scores.length
+      ? candidate.scores.reduce((sum, item) => sum + item.score, 0) / candidate.scores.length
+      : 0,
+  }));
+  rows.sort((a, b) => b.averageScore - a.averageScore);
+  rows.forEach((row, index) => {
+    row.rank = index + 1;
+  });
+  return { rows, synthesizeVotes };
+}
+
+async function runDirectPromptOptimization({ relayBaseUrl, apiKey, idea, language, generatorModelIds, evaluatorModelIds, addLog }) {
+  const startedAt = Date.now();
+  const calls = [];
+  let generatorModel = null;
+  let candidateText = "";
+  let candidates = [];
+  const generatorErrors = [];
+
+  for (const model of generatorModelIds) {
+    try {
+      addLog(`本地直连生成候选提示词: ${model}`);
+      const result = await callChatCompletion({
+        relayBaseUrl,
+        apiKey,
+        model,
+        systemPrompt: "You generate candidate prompts for GPT Image 2. Output strict JSON only.",
+        userPrompt: buildDirectCandidatePrompt(idea, language),
+        maxTokens: 4096,
+        temperature: 0.45,
+        timeoutMs: PROMPT_TIMEOUT_MS,
+      });
+      calls.push({ model, usage: result.usage });
+      candidateText = result.text.trim();
+      const parsed = extractJsonMaybe(candidateText);
+      candidates = normalizeDirectCandidates(parsed);
+      if (candidates.length >= 2) {
+        generatorModel = model;
+        break;
+      }
+      generatorErrors.push(`${model}: 候选 JSON 解析失败`);
+    } catch (error) {
+      generatorErrors.push(`${model}: ${error.message}`);
+      addLog(`${model} 生成失败，自动跳过: ${error.message}`);
+    }
+  }
+
+  if (!candidates.length) {
+    if (candidateText.trim()) {
+      candidates = [{ id: "fallback", label: generatorModel || "fallback", prompt: candidateText.trim() }];
+    } else {
+      throw new Error(`本地直连提示词生成失败。${generatorErrors.join("；")}`);
+    }
+  }
+
+  const judgeOutputs = [];
+  for (const model of evaluatorModelIds.slice(0, 6)) {
+    try {
+      addLog(`本地直连提示词评分: ${model}`);
+      const result = await callChatCompletion({
+        relayBaseUrl,
+        apiKey,
+        model,
+        systemPrompt: "You are a strict image-prompt evaluator. Output strict JSON only.",
+        userPrompt: buildDirectJudgePrompt(candidates, idea, language),
+        maxTokens: 1400,
+        temperature: 0.1,
+        timeoutMs: JUDGE_TIMEOUT_MS,
+      });
+      calls.push({ model, usage: result.usage });
+      judgeOutputs.push({ model, payload: extractJsonMaybe(result.text) || {} });
+    } catch (error) {
+      addLog(`${model} 提示词评分失败，自动跳过: ${error.message}`);
+    }
+  }
+
+  const { rows, synthesizeVotes } = aggregateDirectPromptScores(candidates, judgeOutputs);
+  const fallbackWinner = candidates.find((candidate) => candidate.id === "hybrid") || candidates[0];
+  const top = rows.find((row) => row.averageScore > 0) || rows[0] || {
+    id: fallbackWinner.id,
+    averageScore: 0,
+  };
+  const topCandidate = candidates.find((candidate) => candidate.id === top.id) || fallbackWinner;
+  const hybrid = candidates.find((candidate) => candidate.id === "hybrid");
+  const bestSingleRow = rows.find((row) => row.id !== "hybrid") || top;
+  const bestSingle = candidates.find((candidate) => candidate.id === bestSingleRow.id) || topCandidate;
+  const hybridScore = rows.find((row) => row.id === "hybrid")?.averageScore || 0;
+  const shouldSynthesize = Boolean(hybrid) && (synthesizeVotes > 0 || Math.abs((bestSingleRow.averageScore || 0) - hybridScore) <= 3);
+
+  let optimizedPrompt = topCandidate.prompt;
+  let selectedStrategy = topCandidate.id;
+  if (shouldSynthesize && hybrid && generatorModel) {
+    try {
+      addLog(`本地直连融合最终提示词: ${generatorModel}`);
+      const result = await callChatCompletion({
+        relayBaseUrl,
+        apiKey,
+        model: generatorModel,
+        systemPrompt: "You synthesize the final GPT Image 2 prompt. Output only the final prompt.",
+        userPrompt: buildDirectSynthesisPrompt(idea, bestSingle, hybrid, language),
+        maxTokens: 2048,
+        temperature: 0.35,
+        timeoutMs: PROMPT_TIMEOUT_MS,
+      });
+      calls.push({ model: generatorModel, usage: result.usage });
+      if (result.text.trim()) {
+        optimizedPrompt = result.text.trim();
+        selectedStrategy = `${bestSingle.id}+hybrid`;
+      }
+    } catch (error) {
+      addLog(`最终融合失败，使用当前最高分候选: ${error.message}`);
+    }
+  }
+
+  const promptEvaluation = {
+    candidates: rows,
+    judgeModels: judgeOutputs.map((output) => output.model),
+    selectedCandidateId: topCandidate.id,
+    summary: judgeOutputs.map((output) => output.payload?.summary).find(Boolean) || "Local direct GPT Image 2 prompt evaluation completed.",
+    sourceCommits: [],
+  };
+
+  const inputTokens = calls.reduce((sum, call) => sum + (call.usage?.prompt_tokens || call.usage?.input_tokens || 0), 0);
+  const outputTokens = calls.reduce((sum, call) => sum + (call.usage?.completion_tokens || call.usage?.output_tokens || 0), 0);
+
+  return {
+    optimizedPrompt,
+    stats: {
+      inputTokens,
+      outputTokens,
+      latencyMs: Date.now() - startedAt,
+      tokensDelta: optimizedPrompt.length - idea.length,
+      changePercent: idea.length ? Math.round(((optimizedPrompt.length - idea.length) / idea.length) * 100) : 0,
+    },
+    meta: {
+      generatorModel,
+      targetModel: "GPT Image 2",
+      reviewSummary: `Local direct GPT Image 2 optimizer used ${generatorModel || "fallback"} and ${judgeOutputs.length} judge model(s).`,
+      judgeModels: judgeOutputs.map((output) => output.model),
+      selectedStrategy,
+      promptEvaluation,
+      localDirect: true,
+    },
+  };
+}
+
 async function generateImage({ relayBaseUrl, apiKey, model, prompt, imageSize, quality, responseFormat }) {
   return fetchJson(endpoint(relayBaseUrl, "/images/generations"), {
     method: "POST",
+    timeoutMs: IMAGE_TIMEOUT_MS,
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
@@ -281,6 +627,7 @@ async function generateImageEdit({
       Authorization: `Bearer ${apiKey}`,
     },
     body: form,
+    signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS),
   });
   const textBody = await res.text();
   let data = null;
@@ -290,7 +637,7 @@ async function generateImageEdit({
     data = null;
   }
   if (!res.ok) {
-    const message = data?.error?.message || data?.error || textBody.slice(0, 500);
+    const message = data?.error?.message || data?.error || htmlErrorSummary(textBody);
     throw new Error(`${res.status} ${res.statusText}: ${message}`);
   }
   return data || {};
@@ -366,6 +713,7 @@ async function judgeImageWithModel({ relayBaseUrl, apiKey, judgeModel, userIdea,
 
   const data = await fetchJson(endpoint(relayBaseUrl, "/chat/completions"), {
     method: "POST",
+    timeoutMs: JUDGE_TIMEOUT_MS,
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
@@ -415,6 +763,7 @@ function writeRunFiles(run) {
 
 - Time: ${run.id}
 - App URL: ${report.appUrl}
+- Prompt mode: ${report.promptMode}
 - Relay Base URL: ${report.relayBaseUrl}
 - API Key: ${report.maskedApiKey}
 - Target model: ${report.targetModelId}
@@ -466,6 +815,7 @@ async function runFullReview(run, input) {
   try {
     const relayBaseUrl = normalizeOpenAiBase(input.baseUrl || "https://naapi.cc");
     const appUrl = String(input.appUrl || "https://www.myprompt.asia").replace(/\/+$/, "");
+    const promptMode = input.promptMode || "direct";
     const targetModelId = input.targetModel || "gpt-image-2";
     const imageModel = input.imageModel || "gpt-image-2";
     const imageSize = input.imageSize || "1024x1024";
@@ -497,20 +847,43 @@ async function runFullReview(run, input) {
     if (!generatorModelIds.length) throw new Error("没有可用的生成器模型。请检查模型名称或中转站模型权限。");
 
     run.phase = "1/3 提示词生成和评分";
-    addLog(run, `正在让网站生成 GPT Image 2 优化提示词，生成器: ${generatorModelIds.join(", ")}`);
-    const generated = await generateOptimizedPrompt({
-      appUrl,
-      relayBaseUrl,
-      apiKey,
-      idea: userIdea,
-      language,
-      targetModelId,
-      generatorModelIds,
-      evaluatorModelIds,
-      availableModelIds: relayModels.ids,
-    });
+    addLog(
+      run,
+      promptMode === "app"
+        ? `正在调用网站 API 生成 GPT Image 2 优化提示词，生成器: ${generatorModelIds.join(", ")}`
+        : `正在本地直连中转站生成 GPT Image 2 优化提示词，生成器: ${generatorModelIds.join(", ")}`,
+    );
+    let generated;
+    if (promptMode === "app") {
+      try {
+        generated = await generateOptimizedPrompt({
+          appUrl,
+          relayBaseUrl,
+          apiKey,
+          idea: userIdea,
+          language,
+          targetModelId,
+          generatorModelIds,
+          evaluatorModelIds,
+          availableModelIds: relayModels.ids,
+        });
+      } catch (error) {
+        addLog(run, `网站 API 失败，自动切换本地直连模式: ${error.message}`);
+      }
+    }
+    if (!generated) {
+      generated = await runDirectPromptOptimization({
+        relayBaseUrl,
+        apiKey,
+        idea: userIdea,
+        language,
+        generatorModelIds,
+        evaluatorModelIds,
+        addLog: (message) => addLog(run, message),
+      });
+    }
     const optimizedPrompt = String(generated.optimizedPrompt || "").trim();
-    if (!optimizedPrompt) throw new Error("网站返回了空的 optimizedPrompt。");
+    if (!optimizedPrompt) throw new Error("提示词生成返回了空的 optimizedPrompt。");
     const promptEvaluation = generated.meta?.promptEvaluation;
     const promptScore = averagePromptScore(promptEvaluation);
     addLog(run, `提示词阶段完成，网站内部评分: ${promptScore == null ? "n/a" : `${promptScore.toFixed(1)}/100`}`);
@@ -587,6 +960,7 @@ async function runFullReview(run, input) {
     run.result = {
       runId: run.id,
       appUrl,
+      promptMode: generated.meta?.localDirect ? "direct" : promptMode,
       relayBaseUrl,
       maskedApiKey: maskSecret(apiKey),
       relayModelProbe: { ok: relayModels.ok, count: relayModels.ids.length, error: relayModels.error },
@@ -665,7 +1039,7 @@ function page() {
   <main>
     <section class="card">
       <h1>GPT Image 2 共同真实测试面板</h1>
-      <p>三步一起跑：1. 先测提示词质量；2. 真实生成图片；3. 多个 AI 评图。最后你再填人工评分，页面会把 AI 平均分和你的分数放一起比较。API Key 只发给本机 127.0.0.1 临时服务，不保存到文件。</p>
+      <p>三步一起跑：1. 先测提示词质量；2. 真实生成图片；3. 多个 AI 评图。默认由本机面板直接调用中转站生成提示词，避开网站 524 超时；最后你再填人工评分，页面会把 AI 平均分和你的分数放一起比较。API Key 只发给本机 127.0.0.1 临时服务，不保存到文件。</p>
       <div class="grid">
         <div>
           <label>中转站 Base URL</label>
@@ -676,12 +1050,19 @@ function page() {
           <input id="apiKey" type="password" autocomplete="off" placeholder="粘贴 sk-...，不会显示" />
         </div>
         <div>
-          <label>网站地址</label>
-          <input id="appUrl" value="https://www.myprompt.asia" />
+          <label>提示词生成方式</label>
+          <select id="promptMode">
+            <option value="direct" selected>本地直连中转站，推荐，不怕网站 524</option>
+            <option value="app">调用网站 API，失败后自动降级本地直连</option>
+          </select>
         </div>
         <div>
           <label>图片模型</label>
           <input id="imageModel" value="gpt-image-2" />
+        </div>
+        <div class="full">
+          <label>网站地址，仅在“调用网站 API”模式使用</label>
+          <input id="appUrl" value="https://www.myprompt.asia" />
         </div>
         <div class="full">
           <label>测试需求，也就是用户原始想法</label>
@@ -822,6 +1203,7 @@ function page() {
         apiKey: formValue("apiKey"),
         baseUrl: formValue("baseUrl"),
         appUrl: formValue("appUrl"),
+        promptMode: formValue("promptMode"),
         idea: $("idea").value,
         generatorModels: formValue("generatorModels"),
         evaluatorModels: formValue("evaluatorModels"),

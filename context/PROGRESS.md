@@ -936,3 +936,37 @@ Validation:
 Known boundary:
 
 - The health registry is intentionally free and in-memory. On Vercel it applies per running server instance and resets when the instance restarts. It is still useful for unstable relay/model retries without adding a database.
+
+## 2026-05-04 — GPT Image 2 Local Test Panel 524 Fix
+
+User screenshot showed the local `127.0.0.1:61994` GPT Image 2 review panel failing at step 1 with a Cloudflare `524: A timeout occurred` HTML response from `www.myprompt.asia`. Root cause: the panel was still calling the production website `/api/generate` for prompt optimization, so long GPT Image 2 prompt tournament requests could exceed the production timeout before image generation even started.
+
+Implemented:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - Default prompt generation mode changed to local direct relay calls.
+  - The panel now generates GPT Image 2 candidate prompts directly through the user's relay `/v1/chat/completions` instead of depending on `www.myprompt.asia/api/generate`.
+  - Added the same four-source GPT Image 2 strategy set inside the panel: EvoLinkAI, YouMind, Anil-matcha, wuyoscar, plus a hybrid candidate.
+  - Added direct AI prompt judging, 0-100 scoring, winner selection, and optional synthesis.
+  - Added timeout handling:
+    - prompt generation: 55s
+    - prompt/image judges: 35s
+    - image generation/editing: 180s
+  - The website API mode is still available as an optional dropdown. If it fails, the panel automatically falls back to local direct mode.
+  - HTML error pages such as Cloudflare 524 are summarized cleanly instead of dumping raw HTML into the status area.
+  - Image generation and image judging remain in the same single page, including uploaded reference images.
+
+Workbench launcher updates outside Git:
+
+- `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
+- `E:\AIWB\GPTImage2_PANEL.cmd`
+- `E:\AI工作台\工具 Tools\ai-chain.ps1`
+
+These now stop any old local process listening on port `61994` before starting the panel, so the user does not keep reopening a stale old version.
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed.
+- Local panel restarted successfully on `http://127.0.0.1:61994/`.
+- A local GET confirmed the new page contains `本地直连中转站` and `不怕网站 524`.

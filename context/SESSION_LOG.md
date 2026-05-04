@@ -1254,3 +1254,39 @@ Validation:
 Known boundary:
 
 - No database was added. The cooldown memory is per server process/instance, so it resets on server restart or Vercel instance replacement. This keeps the feature free and safe for now.
+
+---
+
+## 2026-05-04 — Fixed GPT Image 2 Panel 524 Timeout
+
+User showed the `GPT Image 2 共同真实测试面板` failing with:
+
+- `524 <none>: <!DOCTYPE html> ... myprompt.asia | 524: A timeout occurred`
+
+Cause:
+
+- The local panel was calling the production website `/api/generate` for the prompt-generation/score stage.
+- Long GPT Image 2 prompt optimization can exceed the production timeout, so the test failed before real image generation.
+
+Changes:
+
+- Updated `scripts/gpt-image2-live-review-panel.cjs`.
+  - Default mode is now local direct relay prompt optimization.
+  - Added a prompt-mode dropdown:
+    - local direct relay mode, recommended
+    - website API mode, with automatic fallback to local direct mode
+  - Added direct GPT Image 2 candidate generation using the four source strategies plus hybrid.
+  - Added direct prompt judging and scoring through selected evaluator models.
+  - Added final synthesis when hybrid/single-source scores are close.
+  - Added clear timeout handling for prompt, judge, and image calls.
+  - Added cleaner HTML error summaries for 524/Cloudflare pages.
+- Restart handling:
+  - Stopped the old local node process on port `61994`.
+  - Updated the E-drive one-click panel launchers and AI-CHAIN command to stop stale port `61994` processes before launching.
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed.
+- Restarted the local panel.
+- Confirmed `http://127.0.0.1:61994/` returns HTTP 200 and contains the new local-direct UI text.
