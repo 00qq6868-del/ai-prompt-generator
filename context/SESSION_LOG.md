@@ -1593,3 +1593,12 @@ Validation:
   - card clicks update payload fields
   - no page errors
 - `AI-CHAIN.cmd gpt-image2-export-learning` wrote `context/GPT_IMAGE2_LOCAL_LEARNING_SUMMARY.md`.
+
+Follow-up after push:
+
+- GitHub Actions run `25343795020` failed in `Build app`.
+- Root cause was a TypeScript mismatch in `src/lib/prompt-evaluator.ts`: the prompt rubric source can be auto-generated without optional `labelZh` and `guideZh`, while the result mapper accessed those fields directly.
+- Fixed by casting rubric items to a local optional bilingual type before reading `labelZh`/`guideZh`.
+- Local validation after the fix:
+  - `npx tsc --noEmit` passed.
+  - `npm run build` passed.

@@ -1264,3 +1264,9 @@ Validation:
 Note:
 
 - A real relay-key run was not executed in the shell. The browser panel is ready for the user to paste their API key locally and run the live image test.
+
+Follow-up:
+
+- After pushing the local panel fix, GitHub Actions run `25343795020` failed in `Build app` because `src/lib/prompt-evaluator.ts` assumed auto-generated rubric entries always include optional `labelZh` and `guideZh`.
+- Fixed the mapper to treat bilingual rubric fields as optional.
+- `npx tsc --noEmit` and `npm run build` now pass locally.

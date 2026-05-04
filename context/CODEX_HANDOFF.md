@@ -817,4 +817,14 @@ Validation:
 Still not done:
 
 - No real API-key-backed live generation was run from shell. The user should paste the key into the browser panel and run the live test.
-- Local changes are not yet pushed to GitHub in this handoff.
+- Local panel changes were pushed in commit `17fb7ac`; the TypeScript CI follow-up fix still needs its own push after validation.
+
+Push/CI follow-up:
+
+- Commit `17fb7ac` was pushed to `main`.
+- GitHub Actions run `25343795020` failed in `Build app` due a TypeScript issue in `src/lib/prompt-evaluator.ts`.
+- The issue was not in the local panel script; the auto-generated prompt rubric may omit optional `labelZh`/`guideZh`, while the mapper accessed them directly.
+- Fixed by adding a local optional rubric item type before mapping bilingual fields.
+- Local validation after the fix:
+  - `npx tsc --noEmit` passed.
+  - `npm run build` passed.

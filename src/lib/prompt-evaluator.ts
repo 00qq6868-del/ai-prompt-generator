@@ -57,6 +57,11 @@ interface JudgeScorePayload {
   summary?: string;
 }
 
+type PromptEvaluationRubricItem = (typeof PROMPT_EVALUATION_RUBRIC)[number] & {
+  labelZh?: string;
+  guideZh?: string;
+};
+
 export interface PromptEvaluationScore {
   judgeModel: string;
   score: number;
@@ -595,14 +600,17 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
       judgeModels: judgeNames,
       selectedStrategy: selectedCandidate.generatorModelName,
       promptEvaluation: {
-        rubric: PROMPT_EVALUATION_RUBRIC.map((item) => ({
-          id: item.id,
-          label: item.label,
-          labelZh: item.labelZh,
-          weight: item.weight,
-          guide: item.guide,
-          guideZh: item.guideZh,
-        })),
+        rubric: PROMPT_EVALUATION_RUBRIC.map((item) => {
+          const rubricItem = item as PromptEvaluationRubricItem;
+          return {
+            id: rubricItem.id,
+            label: rubricItem.label,
+            labelZh: rubricItem.labelZh,
+            weight: rubricItem.weight,
+            guide: rubricItem.guide,
+            guideZh: rubricItem.guideZh,
+          };
+        }),
         sourceCommits: [...PROMPT_SOURCE_LIBRARY_COMMITS],
         candidates: ranked,
         judgeModels: judgeNames,
