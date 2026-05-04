@@ -927,6 +927,11 @@ Validation:
 - `npm run test:quality` passed: 5/5 Chromium.
 - `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 8/8.
 - `npx playwright test --project=mobile` passed: 13/13.
+- `npx playwright test --project=chromium` passed: 13/13.
+- Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics.
+- Pushed `ae15cfc feat: add generation health fallback and eta`.
+- GitHub E2E run `25298235201` passed: 13/13.
+- Vercel status for `ae15cfc` completed successfully.
 
 Known boundary:
 

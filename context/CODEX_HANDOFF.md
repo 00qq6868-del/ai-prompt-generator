@@ -454,6 +454,14 @@ Validation already run locally:
 - `npm run test:quality`
 - `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium`
 - `npx playwright test --project=mobile`
+- `npx playwright test --project=chromium`
+
+Remote verification:
+
+- Pushed `ae15cfc feat: add generation health fallback and eta`.
+- GitHub E2E run `25298235201` passed: 13/13.
+- Vercel deployment status for `ae15cfc` completed successfully.
+- Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics.
 
 Important limitation:
 
