@@ -96,7 +96,7 @@ async function mockAPIs(page: Page) {
 }
 
 /** Build a SSE response body that streams chunks then sends a done event. */
-function buildSSEBody(optimizedPrompt: string) {
+function buildSSEBody(optimizedPrompt: string, metaExtra: Record<string, unknown> = {}) {
   const chunks = optimizedPrompt.match(/.{1,20}/g) ?? [optimizedPrompt];
   let body = "";
   for (const chunk of chunks) {
@@ -113,7 +113,7 @@ function buildSSEBody(optimizedPrompt: string) {
         tokensDelta: 70,
         changePercent: 140,
       },
-      meta: { generatorModel: "GPT-4o Mini", targetModel: "GPT-4o" },
+      meta: { generatorModel: "GPT-4o Mini", targetModel: "GPT-4o", ...metaExtra },
       generatorModelCost: { input: 0.00015, output: 0.0006 },
     },
   })}\n\n`;
@@ -305,5 +305,92 @@ test.describe("PromptGenerator E2E", () => {
 
     // Error toast should appear
     await expect(page.locator("text=API Key 无效")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("9. result panel shows bilingual evaluation criteria", async ({ page }) => {
+    await page.route("**/api/generate", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(MOCK_OPTIMIZED, {
+          promptEvaluation: {
+            rubric: [
+              {
+                id: "intent_fidelity",
+                label: "Intent fidelity",
+                labelZh: "意图保真",
+                weight: 18,
+                guide: "Preserves user requirements.",
+                guideZh: "保留用户需求。",
+              },
+            ],
+            candidates: [
+              {
+                id: "c1",
+                generatorModelId: "gpt-4o-mini",
+                generatorModelName: "GPT-4o Mini · hybrid",
+                averageScore: 92,
+                rank: 1,
+                scores: [{ judgeModel: "GPT-4o", score: 92, reason: "Strong fit." }],
+              },
+            ],
+            judgeModels: ["GPT-4o"],
+            selectedCandidateId: "c1",
+            summary: "评分摘要 Scoring summary.",
+          },
+        }),
+      })
+    );
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "ai_prompt_user_keys",
+        JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" })
+      );
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/generate", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(MOCK_OPTIMIZED, {
+          promptEvaluation: {
+            rubric: [
+              {
+                id: "intent_fidelity",
+                label: "Intent fidelity",
+                labelZh: "意图保真",
+                weight: 18,
+                guide: "Preserves user requirements.",
+                guideZh: "保留用户需求。",
+              },
+            ],
+            candidates: [
+              {
+                id: "c1",
+                generatorModelId: "gpt-4o-mini",
+                generatorModelName: "GPT-4o Mini · hybrid",
+                averageScore: 92,
+                rank: 1,
+                scores: [{ judgeModel: "GPT-4o", score: 92, reason: "Strong fit." }],
+              },
+            ],
+            judgeModels: ["GPT-4o"],
+            selectedCandidateId: "c1",
+            summary: "评分摘要 Scoring summary.",
+          },
+        }),
+      })
+    );
+
+    await page.locator("textarea").fill("生成一张 GPT Image 2 产品海报提示词");
+    await page.getByRole("button", { name: /生成优化提示词/ }).click();
+
+    await expect(page.getByText("评分标准 Scoring Criteria")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/意图保真 Intent fidelity/)).toBeVisible();
+    await expect(page.getByText(/保留用户需求/)).toBeVisible();
   });
 });

@@ -1454,3 +1454,45 @@ Validation:
 - `npm run test:quality` passed: 5/5.
 - `npm run build` passed.
 - Production-mode local check confirmed generator and evaluator model cards can be selected and no page errors occur.
+
+---
+
+## 2026-05-04 — GPT Image 2 Multi-Model Waiting Fix
+
+User reported that GPT Image 2 optimization appeared to use only one selected generator model, skipped slow relay models too early, and displayed scores without understandable Chinese/English scoring criteria.
+
+Changes:
+
+- GPT Image 2 route now passes all selected generator models into `runGptImage2Ensemble`.
+- GPT Image 2 ensemble now:
+  - checks relay availability before calling custom/aihubmix models,
+  - skips cooling/unavailable models,
+  - waits for slow but responsive selected models,
+  - runs selected generators concurrently,
+  - collects candidates from every successful generator,
+  - uses fallback only when selected generators return no usable candidates,
+  - runs judge models with longer model-aware timeouts,
+  - returns bilingual generator/judge/model-health summary.
+- Added bilingual GPT Image 2 scoring rubric:
+  - 意图保真 / Intent fidelity
+  - GPT Image 2 适配 / GPT Image 2 fit
+  - 视觉细节 / Visual specificity
+  - 文字渲染可靠性 / Typography reliability
+  - 构图和布局可控性 / Layout controllability
+  - 商业可用性 / Commercial usability
+- Result panel now renders `评分标准 Scoring Criteria`.
+- General prompt evaluation rubric also gained Chinese labels and explanations.
+- Provider timeout raised to 260s; default model call timeouts raised to 180s with extra wait time for likely slow high-capability models.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run test:quality` passed 5/5 after sequential rerun.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed 9/9.
+- `npm run build` passed.
+
+Important:
+
+- The earlier parallel `npm run build` + Playwright run caused a temporary `.next` chunk mismatch in dev server (`Cannot find module './276.js'`). This was an environment/test-order issue. After stopping the stale dev server and rerunning sequentially, tests passed.
+- Real multi-model generation was not run because no relay API key was available in the shell.

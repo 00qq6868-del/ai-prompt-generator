@@ -4,7 +4,7 @@ import { resolveRuntimeApiProvider } from "@/lib/gpt-image-2-ensemble";
 import {
   ModelHealthIssue,
   ModelHealthMeta,
-  getTimeoutMs,
+  getModelTimeoutMs,
   recordModelFailure,
   recordModelSuccess,
   splitCoolingPlans,
@@ -73,7 +73,7 @@ export interface PromptEvaluationCandidate {
 }
 
 export interface PromptEvaluationReport {
-  rubric: Array<{ id: string; label: string; weight: number; guide: string }>;
+  rubric: Array<{ id: string; label: string; labelZh?: string; weight: number; guide: string; guideZh?: string }>;
   sourceCommits: string[];
   candidates: PromptEvaluationCandidate[];
   judgeModels: string[];
@@ -386,7 +386,7 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
     current: 0,
     total: generatorPlans.length,
     etaSec: estimateTournamentEtaSec("generators", generatorPlans.length, 0),
-    message: "慢模型会自动超时跳过，不影响其他模型继续完成。",
+    message: "会等待可用模型完整输出；持续失败或已冷却的模型才会跳过。",
   });
 
   const generatorResults = await Promise.allSettled(
@@ -403,7 +403,7 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
             temperature: 0.5,
             userKeys: opts.userKeys,
           }),
-          getTimeoutMs("generator"),
+          getModelTimeoutMs(plan.model, "generator", { startedAt, reserveMs: 75_000 }),
           `${plan.model.name} generator`,
         );
         calls.push({ model: plan.model, result });
@@ -465,7 +465,7 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
             temperature: 0.5,
             userKeys: opts.userKeys,
           }),
-          getTimeoutMs("generator"),
+          getModelTimeoutMs(plan.model, "generator", { startedAt, reserveMs: 75_000 }),
           `${plan.model.name} fallback generator`,
         );
         calls.push({ model: plan.model, result });
@@ -524,7 +524,7 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
             temperature: 0.1,
             userKeys: opts.userKeys,
           }),
-          getTimeoutMs("judge"),
+          getModelTimeoutMs(plan.model, "judge", { startedAt, reserveMs: 35_000 }),
           `${plan.model.name} judge`,
         );
         calls.push({ model: plan.model, result });
@@ -598,8 +598,10 @@ export async function runPromptTournament(opts: PromptTournamentOptions): Promis
         rubric: PROMPT_EVALUATION_RUBRIC.map((item) => ({
           id: item.id,
           label: item.label,
+          labelZh: item.labelZh,
           weight: item.weight,
           guide: item.guide,
+          guideZh: item.guideZh,
         })),
         sourceCommits: [...PROMPT_SOURCE_LIBRARY_COMMITS],
         candidates: ranked,

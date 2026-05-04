@@ -142,55 +142,73 @@ export const PROMPT_EVALUATION_RUBRIC = [
   {
     "id": "intent_fidelity",
     "label": "Intent fidelity",
+    "labelZh": "意图保真",
     "weight": 16,
-    "guide": "Preserves every explicit user requirement, hidden constraint, target model, language, and output goal."
+    "guide": "Preserves every explicit user requirement, hidden constraint, target model, language, and output goal.",
+    "guideZh": "保留用户所有明确需求、隐藏约束、目标模型、语言和输出目标。"
   },
   {
     "id": "task_decomposition",
     "label": "Task decomposition",
+    "labelZh": "任务拆解",
     "weight": 10,
-    "guide": "Breaks complex work into clear phases, inputs, assumptions, checks, and decision points without overcomplicating small tasks."
+    "guide": "Breaks complex work into clear phases, inputs, assumptions, checks, and decision points without overcomplicating small tasks.",
+    "guideZh": "把复杂任务拆成清晰阶段、输入、假设、检查点和决策点，小任务不过度复杂化。"
   },
   {
     "id": "context_engineering",
     "label": "Context engineering",
+    "labelZh": "上下文工程",
     "weight": 12,
-    "guide": "Defines role, audience, references, examples, retrieval/context boundaries, and what to ignore."
+    "guide": "Defines role, audience, references, examples, retrieval/context boundaries, and what to ignore.",
+    "guideZh": "定义角色、受众、参考材料、示例、检索/上下文边界和需要忽略的内容。"
   },
   {
     "id": "specificity_control",
     "label": "Specificity and controllability",
+    "labelZh": "具体性和可控性",
     "weight": 12,
-    "guide": "Uses concrete constraints, success criteria, style/format controls, and verifiable deliverables."
+    "guide": "Uses concrete constraints, success criteria, style/format controls, and verifiable deliverables.",
+    "guideZh": "使用具体约束、成功标准、风格/格式控制和可验证交付物。"
   },
   {
     "id": "model_fit",
     "label": "Target-model fit",
+    "labelZh": "目标模型适配",
     "weight": 10,
-    "guide": "Matches the target model category and known behavior; avoids unsupported flags, tools, or reasoning instructions."
+    "guide": "Matches the target model category and known behavior; avoids unsupported flags, tools, or reasoning instructions.",
+    "guideZh": "匹配目标模型类别和已知行为，避免不支持的参数、工具或推理指令。"
   },
   {
     "id": "output_usability",
     "label": "Output usability",
+    "labelZh": "输出可用性",
     "weight": 12,
-    "guide": "Produces copy-pasteable output with clean structure, labels, examples, and no unnecessary explanation."
+    "guide": "Produces copy-pasteable output with clean structure, labels, examples, and no unnecessary explanation.",
+    "guideZh": "输出可直接复制使用，结构、标签和示例清晰，没有多余解释。"
   },
   {
     "id": "evaluation_ready",
     "label": "Evaluation readiness",
+    "labelZh": "可评测性",
     "weight": 10,
-    "guide": "Includes acceptance tests, scoring hooks, edge cases, or comparison criteria when useful."
+    "guide": "Includes acceptance tests, scoring hooks, edge cases, or comparison criteria when useful.",
+    "guideZh": "在有用时包含验收测试、评分钩子、边界情况或对比标准。"
   },
   {
     "id": "hallucination_safety",
     "label": "Hallucination and safety control",
+    "labelZh": "幻觉和安全控制",
     "weight": 10,
-    "guide": "Requires uncertainty handling, source boundaries, refusal/redirect rules, and avoids unsafe prompt-injection patterns."
+    "guide": "Requires uncertainty handling, source boundaries, refusal/redirect rules, and avoids unsafe prompt-injection patterns.",
+    "guideZh": "要求不确定性处理、来源边界、拒绝/重定向规则，并避免不安全的提示注入模式。"
   },
   {
     "id": "efficiency",
     "label": "Efficiency",
+    "labelZh": "效率",
     "weight": 8,
-    "guide": "Keeps the prompt no longer than needed for the task and model context window."
+    "guide": "Keeps the prompt no longer than needed for the task and model context window.",
+    "guideZh": "在任务和模型上下文允许范围内，保持提示词不过度冗长。"
   }
 ] as const;

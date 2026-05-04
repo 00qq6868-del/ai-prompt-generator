@@ -25,6 +25,14 @@ interface Meta {
     successful?: Array<{ modelId: string; modelName?: string; latencyMs: number }>;
   };
   promptEvaluation?: {
+    rubric?: Array<{
+      id: string;
+      label: string;
+      labelZh?: string;
+      weight: number;
+      guide: string;
+      guideZh?: string;
+    }>;
     candidates: Array<{
       id: string;
       generatorModelId: string;
@@ -183,10 +191,11 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
             )}
             {(meta.modelHealth?.skippedCooling?.length || meta.modelHealth?.failed?.length) && (
               <div className="mx-5 mt-4 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[11px] leading-5 text-amber-100/80">
-                已自动处理不稳定模型：
+                模型健康 Model health：
+                {meta.modelHealth?.successful?.length ? ` 成功 ${meta.modelHealth.successful.length} 个` : " 成功 0 个"}
                 {meta.modelHealth?.skippedCooling?.length ? ` 冷却跳过 ${meta.modelHealth.skippedCooling.length} 个` : ""}
                 {meta.modelHealth?.failed?.length ? `，本次失败但未中断 ${meta.modelHealth.failed.length} 个` : ""}
-                。冷却结束后会自动再试，成功后恢复使用。
+                。会等待可用模型完整输出，持续失败的模型冷却后再试。 Successful models are waited for; repeatedly failing models cool down before retry.
               </div>
             )}
             {meta.promptEvaluation && (
@@ -199,6 +208,28 @@ export function ResultPanel({ prompt, stats, meta, generatorModelCost, originalP
                     满分 100 · {meta.promptEvaluation.judgeModels.length || 0} 个评价模型
                   </div>
                 </div>
+                {meta.promptEvaluation.rubric?.length ? (
+                  <div className="mb-3 rounded-lg border border-white/8 bg-black/10 p-2.5">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/55">
+                      评分标准 Scoring Criteria
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                      {meta.promptEvaluation.rubric.map((item) => (
+                        <div key={item.id} className="rounded-md bg-white/[0.025] px-2.5 py-2">
+                          <div className="flex items-center justify-between gap-2 text-[10px] font-semibold text-white/75">
+                            <span className="min-w-0 truncate">
+                              {item.labelZh ? `${item.labelZh} ` : ""}{item.label}
+                            </span>
+                            <span className="shrink-0 font-mono text-indigo-300">{item.weight}</span>
+                          </div>
+                          <div className="mt-1 line-clamp-2 text-[10px] leading-4 text-white/45">
+                            {item.guideZh ? `${item.guideZh} / ` : ""}{item.guide}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div className="space-y-2">
                   {meta.promptEvaluation.candidates.slice(0, 6).map((candidate) => {
                     const score = Math.round(candidate.averageScore);

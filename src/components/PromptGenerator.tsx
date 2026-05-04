@@ -70,6 +70,14 @@ interface GenerateResult {
       successful?: Array<{ modelId: string; modelName?: string; latencyMs: number }>;
     };
     promptEvaluation?: {
+      rubric?: Array<{
+        id: string;
+        label: string;
+        labelZh?: string;
+        weight: number;
+        guide: string;
+        guideZh?: string;
+      }>;
       candidates: Array<{
         id: string;
         generatorModelId: string;
@@ -119,8 +127,12 @@ function formatDuration(sec: number): string {
 
 function estimateTotalSeconds(targetModelId: string, generatorCount: number, evaluatorCount: number): number {
   const target = targetModelId.toLowerCase();
-  if (target.includes("gpt-image-2") || target.includes("gpt image 2")) return 90;
-  if (generatorCount > 1 || evaluatorCount > 0) return 65;
+  if (target.includes("gpt-image-2") || target.includes("gpt image 2")) {
+    return Math.min(260, 95 + Math.max(generatorCount, 1) * 25 + Math.max(evaluatorCount, 1) * 18);
+  }
+  if (generatorCount > 1 || evaluatorCount > 0) {
+    return Math.min(220, 55 + Math.max(generatorCount, 1) * 20 + Math.max(evaluatorCount, 0) * 15);
+  }
   return 35;
 }
 
@@ -296,7 +308,7 @@ export function PromptGenerator() {
       total: 1,
       etaSec: estimatedTotalSec,
       elapsedSec: 0,
-      message: "接口不稳定时会自动跳过并稍后重试。",
+      message: "正在判断模型是否可用；可输出的慢模型会继续等待，持续失败的模型才会跳过。 Checking model health; slow responsive models will be waited for.",
     });
     const tid = toast.loading(`AI 正在生成优化提示词…预计 ${formatDuration(estimatedTotalSec)} 内完成`);
     const requestStartedAt = performance.now();
@@ -611,7 +623,7 @@ export function PromptGenerator() {
                 aria-label="流式生成预览 Streaming preview"
                 className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto"
               >
-                {streamingText || generationProgress?.message || "正在等待模型返回结果，慢模型会被自动跳过，不会拖垮整次生成。"}
+                {streamingText || generationProgress?.message || "正在等待模型返回结果；慢但能输出的模型会继续等待，持续失败或已冷却的模型才会跳过。 Waiting for model output; slow responsive models are not skipped."}
                 <motion.span
                   animate={{ opacity: [1, 0] }}
                   transition={{ duration: 0.5, repeat: Infinity }}

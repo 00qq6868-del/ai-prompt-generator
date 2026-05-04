@@ -658,33 +658,71 @@ Status:
 
 - The guarded PWA registration follow-up was committed and pushed before the later model-picker selection regression was reported.
 
-## Current Handoff — Model Picker Selection Regression
+## Current Handoff — GPT Image 2 Multi-Model Waiting Fix
 
-User reported that model picker dialogs could now scroll but model cards could not be selected.
+Latest user request:
 
-Root causes:
+- Selected models that can eventually output should be waited for.
+- Slow but alive models like GPT-5.5 should not be skipped too early.
+- Persistently failing/cooling/unavailable relay models should be skipped.
+- GPT Image 2 optimization looked like only one selected generator model was actually producing output.
+- Evaluation criteria must be visible in both Chinese and English.
 
-- Invalid nested buttons in `PickerCard`: the card was a button and the favorite star was another button inside it.
-- Pointer capture was started on every pointer down for drag scrolling, which could redirect ordinary clicks to the scroll container.
+Root cause:
 
-Fix:
+- The GPT Image 2 special route in `src/app/api/generate/route.ts` passed only the first `generatorModel` into `runGptImage2Ensemble`.
+- The normal prompt tournament already used `generatorModels`, but GPT Image 2 did not.
+- Provider-level timeout was 60s, shorter than the desired slow-model wait behavior.
+- `ResultPanel` displayed score bars but no bilingual scoring rubric.
 
-- `src/components/ModelPicker.tsx`
-  - Picker cards are now `motion.div role="button"` rather than outer buttons.
-  - Cards keep accessible activation with `tabIndex`, `aria-pressed`, `aria-disabled`, and Enter/Space key support.
-  - Favorite star remains a child `<button>` and stops click propagation.
-  - Pointer capture now starts only after actual drag movement begins.
-- `tests/e2e/quality.spec.ts`
-  - The model picker test now verifies card selection after scrolling/dragging, not just scrollability.
+Fix now implemented:
+
+- `src/app/api/generate/route.ts`
+  - GPT Image 2 now passes `generatorModels` into the ensemble.
+  - The final meta overrides `generatorModel` with all selected generator names.
+  - Initial progress message explains relay availability checks and slow-model waiting.
+- `src/lib/gpt-image-2-ensemble.ts`
+  - Adds `generatorModels?: ModelInfo[]`.
+  - Plans up to 6 selected text generator models.
+  - Filters custom/aihubmix models against `availableModelIds` before calling.
+  - Splits cooling models out via model health.
+  - Calls all runnable selected generators concurrently with `getModelTimeoutMs()`.
+  - Preserves each generator's four source candidates plus hybrid candidate with unique IDs.
+  - Uses fallback generator only when selected generators produce no usable candidates.
+  - Runs judge models with longer model-aware timeouts.
+  - Returns bilingual review summary, model-health counts, and GPT Image 2 rubric.
+- `src/lib/model-health.ts`
+  - Default timeout is now 180s for generator/judge/simple calls.
+  - Added `getModelTimeoutMs()` with extra time for likely slow high-accuracy models while preserving route budget.
+- `src/lib/providers/index.ts`
+  - Provider HTTP timeout is now 260s.
+- `src/components/ResultPanel.tsx`
+  - Shows `评分标准 Scoring Criteria`.
+  - Renders Chinese + English rubric labels/guides.
+  - Shows bilingual model-health summary.
+- `src/lib/prompt-source-library-status.ts` and `src/lib/prompt-evaluator.ts`
+  - General prompt evaluation rubric now includes Chinese labels/guides.
+- `src/components/PromptGenerator.tsx`
+  - ETA for GPT Image 2 now scales with selected generator/evaluator counts.
+  - Streaming fallback message now says slow responsive models are waited for, not automatically skipped.
+- `tests/e2e/prompt-generator.spec.ts`
+  - Added test for bilingual scoring criteria.
 
 Validation already run:
 
-- `npx tsc --noEmit`
-- `git diff --check`
-- `npm run test:quality` passed 5/5.
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run test:quality` passed 5/5 Chromium.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed 9/9.
 - `npm run build` passed.
-- Production-mode local check on port `3100` selected one generator and one evaluator card successfully, with `aria-pressed="true"` and no page errors.
+
+Testing note:
+
+- A first quality-test run failed because `npm run build` and Playwright were run in parallel, causing a temporary dev-server `.next` chunk mismatch. After stopping the stale dev server and rerunning sequentially, the tests passed.
+- Real GPT Image 2 relay calls were not run in this pass because no API key was available in the shell. Do not claim live multi-model image-prompt quality was verified until a local-key/live-key smoke test is run.
 
 Next step:
 
-- Commit and push this selection fix, watch GitHub Actions, then retest `https://www.myprompt.asia` after deployment. Do not claim the user-facing site is fixed until online Playwright confirms generator/evaluator selection works.
+- Commit and push these changes.
+- Watch GitHub Actions.
+- After Vercel deploys, run production smoke. If the user provides a local API key in the browser/panel, run a real GPT Image 2 multi-generator + multi-judge test and compare the generated image quality with the user's manual score.

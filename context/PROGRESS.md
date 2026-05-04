@@ -1136,3 +1136,47 @@ Validation:
 - Production-mode local check on `http://127.0.0.1:3100/` passed for both generator and evaluator pickers:
   - clicked card `aria-pressed="true"`
   - no page errors
+
+## 2026-05-04 — Fixed GPT Image 2 Multi-Model Waiting and Bilingual Scoring
+
+User reported that GPT Image 2 optimization looked like only one selected generator model was producing output, slow but alive models were skipped too aggressively, and the scoring criteria were unclear.
+
+Root cause:
+
+- `/api/generate` passed only `generatorModel` into `runGptImage2Ensemble`, so the GPT Image 2 special path ignored `generatorModelIds` even though the normal prompt tournament already supported multiple generators.
+- Provider-level timeout was still 60 seconds, so slow relay models could be cut off before the higher-level health logic had a chance to wait.
+- The result panel showed scores but did not show bilingual rubric criteria.
+
+Implemented:
+
+- `src/app/api/generate/route.ts`
+  - Passes the full `generatorModels` array into GPT Image 2 ensemble.
+  - Shows a more accurate initial GPT Image 2 progress estimate and bilingual wait/health message.
+- `src/lib/gpt-image-2-ensemble.ts`
+  - Plans up to 6 selected generator models, filters against relay availability, skips only cooling/unavailable models, and waits for slow responsive models with route-budget-aware timeouts.
+  - Runs selected generators concurrently and collects each model's four source candidates plus hybrid candidate.
+  - Falls back to a healthy text generator only when selected models return no usable candidates.
+  - Runs selected/auto judge models with longer route-budget-aware timeouts.
+  - Reports used generator/judge counts, health counts, source scores, and bilingual GPT Image 2 scoring rubric.
+- `src/lib/model-health.ts` and `src/lib/providers/index.ts`
+  - Raised default model call timeout to 180s and provider HTTP timeout to 260s.
+  - Added `getModelTimeoutMs()` so slow models such as GPT-5.x, Claude Sonnet/Opus, Gemini 3, and DeepSeek V4 get additional wait time without exceeding the Vercel route budget.
+- `src/components/ResultPanel.tsx`
+  - Displays `评分标准 Scoring Criteria` with Chinese + English labels and explanations.
+  - Shows bilingual model-health text and successful/failed/cooling counts.
+- `src/lib/prompt-source-library-status.ts` and `src/lib/prompt-evaluator.ts`
+  - Added Chinese labels/guides to the general prompt evaluation rubric too.
+- `tests/e2e/prompt-generator.spec.ts`
+  - Added regression coverage for bilingual evaluation criteria display.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run test:quality` passed: 5/5 Chromium, re-run sequentially after stopping the stale dev server.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 9/9.
+- `npm run build` passed.
+
+Note:
+
+- No real relay API key was used in this pass, so live GPT Image 2 multi-model generation still needs an API-key-backed smoke run before claiming production generation quality.

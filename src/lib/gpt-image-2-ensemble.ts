@@ -4,7 +4,7 @@ import { GPT_IMAGE_2_SOURCE_COMMITS } from "@/lib/gpt-image-2-source-status";
 import {
   ModelHealthMeta,
   getModelCooldown,
-  getTimeoutMs,
+  getModelTimeoutMs,
   recordModelFailure,
   recordModelSuccess,
   splitCoolingPlans,
@@ -15,6 +15,7 @@ export interface GptImage2Candidate {
   id: string;
   label: string;
   prompt: string;
+  sourceId?: string;
 }
 
 export interface GptImage2Progress {
@@ -31,6 +32,7 @@ interface GptImage2EnsembleOptions {
   language: "zh" | "en";
   targetModel: ModelInfo;
   generatorModel: ModelInfo;
+  generatorModels?: ModelInfo[];
   models: ModelInfo[];
   userKeys: Record<string, string>;
   availableModelIds?: string[];
@@ -52,6 +54,7 @@ export interface GptImage2EnsembleResult {
     sourceCommits: string[];
     modelHealth?: ModelHealthMeta;
     promptEvaluation?: {
+      rubric?: Array<{ id: string; label: string; labelZh: string; weight: number; guide: string; guideZh: string }>;
       candidates: Array<{
         id: string;
         generatorModelId: string;
@@ -120,6 +123,57 @@ const JUDGE_PREFERENCE = [
   "gpt-4o",
   "gpt-4o-mini",
 ];
+
+const GPT_IMAGE_2_RUBRIC = [
+  {
+    id: "intent_fidelity",
+    label: "Intent fidelity",
+    labelZh: "意图保真",
+    weight: 18,
+    guide: "Preserves every explicit and implicit user detail without inventing new requirements.",
+    guideZh: "完整保留用户明确和隐含要求，不私自添加需求。",
+  },
+  {
+    id: "gpt_image_2_fit",
+    label: "GPT Image 2 fit",
+    labelZh: "GPT Image 2 适配",
+    weight: 17,
+    guide: "Uses natural language or clean structured visual specs and avoids unsupported flags or negative-prompt syntax.",
+    guideZh: "使用自然语言或清晰视觉规格，避免不支持的参数旗标和负面提示词语法。",
+  },
+  {
+    id: "visual_specificity",
+    label: "Visual specificity",
+    labelZh: "视觉细节",
+    weight: 17,
+    guide: "Defines subject, scene, layout, lighting, material, camera, palette, and mood with controllable detail.",
+    guideZh: "明确主体、场景、构图、光照、材质、镜头、色彩和氛围，并且可控制。",
+  },
+  {
+    id: "typography_reliability",
+    label: "Typography reliability",
+    labelZh: "文字渲染可靠性",
+    weight: 16,
+    guide: "Quotes exact visible text and specifies font, size, color, placement, and hierarchy when text appears.",
+    guideZh: "涉及画面文字时，必须用引号标出精确文本，并说明字体、大小、颜色、位置和层级。",
+  },
+  {
+    id: "layout_controllability",
+    label: "Layout controllability",
+    labelZh: "构图和布局可控性",
+    weight: 16,
+    guide: "Specifies aspect ratio, panels, zones, UI/diagram structure, foreground/background, and spatial relationships.",
+    guideZh: "指定画幅比例、分镜/区域、UI 或图表结构、前后景和空间关系。",
+  },
+  {
+    id: "commercial_usability",
+    label: "Commercial usability",
+    labelZh: "商业可用性",
+    weight: 16,
+    guide: "Produces polished, practical prompts suitable for ads, product pages, social posts, covers, or client delivery.",
+    guideZh: "产出适合广告、电商、社媒、封面或客户交付的精致实用提示词。",
+  },
+] as const;
 
 function hasKey(name: string, userKeys: Record<string, string>): boolean {
   return Boolean(userKeys[name]?.trim() || process.env[name]?.trim());
@@ -191,23 +245,44 @@ function progress(opts: GptImage2EnsembleOptions, startedAt: number, event: Omit
 
 function selectHealthyGeneratorFallback(
   opts: GptImage2EnsembleOptions,
-  excludeModelId: string,
+  excludeModelIds: Set<string>,
 ): { model: ModelInfo; apiProvider: string } | null {
   const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
   const candidates = opts.models
-    .filter((model) => model.id !== excludeModelId)
+    .filter((model) => !excludeModelIds.has(model.id))
     .filter((model) => (model.category ?? "text") === "text")
-    .filter((model) => !availableSet || availableSet.has(model.id) || model.apiProvider !== "aihubmix")
     .sort((a, b) => scoreModel(b, "fast") + scoreModel(b, "accurate") - (scoreModel(a, "fast") + scoreModel(a, "accurate")));
 
   for (const model of candidates) {
     const apiProvider = resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds);
+    if (availableSet && (apiProvider === "custom" || apiProvider === "aihubmix") && !availableSet.has(model.id)) continue;
     if (!isProviderCallable(apiProvider, opts.userKeys)) continue;
     if (getModelCooldown(model, apiProvider)) continue;
     return { model, apiProvider };
   }
 
   return null;
+}
+
+function planGeneratorModels(opts: GptImage2EnsembleOptions): Array<{ model: ModelInfo; apiProvider: string }> {
+  const availableSet = opts.availableModelIds?.length ? new Set(opts.availableModelIds) : null;
+  const seen = new Set<string>();
+  const selected = [...(opts.generatorModels?.length ? opts.generatorModels : [opts.generatorModel]), opts.generatorModel]
+    .filter((model) => {
+      if (seen.has(model.id)) return false;
+      seen.add(model.id);
+      return true;
+    })
+    .slice(0, 6);
+
+  return selected
+    .map((model) => ({
+      model,
+      apiProvider: resolveRuntimeApiProvider(model, opts.userKeys, opts.availableModelIds),
+    }))
+    .filter((plan) => (plan.model.category ?? "text") === "text")
+    .filter((plan) => !availableSet || availableSet.has(plan.model.id) || (plan.apiProvider !== "custom" && plan.apiProvider !== "aihubmix"))
+    .filter((plan) => isProviderCallable(plan.apiProvider, opts.userKeys));
 }
 
 function safeParseJson<T>(text: string): T | null {
@@ -267,13 +342,8 @@ ${userIdea}
 Candidates:
 ${JSON.stringify(candidates, null, 2)}
 
-Score every candidate from 0 to 100 using these criteria:
-- intent fidelity: preserves every explicit and implicit user detail
-- GPT Image 2 fit: natural-language/structured prompt style, no unsupported flags
-- visual specificity: subject, layout, lighting, material, camera, palette, mood
-- typography reliability: exact quoted text, readable placement, no garbled text
-- layout controllability: aspect ratio, panels, zones, UI/diagram structure when relevant
-- commercial usability: polished, practical, avoids watermarks/logos unless user supplied them
+Score every candidate from 0 to 100 using these weighted criteria:
+${GPT_IMAGE_2_RUBRIC.map((item) => `- ${item.label} / ${item.labelZh} (${item.weight}): ${item.guide}`).join("\n")}
 
 If the top single-source candidate and the hybrid are close in quality, set shouldSynthesize=true.
 
@@ -310,23 +380,30 @@ Create one final prompt that beats both. Keep only the strongest compatible part
 Output only the final prompt in ${outputLanguage}.`;
 }
 
-function normalizeCandidates(payload: CandidatePayload | null): GptImage2Candidate[] {
+function normalizeCandidates(
+  payload: CandidatePayload | null,
+  generator?: ModelInfo,
+): GptImage2Candidate[] {
+  const idPrefix = generator ? `${generator.id}:` : "";
+  const labelPrefix = generator ? `${generator.name} · ` : "";
   const candidates: GptImage2Candidate[] = [];
   for (const source of SOURCE_STRATEGIES) {
     const found = payload?.candidates?.find((c) => c.id === source.id);
     if (found?.prompt?.trim()) {
       candidates.push({
-        id: source.id,
-        label: found.label?.trim() || source.label,
+        id: `${idPrefix}${source.id}`,
+        label: `${labelPrefix}${found.label?.trim() || source.label}`,
         prompt: found.prompt.trim(),
+        sourceId: source.id,
       });
     }
   }
   if (payload?.hybrid?.prompt?.trim()) {
     candidates.push({
-      id: "hybrid",
-      label: payload.hybrid.label?.trim() || "four-source hybrid",
+      id: `${idPrefix}hybrid`,
+      label: `${labelPrefix}${payload.hybrid.label?.trim() || "four-source hybrid"}`,
       prompt: payload.hybrid.prompt.trim(),
+      sourceId: "hybrid",
     });
   }
   return candidates;
@@ -372,29 +449,44 @@ function selectJudgeModels(opts: GptImage2EnsembleOptions): Array<{ model: Model
   return chosen;
 }
 
-function aggregateScores(candidates: GptImage2Candidate[], judgePayloads: JudgePayload[]) {
-  const totals = new Map<string, { score: number; count: number }>();
-  for (const candidate of candidates) totals.set(candidate.id, { score: 0, count: 0 });
+function aggregateScores(
+  candidates: GptImage2Candidate[],
+  judgeOutputs: Array<{ judgeModel: string; payload: JudgePayload }>,
+) {
+  const buckets = new Map<string, {
+    candidate: GptImage2Candidate;
+    score: number;
+    count: number;
+    scores: Array<{ judgeModel: string; score: number; reason: string }>;
+  }>();
+  for (const candidate of candidates) {
+    buckets.set(candidate.id, { candidate, score: 0, count: 0, scores: [] });
+  }
 
   let synthesizeVotes = 0;
-  for (const payload of judgePayloads) {
+  for (const output of judgeOutputs) {
+    const payload = output.payload;
     if (payload.shouldSynthesize) synthesizeVotes += 1;
     for (const item of payload.scores ?? []) {
       if (!item.id || typeof item.score !== "number") continue;
-      const bucket = totals.get(item.id);
+      const bucket = buckets.get(item.id);
       if (!bucket) continue;
-      bucket.score += Math.max(0, Math.min(100, item.score));
+      const score = Math.max(0, Math.min(100, item.score));
+      bucket.score += score;
       bucket.count += 1;
+      bucket.scores.push({
+        judgeModel: output.judgeModel,
+        score,
+        reason: item.reason?.trim() || "",
+      });
     }
   }
 
-  const averages = candidates.map((candidate) => {
-    const bucket = totals.get(candidate.id);
-    return {
-      candidate,
-      average: bucket && bucket.count > 0 ? bucket.score / bucket.count : 0,
-    };
-  });
+  const averages = [...buckets.values()].map((bucket) => ({
+    candidate: bucket.candidate,
+    average: bucket.count > 0 ? bucket.score / bucket.count : 0,
+    scores: bucket.scores,
+  }));
 
   averages.sort((a, b) => b.average - a.average);
   return { averages, synthesizeVotes };
@@ -408,105 +500,138 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
     failed: [],
     successful: [],
   };
-  let activeGenerator = opts.generatorModel;
-  let generatorApiProvider = resolveRuntimeApiProvider(activeGenerator, opts.userKeys, opts.availableModelIds);
+  const selectedGeneratorModels = [...(opts.generatorModels?.length ? opts.generatorModels : [opts.generatorModel]), opts.generatorModel]
+    .filter((model, index, arr) => arr.findIndex((item) => item.id === model.id) === index)
+    .slice(0, 6);
+  const selectedGeneratorIds = new Set(selectedGeneratorModels.map((model) => model.id));
+  const rawGeneratorPlans = planGeneratorModels(opts);
+  const generatorSplit = splitCoolingPlans(rawGeneratorPlans);
+  modelHealth.skippedCooling.push(...generatorSplit.skippedCooling);
+  let generatorPlans = generatorSplit.runnable;
 
-  const generatorCooldown = getModelCooldown(activeGenerator, generatorApiProvider);
-  if (generatorCooldown) {
-    modelHealth.skippedCooling.push(generatorCooldown);
-    const fallback = selectHealthyGeneratorFallback(opts, activeGenerator.id);
+  if (generatorPlans.length === 0) {
+    const fallback = selectHealthyGeneratorFallback(opts, selectedGeneratorIds);
     if (!fallback) {
+      const skippedText = modelHealth.skippedCooling
+        .map((issue) => issue.modelName ?? issue.modelId)
+        .join(", ");
       throw new Error(
-        `${activeGenerator.name} 暂时不稳定，已自动冷却。请稍后重试或换一个生成模型。`,
+        skippedText
+          ? `所选 GPT Image 2 生成模型暂时不稳定，已自动冷却：${skippedText}。请稍后重试或换一个模型。`
+          : "没有可调用的 GPT Image 2 生成模型 / No callable GPT Image 2 generator model",
       );
     }
-    activeGenerator = fallback.model;
-    generatorApiProvider = fallback.apiProvider;
+    generatorPlans = [fallback];
   }
 
   progress(opts, startedAt, {
     phase: "生成 GPT Image 2 候选提示词",
     current: 0,
-    total: 3,
-    etaSec: 75,
-    message: "正在生成四种来源策略和混合版候选。",
+    total: generatorPlans.length,
+    etaSec: Math.min(180, 50 + generatorPlans.length * 25),
+    message: "会等待可用生成模型完整输出；持续失败、冷却或中转站不可用的模型才会跳过。 Slow but responsive models will be waited for.",
   });
 
-  let candidateResult: GenerateResult;
-  try {
+  const runCandidateGenerator = async (plan: { model: ModelInfo; apiProvider: string }) => {
     const callStartedAt = Date.now();
-    candidateResult = await withTimeout(
+    const result = await withTimeout(
       callProvider({
-        model: activeGenerator.id,
-        apiProvider: generatorApiProvider,
+        model: plan.model.id,
+        apiProvider: plan.apiProvider,
         systemPrompt: "You generate candidate prompts for GPT Image 2. Output strict JSON only.",
         userPrompt: buildCandidatePrompt(opts.userIdea, opts.language),
         maxTokens: Math.min(opts.maxTokens, 4096),
         temperature: 0.45,
         userKeys: opts.userKeys,
       }),
-      getTimeoutMs("generator"),
-      `${activeGenerator.name} GPT Image 2 candidates`,
+      getModelTimeoutMs(plan.model, "generator", { startedAt, reserveMs: 90_000 }),
+      `${plan.model.name} GPT Image 2 candidates`,
     );
-    calls.push({ model: activeGenerator, result: candidateResult });
+    calls.push({ model: plan.model, result });
     modelHealth.successful.push(recordModelSuccess(
-      activeGenerator,
-      generatorApiProvider,
-      candidateResult.latencyMs || Date.now() - callStartedAt,
+      plan.model,
+      plan.apiProvider,
+      result.latencyMs || Date.now() - callStartedAt,
     ));
-  } catch (err) {
-    modelHealth.failed.push(recordModelFailure(activeGenerator, generatorApiProvider, err));
-    const fallback = selectHealthyGeneratorFallback(opts, activeGenerator.id);
-    if (!fallback) throw err;
-    activeGenerator = fallback.model;
-    generatorApiProvider = fallback.apiProvider;
-    progress(opts, startedAt, {
-      phase: "主生成模型失败，切换备用模型",
-      current: 0,
-      total: 3,
-      etaSec: 55,
-      message: `正在改用 ${activeGenerator.name} 继续生成 GPT Image 2 候选。`,
-    });
-    const fallbackStartedAt = Date.now();
-    try {
-      candidateResult = await withTimeout(
-        callProvider({
-          model: activeGenerator.id,
-          apiProvider: generatorApiProvider,
-          systemPrompt: "You generate candidate prompts for GPT Image 2. Output strict JSON only.",
-          userPrompt: buildCandidatePrompt(opts.userIdea, opts.language),
-          maxTokens: Math.min(opts.maxTokens, 4096),
-          temperature: 0.45,
-          userKeys: opts.userKeys,
-        }),
-        getTimeoutMs("generator"),
-        `${activeGenerator.name} GPT Image 2 fallback candidates`,
-      );
-      calls.push({ model: activeGenerator, result: candidateResult });
-      modelHealth.successful.push(recordModelSuccess(
-        activeGenerator,
-        generatorApiProvider,
-        candidateResult.latencyMs || Date.now() - fallbackStartedAt,
-      ));
-    } catch (fallbackErr) {
-      modelHealth.failed.push(recordModelFailure(activeGenerator, generatorApiProvider, fallbackErr));
-      throw fallbackErr;
+    const parsed = safeParseJson<CandidatePayload>(result.text);
+    return {
+      plan,
+      result,
+      candidates: normalizeCandidates(parsed, plan.model),
+    };
+  };
+
+  let finishedGenerators = 0;
+  const generatorResults = await Promise.allSettled(
+    generatorPlans.map(async (plan) => {
+      try {
+        return await runCandidateGenerator(plan);
+      } catch (err) {
+        modelHealth.failed.push(recordModelFailure(plan.model, plan.apiProvider, err));
+        throw err;
+      } finally {
+        finishedGenerators += 1;
+        progress(opts, startedAt, {
+          phase: "生成 GPT Image 2 候选提示词",
+          current: finishedGenerators,
+          total: generatorPlans.length,
+          etaSec: Math.max(15, Math.min(180, 50 + (generatorPlans.length - finishedGenerators) * 25)),
+          message: "正在等待仍有响应的模型返回；失败模型会记录并冷却。 Waiting for responsive models; failed models are cooled down.",
+        });
+      }
+    }),
+  );
+
+  let candidateRuns = generatorResults
+    .map((result) => (result.status === "fulfilled" ? result.value : null))
+    .filter((result): result is { plan: { model: ModelInfo; apiProvider: string }; result: GenerateResult; candidates: GptImage2Candidate[] } => Boolean(result));
+  let candidates = candidateRuns.flatMap((run) => run.candidates);
+
+  if (candidates.length < 2) {
+    const excludeIds = new Set([
+      ...selectedGeneratorIds,
+      ...generatorPlans.map((plan) => plan.model.id),
+    ]);
+    const fallback = selectHealthyGeneratorFallback(opts, excludeIds);
+    if (fallback) {
+      progress(opts, startedAt, {
+        phase: "主生成模型不足，切换备用模型",
+        current: 0,
+        total: 1,
+        etaSec: 60,
+        message: `正在改用 ${fallback.model.name} 继续生成 GPT Image 2 候选。 Switching to a healthy fallback generator.`,
+      });
+      try {
+        const fallbackRun = await runCandidateGenerator(fallback);
+        candidateRuns = [...candidateRuns, fallbackRun];
+        candidates = candidateRuns.flatMap((run) => run.candidates);
+      } catch (fallbackErr) {
+        modelHealth.failed.push(recordModelFailure(fallback.model, fallback.apiProvider, fallbackErr));
+      }
     }
   }
 
-  const parsed = safeParseJson<CandidatePayload>(candidateResult.text);
-  const candidates = normalizeCandidates(parsed);
-
   if (candidates.length < 2) {
+    const directRun = candidateRuns.find((run) => run.result.text.trim());
+    if (!directRun) {
+      const failedText = modelHealth.failed
+        .map((issue) => `${issue.modelName ?? issue.modelId}: ${issue.lastError}`)
+        .join("；");
+      throw new Error(
+        failedText
+          ? `GPT Image 2 生成模型都未返回可用候选：${failedText}`
+          : "GPT Image 2 生成模型未返回可用候选 / No usable GPT Image 2 candidates",
+      );
+    }
     return {
-      text: candidateResult.text.trim(),
-      inputTokens: candidateResult.inputTokens,
-      outputTokens: candidateResult.outputTokens,
+      text: directRun.result.text.trim(),
+      inputTokens: calls.reduce((sum, c) => sum + c.result.inputTokens, 0),
+      outputTokens: calls.reduce((sum, c) => sum + c.result.outputTokens, 0),
       latencyMs: Date.now() - startedAt,
-      totalCostUsd: modelCost(opts.generatorModel, candidateResult),
+      totalCostUsd: calls.reduce((sum, c) => sum + modelCost(c.model, c.result), 0),
       meta: {
-        reviewSummary: "GPT Image 2 source ensemble fallback: candidate JSON parsing failed, returned the generator prompt directly.",
-        judgeModels: [activeGenerator.name],
+        reviewSummary: "GPT Image 2 source ensemble fallback: candidate JSON parsing failed, returned the best generator output directly. / 候选 JSON 解析不足，已直接返回最可用的生成结果。",
+        judgeModels: [directRun.plan.model.name],
         selectedStrategy: "fallback",
         sourceCommits: [...GPT_IMAGE_2_SOURCE_COMMITS],
         modelHealth,
@@ -522,7 +647,8 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
     phase: judgePlans.length > 0 ? "AI 评价 GPT Image 2 提示词" : "整理 GPT Image 2 最终提示词",
     current: 0,
     total: judgePlans.length,
-    etaSec: judgePlans.length > 0 ? 45 : 12,
+    etaSec: judgePlans.length > 0 ? Math.min(160, 45 + judgePlans.length * 18) : 12,
+    message: "评价模型会打 0-100 分；慢但能返回的模型会被等待。 Judge models score 0-100; slow responsive judges are waited for.",
   });
 
   const judgeResults = await Promise.allSettled(
@@ -539,7 +665,7 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
             temperature: 0.1,
             userKeys: opts.userKeys,
           }),
-          getTimeoutMs("judge"),
+          getModelTimeoutMs(plan.model, "judge", { startedAt, reserveMs: 45_000 }),
           `${plan.model.name} GPT Image 2 judge`,
         );
         calls.push({ model: plan.model, result });
@@ -548,7 +674,10 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
           plan.apiProvider,
           result.latencyMs || Date.now() - callStartedAt,
         ));
-        return safeParseJson<JudgePayload>(result.text);
+        return {
+          judgeModel: plan.model.name,
+          payload: safeParseJson<JudgePayload>(result.text) ?? {},
+        };
       } catch (err) {
         modelHealth.failed.push(recordModelFailure(plan.model, plan.apiProvider, err));
         return null;
@@ -559,21 +688,34 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
           current: finishedJudges,
           total: judgePlans.length,
           etaSec: Math.max(8, 45 - Math.floor((finishedJudges / Math.max(judgePlans.length, 1)) * 30)),
+          message: "正在汇总评价模型打分。 Aggregating judge scores.",
         });
       }
     }),
   );
 
-  const judgePayloads = judgeResults
+  const judgeOutputs = judgeResults
     .map((r) => (r.status === "fulfilled" ? r.value : null))
-    .filter((r): r is JudgePayload => Boolean(r));
+    .filter((r): r is { judgeModel: string; payload: JudgePayload } => Boolean(r));
 
-  const { averages, synthesizeVotes } = aggregateScores(candidates, judgePayloads);
-  const fallbackWinner = candidates.find((c) => c.id === "hybrid") ?? candidates[0];
+  const { averages, synthesizeVotes } = aggregateScores(candidates, judgeOutputs);
+  const fallbackWinner = candidates.find((c) => c.sourceId === "hybrid") ?? candidates[0];
   const top = averages[0]?.average > 0 ? averages[0] : { candidate: fallbackWinner, average: 0 };
-  const hybridScore = averages.find((a) => a.candidate.id === "hybrid")?.average ?? 0;
-  const bestSingle = averages.find((a) => a.candidate.id !== "hybrid") ?? top;
-  const hybrid = candidates.find((c) => c.id === "hybrid");
+  const bestHybrid = averages.find((a) => a.candidate.sourceId === "hybrid");
+  const hybridScore = bestHybrid?.average ?? 0;
+  const bestSingle = averages.find((a) => a.candidate.sourceId !== "hybrid") ?? top;
+  const hybrid = bestHybrid?.candidate ?? candidates.find((c) => c.sourceId === "hybrid");
+  const candidateProducer = new Map<string, { model: ModelInfo; apiProvider: string }>();
+  for (const run of candidateRuns) {
+    for (const candidate of run.candidates) {
+      candidateProducer.set(candidate.id, run.plan);
+    }
+  }
+  const synthesisPlan =
+    candidateProducer.get(bestSingle.candidate.id) ??
+    candidateProducer.get(top.candidate.id) ??
+    candidateRuns[0]?.plan ??
+    generatorPlans[0];
 
   const shouldSynthesize =
     Boolean(hybrid) &&
@@ -588,26 +730,27 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
       current: 2,
       total: 3,
       etaSec: 25,
+      message: "正在把最佳单路线和混合路线融合成最终版。 Synthesizing the best single route with the hybrid route.",
     });
     try {
       const callStartedAt = Date.now();
       const synthesisResult = await withTimeout(
         callProvider({
-          model: activeGenerator.id,
-          apiProvider: generatorApiProvider,
+          model: synthesisPlan.model.id,
+          apiProvider: synthesisPlan.apiProvider,
           systemPrompt: "You synthesize the final GPT Image 2 prompt. Output only the final prompt.",
           userPrompt: buildSynthesisPrompt(opts.userIdea, bestSingle.candidate, hybrid, opts.language),
           maxTokens: Math.min(opts.maxTokens, 2048),
           temperature: 0.35,
           userKeys: opts.userKeys,
         }),
-        getTimeoutMs("generator"),
-        `${activeGenerator.name} GPT Image 2 synthesis`,
+        getModelTimeoutMs(synthesisPlan.model, "generator", { startedAt, reserveMs: 20_000 }),
+        `${synthesisPlan.model.name} GPT Image 2 synthesis`,
       );
-      calls.push({ model: activeGenerator, result: synthesisResult });
+      calls.push({ model: synthesisPlan.model, result: synthesisResult });
       modelHealth.successful.push(recordModelSuccess(
-        activeGenerator,
-        generatorApiProvider,
+        synthesisPlan.model,
+        synthesisPlan.apiProvider,
         synthesisResult.latencyMs || Date.now() - callStartedAt,
       ));
       if (synthesisResult.text.trim()) {
@@ -615,7 +758,7 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
         selectedStrategy = `${bestSingle.candidate.id}+hybrid`;
       }
     } catch (err) {
-      modelHealth.failed.push(recordModelFailure(activeGenerator, generatorApiProvider, err));
+      modelHealth.failed.push(recordModelFailure(synthesisPlan.model, synthesisPlan.apiProvider, err));
     }
   }
 
@@ -632,8 +775,13 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
   const scoreText = averages
     .filter((a) => a.average > 0)
     .slice(0, 5)
-    .map((a) => `${a.candidate.id}:${a.average.toFixed(1)}`)
+    .map((a) => `${a.candidate.label}:${a.average.toFixed(1)}`)
     .join(", ");
+  const successfulGeneratorNames = Array.from(new Set(candidateRuns
+    .filter((run) => run.candidates.length > 0)
+    .map((run) => run.plan.model.name)));
+  const successfulJudgeNames = judgeOutputs.map((output) => output.judgeModel);
+  const healthText = `模型健康 Model health: 已等待可用模型完整返回；冷却跳过 ${modelHealth.skippedCooling.length} 个持续失败模型；本次失败但未中断 ${modelHealth.failed.length} 个模型。`;
 
   return {
     text: finalPrompt,
@@ -642,25 +790,31 @@ export async function runGptImage2Ensemble(opts: GptImage2EnsembleOptions): Prom
     latencyMs: Date.now() - startedAt,
     totalCostUsd,
     meta: {
-      reviewSummary: `GPT Image 2 four-source ensemble used ${judgePlans.length || 0} judge model(s). Scores: ${scoreText || "fallback selected"}.${modelHealth.skippedCooling.length ? ` 自动跳过冷却模型 ${modelHealth.skippedCooling.length} 个。` : ""}${modelHealth.failed.length ? ` 本次失败但未中断的模型 ${modelHealth.failed.length} 个。` : ""}`,
-      judgeModels: judgePlans.map((p) => p.model.name),
+      reviewSummary: `GPT Image 2 多模型集成 Multi-model ensemble: 已使用 ${successfulGeneratorNames.length}/${selectedGeneratorModels.length} 个生成器模型、${successfulJudgeNames.length}/${judgePlans.length || 0} 个评价模型。Scores: ${scoreText || "fallback selected"}. ${healthText}`,
+      judgeModels: successfulJudgeNames,
       selectedStrategy,
       sourceCommits: [...GPT_IMAGE_2_SOURCE_COMMITS],
       modelHealth,
       promptEvaluation: {
-        candidates: averages.map((item, index) => ({
-          id: item.candidate.id,
-          generatorModelId: item.candidate.id,
-          generatorModelName: item.candidate.label,
-          averageScore: item.average,
-          rank: index + 1,
-          scores: item.average > 0
-            ? [{ judgeModel: "Average", score: item.average, reason: item.candidate.label }]
-            : [],
-        })),
-        judgeModels: judgePlans.map((p) => p.model.name),
+        rubric: GPT_IMAGE_2_RUBRIC.map((item) => ({ ...item })),
+        candidates: averages.map((item, index) => {
+          const producer = candidateProducer.get(item.candidate.id);
+          return {
+            id: item.candidate.id,
+            generatorModelId: producer?.model.id ?? item.candidate.id,
+            generatorModelName: item.candidate.label,
+            averageScore: item.average,
+            rank: index + 1,
+            scores: item.scores.length
+              ? item.scores
+              : item.average > 0
+                ? [{ judgeModel: "Average", score: item.average, reason: item.candidate.label }]
+                : [],
+          };
+        }),
+        judgeModels: successfulJudgeNames,
         selectedCandidateId: top.candidate.id,
-        summary: `GPT Image 2 source strategy scores: ${scoreText || "fallback selected"}.`,
+        summary: `GPT Image 2 scoring summary 评分摘要: ${scoreText || "fallback selected"}. ${healthText}`,
         sourceCommits: [...GPT_IMAGE_2_SOURCE_COMMITS],
       },
     },

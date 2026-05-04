@@ -234,9 +234,49 @@ export function getTimeoutMs(kind: ModelCallKind): number {
       : kind === "generator"
         ? "GENERATOR_MODEL_TIMEOUT_MS"
         : "SIMPLE_MODEL_TIMEOUT_MS";
-  const fallback = kind === "judge" ? 30_000 : kind === "generator" ? 45_000 : 60_000;
+  const fallback = kind === "judge" ? 180_000 : kind === "generator" ? 180_000 : 180_000;
   const raw = Number(process.env[envName]);
   return Number.isFinite(raw) && raw >= 5_000 ? raw : fallback;
+}
+
+function isLikelySlowModel(model: ModelInfo): boolean {
+  const keyText = `${model.id} ${model.name} ${model.provider}`.toLowerCase();
+  return (
+    model.speed === "slow" ||
+    model.accuracy === "supreme" ||
+    keyText.includes("gpt-5") ||
+    keyText.includes("gpt5") ||
+    keyText.includes("claude") ||
+    keyText.includes("opus") ||
+    keyText.includes("sonnet") ||
+    keyText.includes("gemini-3") ||
+    keyText.includes("gemini-2.5") ||
+    keyText.includes("deepseek-v4") ||
+    keyText.includes("deepseek-r1") ||
+    keyText.includes("reason")
+  );
+}
+
+export function getModelTimeoutMs(
+  model: ModelInfo,
+  kind: ModelCallKind,
+  opts?: { startedAt?: number; routeBudgetMs?: number; reserveMs?: number },
+): number {
+  const base = getTimeoutMs(kind);
+  const slowBonus =
+    isLikelySlowModel(model)
+      ? kind === "judge"
+        ? 45_000
+        : 60_000
+      : 0;
+  const desired = Math.min(base + slowBonus, kind === "simple" ? 240_000 : 225_000);
+
+  if (!opts?.startedAt) return desired;
+
+  const routeBudgetMs = opts.routeBudgetMs ?? 285_000;
+  const reserveMs = opts.reserveMs ?? 20_000;
+  const remaining = routeBudgetMs - (Date.now() - opts.startedAt) - reserveMs;
+  return Math.max(15_000, Math.min(desired, remaining));
 }
 
 export function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {

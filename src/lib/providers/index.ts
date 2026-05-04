@@ -26,7 +26,7 @@ export interface GenerateResult {
 
 // ── Constants ─────────────────────────────────────────────────
 
-const API_TIMEOUT = 60_000;
+const API_TIMEOUT = 260_000;
 
 const KEY_MAP: Record<string, string> = {
   custom:       "CUSTOM_API_KEY",

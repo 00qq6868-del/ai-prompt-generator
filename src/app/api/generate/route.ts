@@ -344,6 +344,7 @@ export async function POST(req: NextRequest) {
           language,
           targetModel,
           generatorModel,
+          generatorModels,
           models,
           userKeys,
           availableModelIds,
@@ -362,7 +363,10 @@ export async function POST(req: NextRequest) {
             changePercent: comparison.ratio,
             estimatedCostUsd: ensemble.totalCostUsd,
           },
-          ensemble.meta,
+          {
+            generatorModel: generatorModels.map((model) => model.name).join(" + "),
+            ...ensemble.meta,
+          },
         );
       };
 
@@ -371,9 +375,10 @@ export async function POST(req: NextRequest) {
           send(progressEvent({
             phase: "准备 GPT Image 2 优化",
             current: 0,
-            total: 3,
-            etaSec: 90,
+            total: generatorModels.length + Math.max(evaluatorModels.length, 1),
+            etaSec: Math.min(260, 95 + generatorModels.length * 25 + Math.max(evaluatorModels.length, 1) * 18),
             elapsedSec: 0,
+            message: "正在检查中转站可用模型；可输出的慢模型会等待，持续失败的模型才会跳过。 Checking relay availability; slow responsive models will be waited for.",
           }));
           const payload = await runEnsemble((event) => send(progressEvent(event)));
           send({ t: "chunk", c: payload.optimizedPrompt });
