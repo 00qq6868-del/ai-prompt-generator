@@ -832,3 +832,38 @@ Push/CI follow-up:
 - GitHub Actions run `25344080204` passed:
   - Build app passed.
   - 14 E2E tests passed.
+
+## Current Handoff — 2026-05-05 Missing Run Logger Fix
+
+User showed a new local panel error:
+
+```text
+失败: Cannot read properties of undefined (reading 'push')
+```
+
+It occurred right after relay model probing returned 96 models.
+
+Root cause:
+
+- `scripts/gpt-image2-live-review-panel.cjs` had one `addLog()` call without the `run` argument.
+
+Fix:
+
+- Changed it to `addLog(run, "...")`.
+- Made the global `addLog()` function defensive so a bad call cannot crash the run.
+
+Validation:
+
+- Syntax and diff checks passed.
+- Restarted the panel.
+- Fake relay regression passed:
+  - `/models` returned 96 models.
+  - one selected generator returned fake 502.
+  - another selected generator succeeded.
+  - the panel completed prompt scoring, image generation, image judging, and ended as `done`.
+- Removed the fake regression report/history entry from ignored local reports.
+
+Next:
+
+- Commit and push this logger fix.
+- Watch CI if pushed.

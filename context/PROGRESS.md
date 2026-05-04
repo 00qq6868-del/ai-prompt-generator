@@ -1274,3 +1274,35 @@ Follow-up:
 - GitHub Actions run `25344080204` passed:
   - Build app passed.
   - 14 E2E tests passed.
+
+## 2026-05-05 — Fixed Local Panel Missing Run Logger Bug
+
+User reported the local GPT Image 2 panel still failed immediately after:
+
+```text
+正在检查中转站模型列表...
+中转站返回 96 个模型。
+失败: Cannot read properties of undefined (reading 'push')
+```
+
+Root cause:
+
+- One `addLog()` call in `scripts/gpt-image2-live-review-panel.cjs` missed the `run` argument.
+- The logger then tried to execute `run.logs.push(...)` where `run` was actually a string.
+
+Fix:
+
+- Corrected that call to `addLog(run, "...")`.
+- Made `addLog()` defensive so a future missing `run` argument logs to console instead of crashing the whole panel.
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed with line-ending warnings only.
+- Restarted the local panel and confirmed it is reachable.
+- Ran a local fake relay regression:
+  - `/models` returned 96 models.
+  - `test-bad` returned fake 502.
+  - `test-good` returned valid prompt candidates.
+  - The panel skipped `test-bad`, completed prompt scoring, generated a fake image, ran image judging, and finished with status `done`.
+- Removed the fake regression report from local history so it does not pollute the user's real image-quality records.

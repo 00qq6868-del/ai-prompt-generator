@@ -1606,3 +1606,39 @@ Follow-up after push:
 - GitHub Actions run `25344080204` passed:
   - Build app passed.
   - 14 E2E tests passed.
+
+---
+
+## 2026-05-05 — Follow-Up: Fixed Missing Run Argument In Local Panel Logger
+
+User screenshot showed:
+
+```text
+中转站返回 96 个模型。
+失败: Cannot read properties of undefined (reading 'push')
+```
+
+Cause:
+
+- `scripts/gpt-image2-live-review-panel.cjs` had one incorrect call:
+  - `addLog("中转站模型列表只作为排序提示...")`
+- It should have been:
+  - `addLog(run, "中转站模型列表只作为排序提示...")`
+- Because `addLog()` expects `run.logs.push(...)`, that missing argument caused the crash.
+
+Fix:
+
+- Passed `run` into the call.
+- Hardened `addLog()` so future accidental string-only calls no longer crash the whole run.
+
+Regression validation:
+
+- Started a local fake relay on port 61995.
+- Fake relay returned exactly 96 model ids.
+- `test-bad` returned fake 502.
+- `test-good` returned valid prompt candidates.
+- Panel completed with status `done`, with logs proving failed model skip:
+  - `test-bad 生成失败，自动跳过`
+  - `test-good 已输出 3 个候选提示词`
+  - `提示词生成器完成: 1/2 成功`
+- Deleted the fake regression report/history entry afterward.

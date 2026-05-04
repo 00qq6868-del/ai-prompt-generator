@@ -204,8 +204,9 @@ function extractJsonMaybe(textValue) {
 }
 
 function addLog(run, message) {
-  const line = `[${new Date().toLocaleTimeString()}] ${message}`;
-  run.logs.push(line);
+  const safeMessage = message ?? run;
+  const line = `[${new Date().toLocaleTimeString()}] ${safeMessage}`;
+  if (run && Array.isArray(run.logs)) run.logs.push(line);
   console.log(line);
 }
 
@@ -1180,7 +1181,7 @@ async function runFullReview(run, input) {
       [...requestedImageJudges, ...requestedEvaluators, ...requestedGenerators],
     ).slice(0, 6);
     if (relayModels.ids.length) {
-      addLog("中转站模型列表只作为排序提示；你手动选择但未出现在列表里的模型仍会尝试调用 / Relay model list is only a hint; manually selected unlisted models will still be tried.");
+      addLog(run, "中转站模型列表只作为排序提示；你手动选择但未出现在列表里的模型仍会尝试调用 / Relay model list is only a hint; manually selected unlisted models will still be tried.");
     }
 
     if (!generatorModelIds.length) throw new Error("没有可用的生成器模型。请检查模型名称或中转站模型权限。");
