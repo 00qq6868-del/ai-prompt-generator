@@ -817,7 +817,7 @@ Validation:
 Still not done:
 
 - No real API-key-backed live generation was run from shell. The user should paste the key into the browser panel and run the live test.
-- Local panel changes were pushed in commit `17fb7ac`; the TypeScript CI follow-up fix still needs its own push after validation.
+- Local panel changes and the TypeScript CI follow-up fix have both been pushed to GitHub main.
 
 Push/CI follow-up:
 
@@ -828,3 +828,7 @@ Push/CI follow-up:
 - Local validation after the fix:
   - `npx tsc --noEmit` passed.
   - `npm run build` passed.
+- Pushed commit `7a01057`.
+- GitHub Actions run `25344080204` passed:
+  - Build app passed.
+  - 14 E2E tests passed.

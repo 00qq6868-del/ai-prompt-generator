@@ -1602,3 +1602,7 @@ Follow-up after push:
 - Local validation after the fix:
   - `npx tsc --noEmit` passed.
   - `npm run build` passed.
+- Pushed commit `7a01057`.
+- GitHub Actions run `25344080204` passed:
+  - Build app passed.
+  - 14 E2E tests passed.
