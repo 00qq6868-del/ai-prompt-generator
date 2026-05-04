@@ -970,3 +970,7 @@ Validation:
 - `git diff --check` passed.
 - Local panel restarted successfully on `http://127.0.0.1:61994/`.
 - A local GET confirmed the new page contains `本地直连中转站` and `不怕网站 524`.
+- Pushed `0a4913b fix: make GPT Image 2 panel avoid site timeouts`.
+- GitHub E2E run `25298874948` passed: 13/13.
+- Vercel deployment for `0a4913b` completed successfully.
+- Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics.

@@ -1290,3 +1290,7 @@ Validation:
 - `git diff --check` passed.
 - Restarted the local panel.
 - Confirmed `http://127.0.0.1:61994/` returns HTTP 200 and contains the new local-direct UI text.
+- Pushed `0a4913b fix: make GPT Image 2 panel avoid site timeouts`.
+- GitHub E2E run `25298874948` passed: 13/13.
+- Vercel deployment for `0a4913b` completed successfully.
+- Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics.
