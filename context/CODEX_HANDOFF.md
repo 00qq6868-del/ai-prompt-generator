@@ -634,3 +634,18 @@ Validation:
 - `npm run build` passed.
 - Local panel restarted at `http://127.0.0.1:61994/`.
 - Playwright console/state check showed no page errors and model options loaded: target 266, image 7, generators 245, evaluators 245, judges 245.
+
+Latest follow-up:
+
+- `ModelPicker` now renders through a React portal into `document.body`. This is important because the production page uses animated/transformed containers; keeping a `position: fixed` picker inside those containers can make drag-scroll appear stuck.
+- The local GPT Image 2 panel was restarted on port `61994`.
+- Playwright confirmed the local panel has populated model selectors and the `开始完整测试` button is clickable. With a fake key, the run starts and logs `正在检查中转站模型列表...`.
+- Re-run before handoff:
+  - `npx tsc --noEmit` passed.
+  - `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+  - `npm run test:quality` passed 5/5.
+  - `npm run build` passed.
+
+Next step:
+
+- Commit and push the portal fix, then watch GitHub/Vercel deployment and retest `https://www.myprompt.asia` with a cache-busting URL. Do not tell the user production is fixed until the deployed site confirms model picker drag-scroll works.

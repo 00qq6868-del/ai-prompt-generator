@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Search, X, Star, Zap } from "lucide-react";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
+import { createPortal } from "react-dom";
 
 const STORAGE_KEY_FAVORITES = "ai_prompt_model_favorites";
 
@@ -85,6 +86,11 @@ export function ModelPicker({
   const [provider, setProvider] = useState("全部");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -263,7 +269,7 @@ export function ModelPicker({
     suppressClickRef.current = false;
   };
 
-  return (
+  const picker = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -415,6 +421,9 @@ export function ModelPicker({
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(picker, document.body);
 }
 
 function PickerCard({

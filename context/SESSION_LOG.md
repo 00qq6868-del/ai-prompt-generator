@@ -1410,3 +1410,14 @@ Validation:
 - `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
 - `npm run test:quality` passed: 5/5.
 - `npm run build` passed.
+
+Follow-up after online drag check:
+
+- Added a portal render path to `src/components/ModelPicker.tsx` with `createPortal(picker, document.body)`.
+- Reason: production still had cases where a fixed dialog inside animated/transformed page containers would not receive reliable drag-scroll behavior.
+- Local validation after portal:
+  - `npx tsc --noEmit` passed.
+  - `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+  - `npm run test:quality` passed: 5/5.
+  - `npm run build` passed.
+- Restarted `http://127.0.0.1:61994/` and verified the GPT Image 2 panel has populated model selectors and a clickable start button. With a fake local-only key, the button starts the run and logs `正在检查中转站模型列表...`.

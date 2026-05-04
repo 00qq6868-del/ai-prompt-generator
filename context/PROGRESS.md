@@ -1080,3 +1080,18 @@ Validation:
   - evaluators: 245
   - image judges: 245
 - Clicking the start button with no API key now correctly shows `请先填 API Key` and re-enables buttons.
+
+Follow-up fix:
+
+- Production testing showed drag-scroll could still fail online because the model picker was rendered inside animated/transformed ancestors. Fixed by rendering `ModelPicker` through a React portal into `document.body`, so the fixed overlay and scroll container are no longer trapped by page transforms.
+- Revalidated locally after the portal change:
+  - `npx tsc --noEmit` passed.
+  - `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+  - `npm run test:quality` passed: 5/5 Chromium.
+  - `npm run build` passed.
+- Restarted the local GPT Image 2 panel again and verified in Playwright:
+  - model sync status: `已同步项目模型 266 个`
+  - target select: 266
+  - image select: 7
+  - generator/evaluator/judge selects: 245 each
+  - `开始完整测试` button is clickable and enters the running state.
