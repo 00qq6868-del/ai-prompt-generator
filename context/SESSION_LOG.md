@@ -1174,9 +1174,17 @@ Validation run locally:
 - `node --check scripts/real-gpt-image2-quality-test.cjs` passed.
 - No real image was generated in this session because the user has not provided the relay API key yet.
 
-Next remote steps:
+Remote verification:
 
-- Commit and push this batch.
-- Run GitHub E2E.
-- Run GitHub Android Release workflow so `/api/download/android` has a real APK asset to redirect to.
+- Pushed `5063a63 feat: harden model scrolling and add android qa workflows`.
+- Pushed follow-up `cbbac83 fix: use available setup-java action for android release`.
+- GitHub E2E run `25296187362` passed: 13/13.
+- GitHub E2E run `25296280706` passed after the workflow fix: 13/13.
+- Android Release run `25296284603` passed and uploaded `AI-Prompt-Generator-Android-1.0.0-debug.apk`.
+- GitHub Release `desktop-v1.0.0` now contains Windows installer, Windows portable EXE, macOS DMG, macOS ZIP, Linux AppImage, and Android APK.
+- Production `/download` returned HTTP 200 and contains `下载 Android APK`.
+- Production `/api/download/android` redirects to the GitHub APK asset.
+
+Remaining user-key step:
+
 - If the user provides a relay key, run `npm run test:gpt-image2:real`; set `MAKE_IMAGE=1` for a real image and `JUDGE_IMAGE=1` for vision scoring.

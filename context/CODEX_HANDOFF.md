@@ -318,6 +318,21 @@ Known boundary:
 - Android APK is currently debug-signed and wraps the live website through WebView. It requires internet and is not yet a production-signed Play Store style release.
 - Do not commit local API keys or generated reports/images.
 
+Remote verification completed:
+
+- Code commits pushed:
+  - `5063a63 feat: harden model scrolling and add android qa workflows`
+  - `cbbac83 fix: use available setup-java action for android release`
+- GitHub E2E:
+  - `25296187362` passed: 13/13
+  - `25296280706` passed: 13/13
+- GitHub Android Release:
+  - `25296284603` passed.
+  - Uploaded `AI-Prompt-Generator-Android-1.0.0-debug.apk` to release `desktop-v1.0.0`.
+- Production:
+  - `/download` returns HTTP 200 and contains `下载 Android APK`.
+  - `/api/download/android` redirects to the GitHub APK asset.
+
 Next step: when the user gives more GitHub prompt-source projects, follow `context/PROMPT_SOURCE_AUTOSYNC.md`; keep new source groups separate and add their own sync/status/runtime integration.
 
 ## Latest Work — Multi-Generator Evaluation and Cross-Platform Downloads, 2026-05-04

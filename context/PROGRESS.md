@@ -872,3 +872,14 @@ Local verification:
 Known boundary:
 
 - The Android APK is currently a debug-signed WebView wrapper for the live site and requires internet. It is useful for free/manual install testing. A production signed APK would require adding a release keystore through GitHub Secrets.
+
+Remote verification:
+
+- Pushed `5063a63 feat: harden model scrolling and add android qa workflows`.
+- Pushed `cbbac83 fix: use available setup-java action for android release`.
+- GitHub E2E run `25296187362` passed: 13/13.
+- GitHub E2E run `25296280706` passed: 13/13.
+- Android Release run `25296284603` passed and uploaded `AI-Prompt-Generator-Android-1.0.0-debug.apk`.
+- Release `desktop-v1.0.0` now includes the Android APK alongside Windows/macOS/Linux desktop assets.
+- Production `/download` contains `下载 Android APK`.
+- Production `/api/download/android` redirects to the GitHub APK asset.
