@@ -7,6 +7,8 @@ const { spawn } = require("node:child_process");
 
 const ROOT = process.cwd();
 const REPORT_DIR = path.join(ROOT, "reports", "gpt-image2-live-review");
+const HISTORY_PATH = path.join(REPORT_DIR, "history-index.json");
+const LEARNING_PATH = path.join(REPORT_DIR, "learning-memory.json");
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.GPT_IMAGE2_PANEL_PORT || 61994);
 const DEFAULT_IDEA =
@@ -156,7 +158,7 @@ async function fetchJson(url, options = {}) {
     data = null;
   }
   if (!res.ok) {
-    const message = data?.error?.message || data?.error || textBody.slice(0, 500);
+    const message = data?.error?.message || data?.error || htmlErrorSummary(textBody);
     throw new Error(`${res.status} ${res.statusText}: ${message}`);
   }
   return data || {};
@@ -235,6 +237,235 @@ function openFolder(folderPath) {
   }
 }
 
+function readJsonFile(filePath, fallback) {
+  try {
+    if (!fs.existsSync(filePath)) return fallback;
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJsonFile(filePath, data) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+}
+
+function loadRegistryModels() {
+  const registryPath = path.join(ROOT, "public", "models.json");
+  const data = readJsonFile(registryPath, []);
+  return Array.isArray(data)
+    ? data.filter((model) => model && typeof model.id === "string")
+    : [];
+}
+
+function uniqueById(models) {
+  const seen = new Set();
+  const out = [];
+  for (const model of models) {
+    if (!model?.id || seen.has(model.id)) continue;
+    seen.add(model.id);
+    out.push(model);
+  }
+  return out;
+}
+
+function registryWithRelayModels(relayIds = []) {
+  const registry = loadRegistryModels();
+  const known = new Set(registry.map((model) => model.id));
+  const relayOnly = relayIds
+    .filter((id) => id && !known.has(id))
+    .map((id) => ({
+      id,
+      name: id,
+      provider: "Relay",
+      apiProvider: "custom",
+      category: id.toLowerCase().includes("image") || id.toLowerCase().includes("dall-e") ? "image" : "text",
+      tags: [],
+      speed: "medium",
+      accuracy: "medium",
+      supportsStreaming: true,
+    }));
+  const available = new Set(relayIds);
+  return uniqueById([...registry, ...relayOnly]).map((model) => ({
+    id: model.id,
+    name: model.name || model.id,
+    provider: model.provider || model.apiProvider || "Unknown",
+    category: model.category || "text",
+    tags: Array.isArray(model.tags) ? model.tags : [],
+    speed: model.speed || "medium",
+    accuracy: model.accuracy || "medium",
+    isLatest: Boolean(model.isLatest),
+    available: relayIds.length ? available.has(model.id) : null,
+  }));
+}
+
+function scoreModelOption(model) {
+  const accuracy = { supreme: 40, high: 26, medium: 12, low: 0 }[model.accuracy] ?? 8;
+  const speed = { ultrafast: 18, fast: 14, medium: 8, slow: 2 }[model.speed] ?? 6;
+  const latest = model.isLatest ? 10 : 0;
+  const vision = model.tags?.some((tag) => ["vision", "multimodal", "image-gen"].includes(tag)) ? 8 : 0;
+  const available = model.available === true ? 25 : model.available === false ? -25 : 0;
+  return accuracy + speed + latest + vision + available;
+}
+
+function modelOptionsPayload(relayIds = []) {
+  const models = registryWithRelayModels(relayIds);
+  const byScore = (a, b) => scoreModelOption(b) - scoreModelOption(a) || a.id.localeCompare(b.id);
+  const sortedModels = [...models].sort(byScore);
+  const textModels = models
+    .filter((model) => (model.category || "text") === "text")
+    .sort(byScore);
+  const imageModels = models
+    .filter((model) => (model.category || "text") === "image" || model.tags.includes("image-gen"))
+    .sort(byScore);
+  return {
+    total: models.length,
+    availableCount: relayIds.length,
+    models: sortedModels,
+    targetModels: sortedModels,
+    imageModels,
+    textModels,
+    generatorModels: textModels,
+    evaluatorModels: textModels,
+    visionTextModels: models
+      .filter((model) => (model.category || "text") === "text")
+      .sort((a, b) => {
+        const av = a.tags.some((tag) => ["vision", "multimodal"].includes(tag)) ? 1 : 0;
+        const bv = b.tags.some((tag) => ["vision", "multimodal"].includes(tag)) ? 1 : 0;
+        return bv - av || byScore(a, b);
+      }),
+  };
+}
+
+function reportPathForRun(runId) {
+  return path.join(REPORT_DIR, `report-${runId}.json`);
+}
+
+function loadReport(runId) {
+  return readJsonFile(reportPathForRun(runId), null);
+}
+
+function summarizeHistory(report) {
+  if (!report?.runId) return null;
+  return {
+    runId: report.runId,
+    savedAt: report.userReview?.savedAt || report.runId,
+    userIdea: String(report.userIdea || "").slice(0, 220),
+    optimizedPrompt: String(report.optimizedPrompt || "").slice(0, 260),
+    promptScore: report.promptScore ?? null,
+    imageJudgeAverage: report.imageJudgeAverage ?? null,
+    userScore: report.userReview?.score ?? null,
+    userNotes: report.userReview?.notes ? String(report.userReview.notes).slice(0, 260) : "",
+    deltaFromAiAverage: report.userReview?.deltaFromAiAverage ?? null,
+    imageBrowserUrl: report.imageArtifact?.browserUrl || `/artifact/${report.runId}/image`,
+    imageFileName: report.imageArtifact?.fileName || "",
+    mode: report.imageGeneration?.mode || "unknown",
+    files: report.files || null,
+  };
+}
+
+function rebuildHistoryIndex() {
+  const reports = fs.existsSync(REPORT_DIR)
+    ? fs.readdirSync(REPORT_DIR)
+        .filter((name) => /^report-.+\.json$/.test(name))
+        .map((name) => readJsonFile(path.join(REPORT_DIR, name), null))
+        .filter(Boolean)
+    : [];
+  const entries = reports
+    .map(summarizeHistory)
+    .filter(Boolean)
+    .sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)))
+    .slice(0, 300);
+  writeJsonFile(HISTORY_PATH, { updatedAt: new Date().toISOString(), entries });
+  return entries;
+}
+
+function loadHistoryEntries() {
+  const index = readJsonFile(HISTORY_PATH, null);
+  if (Array.isArray(index?.entries)) return index.entries;
+  return rebuildHistoryIndex();
+}
+
+function deriveLearningRulesFromReview(report) {
+  const review = report?.userReview;
+  if (!review?.notes) return [];
+  const textValue = String(review.notes);
+  const rules = [];
+  const add = (id, label, rule) => rules.push({ id, label, rule });
+  if (/不像真人|真实感|相机|拍|真人|假|照片/.test(textValue)) {
+    add("photorealism", "照片级真人感", "强调真实相机拍摄、自然皮肤纹理、真实鼻唇结构、真实光学景深、真实漫展现场抓拍，避免塑料感、AI感、过度磨皮和插画感。");
+  }
+  if (/头|脖子|比例|大小|怪/.test(textValue)) {
+    add("anatomy_proportion", "头颈比例", "明确要求头部、脖子、肩宽和身体比例自然，避免头大身小、脖子过细/过长、肩颈连接异常。");
+  }
+  if (/手|手指|扇子/.test(textValue)) {
+    add("hands_prop", "手部和道具", "如果出现手和道具，要求手指结构自然、握持动作合理；拿扇子时手部应有可见支撑，若不能保证则用构图遮挡异常手部。");
+  }
+  if (/服装|衣服|商心慈|角色|cos|COS|大爱仙尊/.test(textValue)) {
+    add("character_costume", "角色服装识别", "对指定角色要写出可识别服装、发饰、气质、故事背景和角色性格，不要生成泛化和风写真。");
+  }
+  if (/提示词.*我自己写|看不出来|没有优化/.test(textValue)) {
+    add("prompt_expansion", "提示词应明显增益", "不要只复述用户原文，要补足构图、镜头、材质、光线、角色识别点、负面规避和参考图保持规则。");
+  }
+  return rules;
+}
+
+function updateLearningMemory(report) {
+  if (!report?.userReview) return null;
+  const memory = readJsonFile(LEARNING_PATH, { updatedAt: null, rules: [], examples: [] });
+  const rules = Array.isArray(memory.rules) ? memory.rules : [];
+  for (const rule of deriveLearningRulesFromReview(report)) {
+    const existing = rules.find((item) => item.id === rule.id);
+    if (existing) {
+      existing.count = (existing.count || 0) + 1;
+      existing.lastSeenAt = new Date().toISOString();
+      existing.lastRunId = report.runId;
+      existing.rule = rule.rule;
+    } else {
+      rules.push({ ...rule, count: 1, lastSeenAt: new Date().toISOString(), lastRunId: report.runId });
+    }
+  }
+  const examples = Array.isArray(memory.examples) ? memory.examples : [];
+  examples.unshift({
+    runId: report.runId,
+    userScore: report.userReview.score,
+    aiScore: report.imageJudgeAverage,
+    delta: report.userReview.deltaFromAiAverage,
+    notes: report.userReview.notes,
+    idea: String(report.userIdea || "").slice(0, 500),
+  });
+  const next = {
+    updatedAt: new Date().toISOString(),
+    rules: rules.sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 50),
+    examples: examples.slice(0, 100),
+  };
+  writeJsonFile(LEARNING_PATH, next);
+  return next;
+}
+
+function rebuildLearningMemoryFromReports() {
+  const reports = fs.existsSync(REPORT_DIR)
+    ? fs.readdirSync(REPORT_DIR)
+        .filter((name) => /^report-.+\.json$/.test(name))
+        .map((name) => readJsonFile(path.join(REPORT_DIR, name), null))
+        .filter((report) => report?.userReview)
+    : [];
+  let memory = { updatedAt: null, rules: [], examples: [] };
+  writeJsonFile(LEARNING_PATH, memory);
+  for (const report of reports.sort((a, b) => String(a.runId).localeCompare(String(b.runId)))) {
+    memory = updateLearningMemory(report) || memory;
+  }
+  return readJsonFile(LEARNING_PATH, memory);
+}
+
+function learningMemoryPrompt() {
+  const memory = readJsonFile(LEARNING_PATH, { rules: [] });
+  const rules = Array.isArray(memory.rules) ? memory.rules.slice(0, 8) : [];
+  if (!rules.length) return "";
+  return `\n\nLocal human feedback memory. Apply these learned rules because previous generated images were judged by the human user:\n${rules.map((rule, index) => `${index + 1}. ${rule.label}: ${rule.rule}`).join("\n")}`;
+}
+
 async function listRelayModels(relayBaseUrl, apiKey) {
   try {
     const data = await fetchJson(endpoint(relayBaseUrl, "/models"), {
@@ -310,12 +541,15 @@ function buildDirectCandidatePrompt(userIdea, language) {
   const outputLanguage = language === "zh" ? "Chinese" : "English";
   return `User idea:
 ${userIdea}
+${learningMemoryPrompt()}
 
 Create GPT Image 2.0 prompt candidates using four independent source strategies plus one hybrid.
 
 Rules:
 - Preserve every user detail exactly.
 - If reference images will be used, write the prompt as an image-edit/image-to-image instruction: preserve identity, pose-critical features, and useful visual traits from the reference while applying the requested changes.
+- If the request asks for photorealistic cosplay or character transformation, add concrete constraints for real camera look, natural head-neck-body proportions, believable facial structure, realistic hands/props, recognizable role costume cues, and convention-scene realism.
+- Do not merely restate the user idea. Add useful visual details, camera/lens/light/composition rules, reference-image preservation rules, and failure prevention.
 - Do not mix the four strategies inside the four source candidates.
 - The fifth candidate is the only hybrid.
 - GPT Image 2 uses natural language and structured visual specs; do not add Midjourney flags, SD weights, or unsupported negative-prompt sections.
@@ -579,7 +813,16 @@ async function runDirectPromptOptimization({ relayBaseUrl, apiKey, idea, languag
   };
 }
 
-async function generateImage({ relayBaseUrl, apiKey, model, prompt, imageSize, quality, responseFormat }) {
+async function generateImage({ relayBaseUrl, apiKey, model, prompt, imageSize, quality, background, responseFormat }) {
+  const body = {
+    model,
+    prompt,
+    size: imageSize,
+    quality,
+    n: 1,
+    response_format: responseFormat,
+  };
+  if (background) body.background = background;
   return fetchJson(endpoint(relayBaseUrl, "/images/generations"), {
     method: "POST",
     timeoutMs: IMAGE_TIMEOUT_MS,
@@ -587,14 +830,7 @@ async function generateImage({ relayBaseUrl, apiKey, model, prompt, imageSize, q
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model,
-      prompt,
-      size: imageSize,
-      quality,
-      n: 1,
-      response_format: responseFormat,
-    }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -605,6 +841,7 @@ async function generateImageEdit({
   prompt,
   imageSize,
   quality,
+  background,
   responseFormat,
   referenceImages,
 }) {
@@ -614,6 +851,7 @@ async function generateImageEdit({
   form.append("size", imageSize);
   form.append("quality", quality);
   form.append("n", "1");
+  if (background) form.append("background", background);
   if (responseFormat) form.append("response_format", responseFormat);
 
   for (const image of referenceImages) {
@@ -797,6 +1035,8 @@ ${(report.imageJudges || [])
 `;
   fs.writeFileSync(mdPath, md, "utf8");
   run.result.files = { jsonPath, mdPath, promptPath };
+  rebuildHistoryIndex();
+  if (run.result.userReview) updateLearningMemory(run.result);
 }
 
 function safeRunView(run) {
@@ -820,6 +1060,8 @@ async function runFullReview(run, input) {
     const imageModel = input.imageModel || "gpt-image-2";
     const imageSize = input.imageSize || "1024x1024";
     const quality = input.quality || "auto";
+    const background = input.background || "";
+    const responseFormat = input.responseFormat || "b64_json";
     const userIdea = input.idea || DEFAULT_IDEA;
     const language = input.language || "zh";
     const referenceImages = decodeReferenceImages(input.referenceImages, run);
@@ -907,7 +1149,8 @@ async function runFullReview(run, input) {
             prompt: optimizedPrompt,
             imageSize,
             quality,
-            responseFormat: "b64_json",
+            background,
+            responseFormat,
             referenceImages,
           })
         : await generateImage({
@@ -917,7 +1160,8 @@ async function runFullReview(run, input) {
             prompt: optimizedPrompt,
             imageSize,
             quality,
-            responseFormat: "b64_json",
+            background,
+            responseFormat,
           });
       imageArtifact = saveImageArtifact(imageData, run);
       imageGeneration = { ok: true, mode: imageMode, usage: imageData.usage || null };
@@ -974,7 +1218,7 @@ async function runFullReview(run, input) {
       promptScore,
       promptEvaluation,
       referenceImages: referenceImages.map(({ buffer, ...image }) => image),
-      imageOptions: { imageSize, quality },
+      imageOptions: { imageSize, quality, background, responseFormat },
       imageGeneration,
       imageArtifact,
       imageJudges,
@@ -986,6 +1230,86 @@ async function runFullReview(run, input) {
     run.status = "done";
     run.phase = "完成";
     addLog(run, "完整测试完成。你可以在页面里看图、看 AI 评分，再填写你的人工评分。");
+    if (input.openFolder !== false) openFolder(REPORT_DIR);
+  } catch (error) {
+    run.status = "failed";
+    run.error = error.message;
+    addLog(run, `失败: ${error.message}`);
+  } finally {
+    apiKey = null;
+  }
+}
+
+async function runImageOnly(run, input) {
+  let apiKey = input.apiKey;
+  try {
+    const relayBaseUrl = normalizeOpenAiBase(input.baseUrl || "https://naapi.cc");
+    const imageModel = input.imageModel || "gpt-image-2";
+    const imageSize = input.imageSize || "1024x1024";
+    const quality = input.quality || "auto";
+    const background = input.background || "";
+    const responseFormat = input.responseFormat || "b64_json";
+    const userIdea = input.idea || "";
+    const prompt = String(input.directPrompt || input.optimizedPrompt || input.idea || DEFAULT_IDEA).trim();
+    const referenceImages = decodeReferenceImages(input.referenceImages, run);
+    if (!prompt) throw new Error("请先填写直接生图提示词或测试需求。");
+
+    run.phase = referenceImages.length ? "直接图生图/改图" : "直接文生图";
+    addLog(run, referenceImages.length
+      ? `直接生图：检测到 ${referenceImages.length} 张参考图，正在调用 /images/edits...`
+      : "直接生图：未上传参考图，正在调用 /images/generations...");
+
+    const imageData = referenceImages.length
+      ? await generateImageEdit({
+          relayBaseUrl,
+          apiKey,
+          model: imageModel,
+          prompt,
+          imageSize,
+          quality,
+          background,
+          responseFormat,
+          referenceImages,
+        })
+      : await generateImage({
+          relayBaseUrl,
+          apiKey,
+          model: imageModel,
+          prompt,
+          imageSize,
+          quality,
+          background,
+          responseFormat,
+        });
+    const imageArtifact = saveImageArtifact(imageData, run);
+    run.result = {
+      runId: run.id,
+      appUrl: "",
+      promptMode: "image-only",
+      relayBaseUrl,
+      maskedApiKey: maskSecret(apiKey),
+      targetModelId: imageModel,
+      imageModel,
+      generatorModelIds: [],
+      evaluatorModelIds: [],
+      imageJudgeModels: [],
+      userIdea,
+      optimizedPrompt: prompt,
+      promptScore: null,
+      promptEvaluation: null,
+      referenceImages: referenceImages.map(({ buffer, ...image }) => image),
+      imageOptions: { imageSize, quality, background, responseFormat },
+      imageGeneration: { ok: true, mode: referenceImages.length ? "image-to-image" : "text-to-image", usage: imageData.usage || null },
+      imageArtifact,
+      imageJudges: [],
+      imageJudgeAverage: null,
+      rawGenerateMeta: { imageOnly: true },
+      rawGenerateStats: {},
+    };
+    writeRunFiles(run);
+    run.status = "done";
+    run.phase = "直接生图完成";
+    addLog(run, `直接生图完成: ${imageArtifact?.fileName || imageArtifact?.url || "response received"}`);
     if (input.openFolder !== false) openFolder(REPORT_DIR);
   } catch (error) {
     run.status = "failed";
@@ -1030,8 +1354,18 @@ function page() {
     .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
     .ref-grid img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); }
     .file-hint { border: 1px dashed rgba(165,180,252,.45); border-radius: 14px; padding: 14px; background: rgba(99,102,241,.08); }
+    .toolbox { border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px; background: rgba(255,255,255,.035); }
+    .model-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .model-grid select { min-height: 190px; padding: 8px; }
+    .small-btn { padding: 8px 10px; border-radius: 10px; font-size: 12px; background: rgba(99,102,241,.72); }
+    .secondary { background: rgba(255,255,255,.11); }
+    .history-list { display: grid; gap: 10px; max-height: 360px; overflow: auto; }
+    .history-item { border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.035); cursor: pointer; }
+    .history-item:hover { border-color: rgba(129,140,248,.55); background: rgba(99,102,241,.09); }
+    .history-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); float: left; margin-right: 10px; }
     .danger { color: #fca5a5; }
     .ok { color: #86efac; }
+    @media (max-width: 900px) { .model-grid { grid-template-columns: 1fr; } }
     @media (max-width: 760px) { .grid, .cols { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -1048,6 +1382,7 @@ function page() {
         <div>
           <label>API Key，隐藏输入</label>
           <input id="apiKey" type="password" autocomplete="off" placeholder="粘贴 sk-...，不会显示" />
+          <label style="margin-top:8px"><input id="rememberKey" type="checkbox" checked style="width:auto" /> 只保存到本机浏览器，下次自动填入</label>
         </div>
         <div>
           <label>提示词生成方式</label>
@@ -1063,6 +1398,45 @@ function page() {
         <div class="full">
           <label>网站地址，仅在“调用网站 API”模式使用</label>
           <input id="appUrl" value="https://www.myprompt.asia" />
+        </div>
+        <div class="full toolbox">
+          <div class="row">
+            <strong>同步模型选择器</strong>
+            <span id="modelSyncStatus" class="muted">读取项目模型注册表中...</span>
+          </div>
+          <p class="muted">这里同步主项目的 public/models.json；填入 Key 后可再探测中转站真实可用模型。下面可手动多选，仍然保留逗号输入作为高级自定义。</p>
+          <div class="row" style="justify-content:flex-start">
+            <button id="loadModelsBtn" type="button" class="small-btn secondary">同步项目模型</button>
+            <button id="probeModelsBtn" type="button" class="small-btn">探测中转站可用模型</button>
+            <button id="applyModelSelectBtn" type="button" class="small-btn secondary">把选择写入输入框</button>
+          </div>
+          <div class="model-grid" style="margin-top:12px">
+            <div>
+              <label>目标模型 Target，同步全部模型</label>
+              <select id="targetModelSelect"></select>
+              <input id="targetModel" value="gpt-image-2" style="margin-top:8px" />
+            </div>
+            <div>
+              <label>生图模型 Image，只显示图片模型</label>
+              <select id="imageModelSelect"></select>
+            </div>
+            <div>
+              <label>图片评价模型 Image Judges，多选</label>
+              <select id="imageJudgeModelSelect" multiple></select>
+            </div>
+            <div>
+              <label>提示词生成器模型 Generators，多选</label>
+              <select id="generatorModelSelect" multiple></select>
+            </div>
+            <div>
+              <label>提示词评价模型 Evaluators，多选</label>
+              <select id="evaluatorModelSelect" multiple></select>
+            </div>
+            <div>
+              <label>本地学习记忆</label>
+              <div id="learningSummary" class="muted logs" style="height:190px"></div>
+            </div>
+          </div>
         </div>
         <div class="full">
           <label>测试需求，也就是用户原始想法</label>
@@ -1094,11 +1468,38 @@ function page() {
           <label>质量参数</label>
           <input id="quality" value="auto" />
         </div>
+        <div>
+          <label>背景参数，可选</label>
+          <input id="background" placeholder="auto / transparent / opaque，可留空" />
+        </div>
+        <div>
+          <label>返回格式</label>
+          <select id="responseFormat">
+            <option value="b64_json" selected>b64_json，本地保存图片</option>
+            <option value="url">url，如果中转站支持</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>直接生图提示词，可选。填这里后可以不跑测评，直接文生图/图生图。</label>
+          <textarea id="directPrompt" placeholder="可以粘贴任意生图提示词；空则用上面的测试需求。"></textarea>
+        </div>
         <div class="full row">
           <label><input id="openFolder" type="checkbox" checked style="width:auto" /> 完成后自动打开报告文件夹</label>
-          <button id="startBtn">开始完整测试</button>
+          <div class="row">
+            <button id="imageOnlyBtn" type="button" class="secondary">只生图/改图</button>
+            <button id="startBtn">开始完整测试</button>
+          </div>
         </div>
       </div>
+    </section>
+
+    <section class="card" style="margin-top:16px">
+      <div class="row">
+        <strong>历史记录与人工反馈学习</strong>
+        <button id="refreshHistoryBtn" type="button" class="small-btn secondary">刷新历史</button>
+      </div>
+      <p class="muted">历史、图片、你的评分和评价都保存在本机 reports/gpt-image2-live-review。你的差评原因会沉淀成本地学习记忆，用于下次提示词优化。</p>
+      <div id="historyList" class="history-list"></div>
     </section>
 
     <section class="card" style="margin-top:16px">
@@ -1142,10 +1543,108 @@ function page() {
     let pollTimer = null;
     let currentRun = null;
     let selectedReferenceImages = [];
+    let modelOptions = { imageModels: [], textModels: [], visionTextModels: [] };
     const $ = (id) => document.getElementById(id);
     function formValue(id) { return $(id).value.trim(); }
     function escapeHtml(value) {
       return String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function csv(value) {
+      return String(value || "").split(",").map(v => v.trim()).filter(Boolean);
+    }
+    function selectedValues(id) {
+      return Array.from($(id).selectedOptions || []).map(option => option.value).filter(Boolean);
+    }
+    function setSelectedValues(id, values) {
+      const wanted = new Set(values);
+      Array.from($(id).options || []).forEach(option => { option.selected = wanted.has(option.value); });
+    }
+    function optionLabel(model) {
+      const status = model.available === true ? "✓ " : model.available === false ? "· " : "";
+      const tags = (model.tags || []).slice(0, 3).join("/");
+      return status + model.name + " · " + model.id + " · " + model.provider + (tags ? " · " + tags : "");
+    }
+    function fillSelect(id, models, selectedIds, limit) {
+      const select = $(id);
+      const selected = new Set(selectedIds);
+      select.innerHTML = models.slice(0, limit || 260).map(model =>
+        "<option value='" + escapeHtml(model.id) + "'" + (selected.has(model.id) ? " selected" : "") + ">" + escapeHtml(optionLabel(model)) + "</option>"
+      ).join("");
+    }
+    function syncInputsFromSelects() {
+      if (selectedValues("targetModelSelect")[0]) $("targetModel").value = selectedValues("targetModelSelect")[0];
+      if (selectedValues("imageModelSelect")[0]) $("imageModel").value = selectedValues("imageModelSelect")[0];
+      const generators = selectedValues("generatorModelSelect").slice(0, 6);
+      const evaluators = selectedValues("evaluatorModelSelect").slice(0, 6);
+      const imageJudges = selectedValues("imageJudgeModelSelect").slice(0, 6);
+      if (generators.length) $("generatorModels").value = generators.join(",");
+      if (evaluators.length) $("evaluatorModels").value = evaluators.join(",");
+      if (imageJudges.length) $("imageJudgeModels").value = imageJudges.join(",");
+    }
+    function syncSelectsFromInputs() {
+      setSelectedValues("targetModelSelect", [formValue("targetModel") || "gpt-image-2"]);
+      setSelectedValues("imageModelSelect", [formValue("imageModel") || "gpt-image-2"]);
+      setSelectedValues("generatorModelSelect", csv(formValue("generatorModels")));
+      setSelectedValues("evaluatorModelSelect", csv(formValue("evaluatorModels")));
+      setSelectedValues("imageJudgeModelSelect", csv(formValue("imageJudgeModels")));
+    }
+    function renderModelOptions() {
+      const targetId = formValue("targetModel") || "gpt-image-2";
+      const imageId = formValue("imageModel") || "gpt-image-2";
+      const targetModels = modelOptions.targetModels || modelOptions.models || [];
+      const imageModels = modelOptions.imageModels && modelOptions.imageModels.length ? modelOptions.imageModels : modelOptions.models || [];
+      const generatorModels = modelOptions.generatorModels || modelOptions.textModels || [];
+      const evaluatorModels = modelOptions.evaluatorModels || modelOptions.textModels || [];
+      fillSelect("targetModelSelect", targetModels, [targetId], 320);
+      fillSelect("imageModelSelect", imageModels, [imageId], 220);
+      fillSelect("generatorModelSelect", generatorModels, csv(formValue("generatorModels")), 260);
+      fillSelect("evaluatorModelSelect", evaluatorModels, csv(formValue("evaluatorModels")), 260);
+      fillSelect("imageJudgeModelSelect", modelOptions.visionTextModels || evaluatorModels, csv(formValue("imageJudgeModels")), 260);
+      syncSelectsFromInputs();
+    }
+    async function loadModelOptions(probeRelay) {
+      $("modelSyncStatus").textContent = probeRelay ? "正在探测中转站模型..." : "正在同步项目模型...";
+      const apiKey = formValue("apiKey");
+      const baseUrl = formValue("baseUrl");
+      const res = await fetch(probeRelay ? "/api/probe-models" : "/api/model-options", {
+        method: probeRelay ? "POST" : "GET",
+        headers: { "Content-Type": "application/json" },
+        body: probeRelay ? JSON.stringify({ apiKey, baseUrl }) : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "模型同步失败");
+      modelOptions = data;
+      renderModelOptions();
+      $("modelSyncStatus").textContent = probeRelay
+        ? "已同步项目模型 " + data.total + " 个，中转站可用 " + data.availableCount + " 个"
+        : "已同步项目模型 " + data.total + " 个";
+    }
+    function saveLocalSettings() {
+      const data = {
+        baseUrl: formValue("baseUrl"),
+        appUrl: formValue("appUrl"),
+        promptMode: formValue("promptMode"),
+        targetModel: formValue("targetModel"),
+        imageModel: formValue("imageModel"),
+        generatorModels: formValue("generatorModels"),
+        evaluatorModels: formValue("evaluatorModels"),
+        imageJudgeModels: formValue("imageJudgeModels"),
+        imageSize: formValue("imageSize"),
+        quality: formValue("quality"),
+        background: formValue("background"),
+        responseFormat: formValue("responseFormat"),
+        apiKey: $("rememberKey").checked ? formValue("apiKey") : "",
+      };
+      localStorage.setItem("gpt_image2_panel_settings", JSON.stringify(data));
+    }
+    function loadLocalSettings() {
+      try {
+        const data = JSON.parse(localStorage.getItem("gpt_image2_panel_settings") || "{}");
+        for (const id of ["baseUrl", "appUrl", "promptMode", "targetModel", "imageModel", "generatorModels", "evaluatorModels", "imageJudgeModels", "imageSize", "quality", "background", "responseFormat"]) {
+          if (data[id] && $(id)) $(id).value = data[id];
+        }
+        if (data.apiKey) $("apiKey").value = data.apiKey;
+      } catch {}
     }
     function readFileAsDataUrl(file) {
       return new Promise((resolve, reject) => {
@@ -1183,6 +1682,32 @@ function page() {
       }).join("");
       $("files").textContent = r.files ? "报告已保存: " + r.files.mdPath : "";
     }
+    async function loadHistory() {
+      const res = await fetch("/api/history");
+      const data = await res.json();
+      if (!res.ok) return;
+      $("learningSummary").textContent = (data.learning?.rules || []).length
+        ? data.learning.rules.map((rule, index) => (index + 1) + ". " + rule.label + "：" + rule.rule).join("\\n")
+        : "还没有人工反馈学习记忆。保存你的评分和评价后，这里会自动生成后续优化规则。";
+      $("historyList").innerHTML = (data.entries || []).length
+        ? data.entries.map(item => {
+            const score = item.userScore == null ? "未评分" : "你 " + item.userScore + " / AI " + (item.imageJudgeAverage ?? "--");
+            return "<div class='history-item' data-run='" + escapeHtml(item.runId) + "'>" +
+              "<img class='history-thumb' src='" + escapeHtml(item.imageBrowserUrl) + "' onerror='this.style.display=\"none\"' />" +
+              "<div><strong>" + escapeHtml(score) + "</strong><span class='muted'> · " + escapeHtml(item.mode) + " · " + escapeHtml(item.runId) + "</span></div>" +
+              "<div class='muted'>" + escapeHtml(item.userIdea) + "</div>" +
+              (item.userNotes ? "<div class='muted'>你的评价：" + escapeHtml(item.userNotes) + "</div>" : "") +
+              "<div style='clear:both'></div></div>";
+          }).join("")
+        : "<div class='muted'>暂无历史。跑一次完整测试或直接生图后会出现在这里。</div>";
+      Array.from(document.querySelectorAll(".history-item")).forEach(item => {
+        item.onclick = async () => {
+          const res = await fetch("/api/history/" + encodeURIComponent(item.dataset.run));
+          const run = await res.json();
+          if (res.ok) renderResult({ id: item.dataset.run, result: run.report });
+        };
+      });
+    }
     async function poll() {
       if (!runId) return;
       const res = await fetch("/api/run/" + runId);
@@ -1191,11 +1716,16 @@ function page() {
       if (run.status === "done" || run.status === "failed") {
         clearInterval(pollTimer);
         $("startBtn").disabled = false;
+        $("imageOnlyBtn").disabled = false;
         renderResult(run);
+        loadHistory();
       }
     }
     $("startBtn").onclick = async () => {
       $("startBtn").disabled = true;
+      $("imageOnlyBtn").disabled = true;
+      syncInputsFromSelects();
+      saveLocalSettings();
       $("result").style.display = "none";
       $("logs").textContent = "";
       $("error").textContent = "";
@@ -1204,6 +1734,7 @@ function page() {
         baseUrl: formValue("baseUrl"),
         appUrl: formValue("appUrl"),
         promptMode: formValue("promptMode"),
+        targetModel: formValue("targetModel"),
         idea: $("idea").value,
         generatorModels: formValue("generatorModels"),
         evaluatorModels: formValue("evaluatorModels"),
@@ -1211,12 +1742,15 @@ function page() {
         imageModel: formValue("imageModel"),
         imageSize: formValue("imageSize"),
         quality: formValue("quality"),
+        background: formValue("background"),
+        responseFormat: formValue("responseFormat"),
         referenceImages: selectedReferenceImages,
         openFolder: $("openFolder").checked
       };
       if (!payload.apiKey) {
         alert("请先填 API Key");
         $("startBtn").disabled = false;
+        $("imageOnlyBtn").disabled = false;
         return;
       }
       const res = await fetch("/api/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -1224,9 +1758,50 @@ function page() {
       if (!res.ok) {
         alert(data.error || "启动失败");
         $("startBtn").disabled = false;
+        $("imageOnlyBtn").disabled = false;
         return;
       }
-      $("apiKey").value = "";
+      if (!$("rememberKey").checked) $("apiKey").value = "";
+      runId = data.runId;
+      pollTimer = setInterval(poll, 1400);
+      poll();
+    };
+    $("imageOnlyBtn").onclick = async () => {
+      $("imageOnlyBtn").disabled = true;
+      $("startBtn").disabled = true;
+      syncInputsFromSelects();
+      saveLocalSettings();
+      $("result").style.display = "none";
+      $("logs").textContent = "";
+      $("error").textContent = "";
+      const payload = {
+        apiKey: formValue("apiKey"),
+        baseUrl: formValue("baseUrl"),
+        idea: $("idea").value,
+        directPrompt: $("directPrompt").value,
+        imageModel: formValue("imageModel"),
+        imageSize: formValue("imageSize"),
+        quality: formValue("quality"),
+        background: formValue("background"),
+        responseFormat: formValue("responseFormat"),
+        referenceImages: selectedReferenceImages,
+        openFolder: $("openFolder").checked
+      };
+      if (!payload.apiKey) {
+        alert("请先填 API Key");
+        $("imageOnlyBtn").disabled = false;
+        $("startBtn").disabled = false;
+        return;
+      }
+      const res = await fetch("/api/image-only", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "启动失败");
+        $("imageOnlyBtn").disabled = false;
+        $("startBtn").disabled = false;
+        return;
+      }
+      if (!$("rememberKey").checked) $("apiKey").value = "";
       runId = data.runId;
       pollTimer = setInterval(poll, 1400);
       poll();
@@ -1261,7 +1836,24 @@ function page() {
       const ai = currentRun.result.imageJudgeAverage;
       const delta = Number.isFinite(ai) && Number.isFinite(score) ? Math.abs(ai - score).toFixed(1) : "--";
       $("compare").textContent = "已保存。AI 平均分 " + (ai == null ? "--" : ai.toFixed(1)) + "，你的评分 " + score + "，差距 " + delta + " 分。";
+      await loadHistory();
     };
+    $("loadModelsBtn").onclick = () => loadModelOptions(false).catch(error => alert(error.message));
+    $("probeModelsBtn").onclick = () => {
+      if (!formValue("apiKey")) return alert("先填 API Key，才能探测中转站可用模型。");
+      saveLocalSettings();
+      loadModelOptions(true).catch(error => alert(error.message));
+    };
+    $("applyModelSelectBtn").onclick = syncInputsFromSelects;
+    $("targetModelSelect").onchange = syncInputsFromSelects;
+    $("imageModelSelect").onchange = syncInputsFromSelects;
+    $("generatorModelSelect").onchange = syncInputsFromSelects;
+    $("evaluatorModelSelect").onchange = syncInputsFromSelects;
+    $("imageJudgeModelSelect").onchange = syncInputsFromSelects;
+    $("refreshHistoryBtn").onclick = loadHistory;
+    loadLocalSettings();
+    loadModelOptions(false).catch(error => { $("modelSyncStatus").textContent = error.message; });
+    loadHistory();
   </script>
 </body>
 </html>`;
@@ -1271,6 +1863,37 @@ async function handle(req, res) {
   const url = new URL(req.url, `http://${HOST}`);
   try {
     if (req.method === "GET" && url.pathname === "/") return html(res, page());
+
+    if (req.method === "GET" && url.pathname === "/api/model-options") {
+      return json(res, 200, modelOptionsPayload([]));
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/probe-models") {
+      const input = await readBody(req);
+      if (!input.apiKey || String(input.apiKey).trim().length < 8) {
+        return json(res, 400, { error: "API key looks empty or too short." });
+      }
+      const relayBaseUrl = normalizeOpenAiBase(input.baseUrl || "https://naapi.cc");
+      const relayModels = await listRelayModels(relayBaseUrl, input.apiKey);
+      const payload = modelOptionsPayload(relayModels.ids);
+      return json(res, relayModels.ok ? 200 : 502, { ...payload, relayError: relayModels.error });
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/history") {
+      const currentLearning = readJsonFile(LEARNING_PATH, { rules: [], examples: [] });
+      return json(res, 200, {
+        entries: loadHistoryEntries(),
+        learning: currentLearning.rules?.length ? currentLearning : rebuildLearningMemoryFromReports(),
+      });
+    }
+
+    const historyMatch = url.pathname.match(/^\/api\/history\/(.+)$/);
+    if (req.method === "GET" && historyMatch) {
+      const runId = decodeURIComponent(historyMatch[1]);
+      const report = loadReport(runId);
+      if (!report) return json(res, 404, { error: "History report not found" });
+      return json(res, 200, { report });
+    }
 
     if (req.method === "POST" && url.pathname === "/api/start") {
       const input = await readBody(req);
@@ -1285,6 +1908,19 @@ async function handle(req, res) {
       return;
     }
 
+    if (req.method === "POST" && url.pathname === "/api/image-only") {
+      const input = await readBody(req);
+      if (!input.apiKey || String(input.apiKey).trim().length < 8) {
+        return json(res, 400, { error: "API key looks empty or too short." });
+      }
+      const id = new Date().toISOString().replace(/[:.]/g, "-");
+      const run = { id, status: "running", phase: "排队", logs: [], result: null, error: null };
+      runs.set(id, run);
+      json(res, 200, { runId: id });
+      runImageOnly(run, input);
+      return;
+    }
+
     const runMatch = url.pathname.match(/^\/api\/run\/(.+)$/);
     if (req.method === "GET" && runMatch) {
       const run = runs.get(decodeURIComponent(runMatch[1]));
@@ -1294,7 +1930,14 @@ async function handle(req, res) {
 
     if (req.method === "POST" && url.pathname === "/api/user-review") {
       const body = await readBody(req);
-      const run = runs.get(body.runId);
+      let run = runs.get(body.runId);
+      if (!run || !run.result) {
+        const report = loadReport(body.runId);
+        if (report) {
+          run = { id: body.runId, status: "done", phase: "历史", logs: [], result: report, error: null };
+          runs.set(body.runId, run);
+        }
+      }
       if (!run || !run.result) return json(res, 404, { error: "Run not found or not finished" });
       const score = Number(body.score);
       if (!Number.isFinite(score) || score < 0 || score > 100) {
@@ -1313,8 +1956,10 @@ async function handle(req, res) {
 
     const artifactMatch = url.pathname.match(/^\/artifact\/([^/]+)\/image$/);
     if (req.method === "GET" && artifactMatch) {
-      const run = runs.get(decodeURIComponent(artifactMatch[1]));
-      const filePath = run?.result?.imageArtifact?.filePath;
+      const runId = decodeURIComponent(artifactMatch[1]);
+      const run = runs.get(runId);
+      const report = run?.result || loadReport(runId);
+      const filePath = report?.imageArtifact?.filePath;
       if (!filePath || !fs.existsSync(filePath)) return text(res, 404, "Image not found");
       res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
       fs.createReadStream(filePath).pipe(res);
@@ -1323,9 +1968,11 @@ async function handle(req, res) {
 
     const refMatch = url.pathname.match(/^\/artifact\/([^/]+)\/ref\/(\d+)$/);
     if (req.method === "GET" && refMatch) {
-      const run = runs.get(decodeURIComponent(refMatch[1]));
+      const runId = decodeURIComponent(refMatch[1]);
+      const run = runs.get(runId);
+      const report = run?.result || loadReport(runId);
       const index = Number(refMatch[2]);
-      const reference = run?.result?.referenceImages?.find((image) => image.index === index);
+      const reference = report?.referenceImages?.find((image) => image.index === index);
       if (!reference?.filePath || !fs.existsSync(reference.filePath)) {
         return text(res, 404, "Reference image not found");
       }

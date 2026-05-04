@@ -974,3 +974,43 @@ Validation:
 - GitHub E2E run `25298874948` passed: 13/13.
 - Vercel deployment for `0a4913b` completed successfully.
 - Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics.
+
+## 2026-05-04 — GPT Image 2 Panel History, Local Learning, and Model Sync
+
+User asked that the GPT Image 2 test panel preserve test history, keep the user's human scores/critiques, learn from those critiques, store API keys locally only, and let every major model role be synchronized from the main AI prompt generator model registry with manual selection.
+
+Implemented:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - Added local history index at `reports/gpt-image2-live-review/history-index.json`.
+  - Added local feedback memory at `reports/gpt-image2-live-review/learning-memory.json`.
+  - Existing report JSON/Markdown/prompt files remain the source of truth; the history index can be rebuilt from reports.
+  - User score and notes now update both the report and the local learning rules.
+  - Learned rules are injected into later GPT Image 2 candidate prompt generation, so repeated user critiques influence future prompts.
+  - Added one-page history UI with thumbnails, AI score, user score, user notes, and click-to-reopen reports.
+  - Added direct image generation/editing mode on the same page, so the panel can test or simply generate images.
+  - Added reference-image upload support for text-to-image and image-to-image/editing.
+  - Added local-browser-only API key persistence checkbox. The key is not written to project files or reports.
+  - Added model sync endpoints:
+    - `GET /api/model-options`
+    - `POST /api/probe-models`
+  - Model selectors now synchronize with `public/models.json` first, and can optionally probe the relay `/v1/models` to mark which models the current API key can actually call.
+  - Manual selectors now cover:
+    - target model: all 266 registered/relay models
+    - image model: image-generation models
+    - prompt generator models: text models, multi-select up to 6
+    - prompt evaluator models: text models, multi-select up to 6
+    - image judge models: vision/multimodal text models, multi-select up to 6
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed.
+- Local panel restarted successfully on `http://127.0.0.1:61994/`.
+- Local API check confirmed:
+  - HTTP 200 for the page.
+  - target models: 266
+  - image models: 7
+  - text/generator/evaluator models: 245
+  - history entries: 1
+  - learning rules: 5

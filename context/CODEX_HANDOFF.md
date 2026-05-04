@@ -505,3 +505,52 @@ Files outside Git also changed:
 - `E:\AI工作台\GPTImage2一键共同真实测试面板.cmd`
 - `E:\AIWB\GPTImage2_PANEL.cmd`
 - `E:\AI工作台\工具 Tools\ai-chain.ps1`
+
+## Current Handoff — GPT Image 2 Panel History, Learning, and Model Sync
+
+Latest local work extends the same GPT Image 2 panel into a persistent local testing/generation workbench.
+
+Changed file:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+
+New local data files generated under ignored reports:
+
+- `reports/gpt-image2-live-review/history-index.json`
+- `reports/gpt-image2-live-review/learning-memory.json`
+
+Behavior now expected:
+
+- Reports, generated images, human scores, and human critique notes are preserved locally.
+- The history index is rebuildable from `report-*.json` files.
+- Human critique notes generate local learning rules. Those rules are injected into later GPT Image 2 prompt candidate generation.
+- API keys are only kept in the page password field or optional browser `localStorage`; they are not written to repo files or reports.
+- The panel remains one page and supports:
+  - full prompt test
+  - real image generation
+  - image-to-image/editing with reference image upload
+  - direct image generation without prompt scoring
+  - AI image scoring
+  - human score comparison
+- Model roles now sync from the main project registry and can be manually selected:
+  - target model: all registered/relay models
+  - image model: image-generation models
+  - prompt generator models: text models, multi-select up to 6
+  - prompt evaluator models: text models, multi-select up to 6
+  - image judge models: vision/multimodal text models, multi-select up to 6
+- Optional relay probing calls `/v1/models` with the local API key and marks which choices are actually available.
+
+Validation already run:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs`
+- `git diff --check`
+- Restarted local panel at `http://127.0.0.1:61994/`.
+- Local API verification:
+  - page HTTP 200
+  - model picker text present
+  - `models=266 target=266 image=7 text=245 generators=245 evaluators=245 visionText=245`
+  - `history=1 learningRules=5`
+
+Suggested next product step:
+
+- Port the stable parts of this local panel into the main website/desktop app: image generation UI, reference image upload, history, human scoring, and feedback-to-prompt optimization.

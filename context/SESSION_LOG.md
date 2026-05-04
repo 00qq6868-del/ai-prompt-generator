@@ -1294,3 +1294,36 @@ Validation:
 - GitHub E2E run `25298874948` passed: 13/13.
 - Vercel deployment for `0a4913b` completed successfully.
 - Production smoke with `SMOKE_SKIP_GENERATE=1` passed for homepage, models, and analytics.
+
+---
+
+## 2026-05-04 — GPT Image 2 Panel History + Model Role Sync
+
+User clarified that the test panel should keep history and human feedback, use that feedback for future prompt quality, keep API keys local only, and make target/generator/evaluator/image/judge model roles sync with the main AI prompt generator model list while remaining manually selectable.
+
+Changes:
+
+- Updated `scripts/gpt-image2-live-review-panel.cjs`.
+  - Added persistent local history index under `reports/gpt-image2-live-review/history-index.json`.
+  - Added persistent local learning memory under `reports/gpt-image2-live-review/learning-memory.json`.
+  - User ratings and critique notes update reports and learning memory.
+  - Learned feedback rules are inserted into future GPT Image 2 candidate prompt generation.
+  - Added single-page history display with thumbnails and click-to-reopen.
+  - Added direct text-to-image/image-to-image mode on the same page.
+  - Added local browser settings storage, including optional local-only API key autofill.
+  - Added model synchronization from `public/models.json`.
+  - Added optional relay probing through `/v1/models`.
+  - Added manual selectors for:
+    - target model, all models
+    - image model, image models
+    - prompt generator models, text models
+    - prompt evaluator models, text models
+    - image judge models, vision/multimodal models
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `git diff --check` passed.
+- Restarted local panel at `http://127.0.0.1:61994/`.
+- API verification returned `models=266 target=266 image=7 text=245 generators=245 evaluators=245 visionText=245`.
+- History/learning verification returned `history=1 learningRules=5`.
