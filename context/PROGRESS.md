@@ -1176,6 +1176,10 @@ Validation:
 - `npm run test:quality` passed: 5/5 Chromium, re-run sequentially after stopping the stale dev server.
 - `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 9/9.
 - `npm run build` passed.
+- Pushed commit `03a5532` to GitHub `main`.
+- GitHub Actions run `25324089137` passed: 14/14 E2E.
+- Production smoke on `https://www.myprompt.asia` passed with generation skipped: homepage ok, models ok (`total=266`, text 245/image 7/video 7/tts 7), analytics ok.
+- Production browser smoke with mocked SSE confirmed `评分标准 Scoring Criteria` and `意图保真 Intent fidelity` render with no page errors.
 
 Note:
 

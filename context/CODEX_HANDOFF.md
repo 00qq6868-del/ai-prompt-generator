@@ -715,6 +715,10 @@ Validation already run:
 - `npm run test:quality` passed 5/5 Chromium.
 - `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed 9/9.
 - `npm run build` passed.
+- Commit `03a5532` pushed to GitHub `main`.
+- GitHub Actions run `25324089137` passed: 14/14 E2E.
+- Production smoke on `https://www.myprompt.asia` passed with `SMOKE_SKIP_GENERATE=1`.
+- Production browser smoke with mocked `/api/generate` SSE confirmed bilingual scoring criteria render online with no page errors.
 
 Testing note:
 
@@ -723,6 +727,4 @@ Testing note:
 
 Next step:
 
-- Commit and push these changes.
-- Watch GitHub Actions.
-- After Vercel deploys, run production smoke. If the user provides a local API key in the browser/panel, run a real GPT Image 2 multi-generator + multi-judge test and compare the generated image quality with the user's manual score.
+- If the user provides a local API key in the browser/panel, run a real GPT Image 2 multi-generator + multi-judge test and compare the generated image quality with the user's manual score.
