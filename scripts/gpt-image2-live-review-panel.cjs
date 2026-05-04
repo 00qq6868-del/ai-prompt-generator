@@ -1693,13 +1693,16 @@ function page() {
         ? data.entries.map(item => {
             const score = item.userScore == null ? "未评分" : "你 " + item.userScore + " / AI " + (item.imageJudgeAverage ?? "--");
             return "<div class='history-item' data-run='" + escapeHtml(item.runId) + "'>" +
-              "<img class='history-thumb' src='" + escapeHtml(item.imageBrowserUrl) + "' onerror='this.style.display=\"none\"' />" +
+              "<img class='history-thumb' src='" + escapeHtml(item.imageBrowserUrl) + "' />" +
               "<div><strong>" + escapeHtml(score) + "</strong><span class='muted'> · " + escapeHtml(item.mode) + " · " + escapeHtml(item.runId) + "</span></div>" +
               "<div class='muted'>" + escapeHtml(item.userIdea) + "</div>" +
               (item.userNotes ? "<div class='muted'>你的评价：" + escapeHtml(item.userNotes) + "</div>" : "") +
               "<div style='clear:both'></div></div>";
           }).join("")
         : "<div class='muted'>暂无历史。跑一次完整测试或直接生图后会出现在这里。</div>";
+      Array.from(document.querySelectorAll("img.history-thumb")).forEach(img => {
+        img.addEventListener("error", () => { img.style.display = "none"; }, { once: true });
+      });
       Array.from(document.querySelectorAll(".history-item")).forEach(item => {
         item.onclick = async () => {
           const res = await fetch("/api/history/" + encodeURIComponent(item.dataset.run));

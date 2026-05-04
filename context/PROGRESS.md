@@ -1047,3 +1047,36 @@ Validation:
 Boundary:
 
 - This reduces hallucination risk with source sync, evidence gates, script checks, evals, and logs. It does not guarantee hallucination rate is mathematically zero.
+
+## 2026-05-04 — Fixed Model Picker Drag Scroll and GPT Image 2 Panel Startup
+
+User showed screenshots where the website model picker dialog still could not be moved/scrolled by dragging, and the local GPT Image 2 test panel had empty model selectors and unusable start buttons.
+
+Implemented:
+
+- `src/components/ModelPicker.tsx`
+  - Added pointer drag-to-scroll support for the full-screen model picker dialog.
+  - Preserved normal click-to-select behavior by suppressing click only after an actual drag.
+  - Kept existing wheel/touch scrolling.
+- `tests/e2e/quality.spec.ts`
+  - Added a regression check that drags the model picker scroller with the mouse and verifies `scrollTop` changes.
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - Removed an inline image `onerror` attribute that broke the page script as `Unexpected identifier 'none'`.
+  - Replaced it with a safe event listener after history HTML is rendered.
+
+Validation:
+
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `npx tsc --noEmit` passed.
+- `git diff --check` passed.
+- `npm run test:quality` passed: 5/5 Chromium.
+- `npm run build` passed.
+- Restarted local panel at `http://127.0.0.1:61994/`.
+- Browser console check for the panel returned no page errors.
+- Local panel model options loaded:
+  - target: 266
+  - image: 7
+  - generators: 245
+  - evaluators: 245
+  - image judges: 245
+- Clicking the start button with no API key now correctly shows `请先填 API Key` and re-enables buttons.

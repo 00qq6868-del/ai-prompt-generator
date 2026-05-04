@@ -74,6 +74,13 @@ export function ModelPicker({
   availableModelIds,
 }: ModelPickerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({
+    pointerId: -1,
+    startY: 0,
+    lastY: 0,
+    active: false,
+  });
+  const suppressClickRef = useRef(false);
   const [search, setSearch] = useState("");
   const [provider, setProvider] = useState("全部");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -204,6 +211,58 @@ export function ModelPicker({
     }
   };
 
+  const canDragFrom = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return !target.closest("input, textarea, select, a");
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!event.isPrimary || !canDragFrom(event.target)) return;
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      lastY: event.clientY,
+      active: false,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const scroller = scrollRef.current;
+    if (!scroller || drag.pointerId !== event.pointerId) return;
+
+    const totalDelta = event.clientY - drag.startY;
+    const frameDelta = event.clientY - drag.lastY;
+    if (!drag.active && Math.abs(totalDelta) < 6) return;
+
+    drag.active = true;
+    drag.lastY = event.clientY;
+    scroller.scrollTop -= frameDelta;
+    event.preventDefault();
+  };
+
+  const finishPointerDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (drag.pointerId !== event.pointerId) return;
+
+    if (drag.active) {
+      suppressClickRef.current = true;
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+    dragRef.current = { pointerId: -1, startY: 0, lastY: 0, active: false };
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  };
+
+  const handleClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!suppressClickRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClickRef.current = false;
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -238,8 +297,13 @@ export function ModelPicker({
           <div
             ref={scrollRef}
             data-testid="model-picker-scroll"
-            className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y"
+            className="flex-1 min-h-0 cursor-grab select-none overflow-y-auto overscroll-y-contain touch-pan-y active:cursor-grabbing"
             style={{ scrollbarGutter: "stable" }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={finishPointerDrag}
+            onPointerCancel={finishPointerDrag}
+            onClickCapture={handleClickCapture}
           >
             <div className="sticky top-0 z-10 border-b border-white/[0.07] bg-[#08080f]/95 px-6 py-3 backdrop-blur-xl">
               <div className="mx-auto max-w-5xl space-y-3">

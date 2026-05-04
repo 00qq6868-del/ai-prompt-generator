@@ -46,6 +46,25 @@ async function expectScrollable(locator: Locator, page: Page, useWheel: boolean)
   expect(after).toBeGreaterThan(before.scrollTop);
 }
 
+async function expectDragScrollable(locator: Locator, page: Page) {
+  await expect(locator).toBeVisible({ timeout: 15_000 });
+  await locator.evaluate((el) => { el.scrollTop = 0; });
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+
+  const startX = box.x + box.width / 2;
+  const startY = box.y + Math.min(box.height - 24, 520);
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY - 260, { steps: 12 });
+  await page.mouse.up();
+
+  await expect
+    .poll(() => locator.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
+}
+
 test.describe("Quality and accessibility audit", () => {
   test("desktop homepage has no obvious layout or accessibility regressions", async ({
     page,
@@ -159,6 +178,7 @@ test.describe("Quality and accessibility audit", () => {
 
       const scroller = page.getByTestId("model-picker-scroll");
       await expectScrollable(scroller, page, !isMobile);
+      await expectDragScrollable(scroller, page);
 
       await dialog.getByRole("button", { name: "关闭 Close" }).click();
       await expect(dialog).toBeHidden();

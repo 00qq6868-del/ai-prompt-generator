@@ -1367,3 +1367,46 @@ Validation:
 - `HALLUCINATION-GUARD.cmd imports` imported all target libraries.
 - `HALLUCINATION-GUARD.cmd check-script -Path "E:\AI工作台\工具 Tools\hallucination-guard.ps1"` passed.
 - `AI-CHAIN.cmd hallucination` and `AI-CHAIN.cmd hallucination-sync` both ran successfully.
+
+---
+
+## 2026-05-04 — Fixed User-Reported Scroll/Test Panel Bugs
+
+User screenshots showed:
+
+- Main website model picker dialogs could not be dragged/scrolled comfortably.
+- Local GPT Image 2 shared review panel showed empty model selectors.
+- Start test button appeared unusable.
+
+Debugging:
+
+- Playwright console capture on `http://127.0.0.1:61994/` showed `PAGEERROR: Unexpected identifier 'none'`.
+- Root cause was a history thumbnail string in `scripts/gpt-image2-live-review-panel.cjs`: `onerror='this.style.display="none"'` was embedded inside the panel's inline script and broke parsing.
+
+Fixes:
+
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - Removed the fragile inline `onerror`.
+  - Added JS event listeners for `img.history-thumb` error handling after rendering.
+- `src/components/ModelPicker.tsx`
+  - Added pointer drag-to-scroll behavior.
+  - Keeps clicks working unless the pointer actually moved enough to scroll.
+- `tests/e2e/quality.spec.ts`
+  - Added drag-scroll regression coverage for model picker dialogs.
+
+Validation:
+
+- Restarted the local panel.
+- Playwright state check returned:
+  - `status=已同步项目模型 266 个`
+  - `targetOptions=266`
+  - `imageOptions=7`
+  - `genOptions=245`
+  - `evalOptions=245`
+  - `judgeOptions=245`
+  - no page errors
+- Clicking `开始完整测试` without a key opens the expected alert `请先填 API Key` and leaves both buttons enabled.
+- `npx tsc --noEmit` passed.
+- `node --check scripts/gpt-image2-live-review-panel.cjs` passed.
+- `npm run test:quality` passed: 5/5.
+- `npm run build` passed.

@@ -601,3 +601,36 @@ Validation already run:
 Important caution:
 
 - This toolchain reduces hallucination risk through source sync, evidence gates, script checks, eval tooling, and logs. It does not make hallucination mathematically impossible. Future AI windows must not promise a 0% hallucination rate.
+
+## Current Handoff — Model Picker Scroll and Panel Startup Fix
+
+Latest user-reported bugs:
+
+- On the production website, model picker dialogs still felt stuck because dragging the model list did not scroll.
+- On the local GPT Image 2 review panel, model selectors were empty and the start button appeared unusable.
+
+Root cause for local panel:
+
+- The panel's inline browser script failed with `Unexpected identifier 'none'`.
+- The culprit was an inline history image handler: `onerror='this.style.display="none"'`.
+
+Fix:
+
+- `src/components/ModelPicker.tsx`
+  - Adds pointer drag-to-scroll on the dialog scroll container.
+  - Suppresses accidental model-card click only after a real drag.
+- `tests/e2e/quality.spec.ts`
+  - Adds Playwright coverage for drag-scrolling model picker dialogs.
+- `scripts/gpt-image2-live-review-panel.cjs`
+  - Removes fragile inline `onerror`.
+  - Adds safe thumbnail error listeners after history markup is inserted.
+
+Validation:
+
+- `npx tsc --noEmit`
+- `node --check scripts/gpt-image2-live-review-panel.cjs`
+- `git diff --check`
+- `npm run test:quality` passed 5/5.
+- `npm run build` passed.
+- Local panel restarted at `http://127.0.0.1:61994/`.
+- Playwright console/state check showed no page errors and model options loaded: target 266, image 7, generators 245, evaluators 245, judges 245.
