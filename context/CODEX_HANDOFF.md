@@ -646,6 +646,14 @@ Latest follow-up:
   - `npm run test:quality` passed 5/5.
   - `npm run build` passed.
 
+PWA registration follow-up:
+
+- A production Playwright check with service workers blocked revealed an uncaught error: `Cannot read properties of undefined (reading 'waiting')`.
+- Root cause was automatic registration from `@ducanh2912/next-pwa`/workbox assuming a registration object.
+- `next.config.js` now uses `register: false`.
+- `src/components/PWAPrompts.tsx` manually registers `/sw.js` only in production and inside guarded browser capability checks.
+- Production-mode local check on `http://127.0.0.1:3100/` passed with no page errors, no console errors, and successful model picker drag-scroll.
+
 Next step:
 
-- Commit and push the portal fix, then watch GitHub/Vercel deployment and retest `https://www.myprompt.asia` with a cache-busting URL. Do not tell the user production is fixed until the deployed site confirms model picker drag-scroll works.
+- Commit and push the guarded PWA registration follow-up, then watch GitHub/Vercel deployment and retest `https://www.myprompt.asia` with a cache-busting URL. Do not tell the user production is clean until the deployed site confirms model picker drag-scroll works and the `waiting` page error is gone.

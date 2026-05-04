@@ -1095,3 +1095,12 @@ Follow-up fix:
   - image select: 7
   - generator/evaluator/judge selects: 245 each
   - `开始完整测试` button is clickable and enters the running state.
+
+Additional bug fixed in the same user report:
+
+- Production browser checks also showed an uncaught PWA registration error: `Cannot read properties of undefined (reading 'waiting')`.
+- Disabled the package's automatic service-worker registration and moved registration into `PWAPrompts` with guarded `navigator.serviceWorker.register("/sw.js")` logic.
+- Production-mode local verification on `http://127.0.0.1:3100/` passed with:
+  - no page errors
+  - no console errors
+  - model picker drag-scroll still working

@@ -1421,3 +1421,10 @@ Follow-up after online drag check:
   - `npm run test:quality` passed: 5/5.
   - `npm run build` passed.
 - Restarted `http://127.0.0.1:61994/` and verified the GPT Image 2 panel has populated model selectors and a clickable start button. With a fake local-only key, the button starts the run and logs `正在检查中转站模型列表...`.
+
+PWA error follow-up:
+
+- Production check surfaced `Cannot read properties of undefined (reading 'waiting')` from automatic PWA registration.
+- Changed `next.config.js` to `register: false`.
+- Added guarded manual service-worker registration in `src/components/PWAPrompts.tsx`.
+- Verified with production `next start` on port `3100`: no page errors, no console errors, and model picker drag-scroll still worked.

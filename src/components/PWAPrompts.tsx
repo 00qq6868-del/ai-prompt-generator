@@ -29,22 +29,63 @@ export function PWAPrompts() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.ready.then((reg) => {
-        reg.addEventListener("updatefound", () => {
+    let removeUpdateFound: (() => void) | undefined;
+    let cancelled = false;
+
+    const registerServiceWorker = async () => {
+      if (process.env.NODE_ENV !== "production") return;
+      if (!("serviceWorker" in navigator)) return;
+
+      const isSecureContext =
+        window.location.protocol === "https:" ||
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+      if (!isSecureContext) return;
+
+      try {
+        const reg = await navigator.serviceWorker.register("/sw.js");
+        if (cancelled) return;
+
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          setShowUpdate(true);
+        }
+
+        const handleUpdateFound = () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
           newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            if (
+              newWorker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
               setShowUpdate(true);
             }
           });
-        });
-      });
+        };
+
+        reg.addEventListener("updatefound", handleUpdateFound);
+        removeUpdateFound = () =>
+          reg.removeEventListener("updatefound", handleUpdateFound);
+      } catch (error) {
+        console.warn("PWA service worker registration skipped:", error);
+      }
+    };
+
+    const handleLoad = () => {
+      void registerServiceWorker();
+    };
+
+    if (document.readyState === "complete") {
+      void registerServiceWorker();
+    } else {
+      window.addEventListener("load", handleLoad, { once: true });
     }
 
     return () => {
+      cancelled = true;
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("load", handleLoad);
+      removeUpdateFound?.();
     };
   }, []);
 
