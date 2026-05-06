@@ -199,6 +199,26 @@
     "category": "text"
   },
   {
+    "id": "gpt-5.5-free",
+    "name": "gpt-5.5-free",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "code"
+    ],
+    "releaseDate": "2025-11-01",
+    "category": "text"
+  },
+  {
     "id": "gpt-5.4-low",
     "name": "gpt-5.4-low",
     "provider": "OpenAI",
@@ -4374,6 +4394,23 @@
     "tags": [],
     "releaseDate": "",
     "category": "text"
+  },
+  {
+    "id": "gpt-image-2-free",
+    "name": "gpt-image-2-free",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "image"
   },
   {
     "id": "gpt-5.5-pro",
