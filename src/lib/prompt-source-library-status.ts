@@ -10,16 +10,16 @@ export interface PromptSourceRepositoryStatus {
   commit: string;
 }
 
-export const PROMPT_SOURCE_LIBRARY_UPDATED_AT = "2026-05-06T14:44:59Z";
+export const PROMPT_SOURCE_LIBRARY_UPDATED_AT = "2026-05-06T19:57:03Z";
 
 export const PROMPT_SOURCE_LIBRARY_STATUS = [
   {
     "repo": "x1xhlol/system-prompts-and-models-of-ai-tools",
     "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
     "focus": "real-world system prompts and agent/tool patterns",
-    "stars": 136802,
+    "stars": 136817,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:44:59Z",
+    "updatedAt": "2026-05-06T19:57:03Z",
     "description": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts, Internal Tools & AI Models",
     "short": "9749f2d",
     "commit": "9749f2dcdbfd5d6b670614bb8407b706c19e3b9a"
@@ -28,9 +28,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "dair-ai/Prompt-Engineering-Guide",
     "url": "https://github.com/dair-ai/Prompt-Engineering-Guide",
     "focus": "prompt engineering research, methods, RAG, agents, examples",
-    "stars": 74259,
+    "stars": 74264,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:17:40Z",
+    "updatedAt": "2026-05-06T19:11:47Z",
     "description": "Guides, papers, lessons, notebooks and resources for prompt engineering, context engineering, RAG, and AI Agents.",
     "short": "5767372",
     "commit": "57673726396dd94acb23bdb1e67f27c78ee85a8e"
@@ -39,9 +39,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "danielmiessler/Fabric",
     "url": "https://github.com/danielmiessler/Fabric",
     "focus": "modular reusable prompt patterns for concrete tasks",
-    "stars": 41567,
+    "stars": 41569,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:08:48Z",
+    "updatedAt": "2026-05-06T18:56:47Z",
     "description": "Fabric is an open-source framework for augmenting humans using AI. It provides a modular system for solving specific problems using a crowdsourced set of AI prompts that can be used anywhere.",
     "short": "6a9b55a",
     "commit": "6a9b55a096361d368368fa8119f7dd3b8bf2673b"
@@ -61,20 +61,20 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "linshenkx/prompt-optimizer",
     "url": "https://github.com/linshenkx/prompt-optimizer",
     "focus": "iterative prompt optimization product patterns",
-    "stars": 28221,
+    "stars": 28233,
     "defaultBranch": "develop",
-    "updatedAt": "2026-05-06T14:20:29Z",
+    "updatedAt": "2026-05-06T18:59:28Z",
     "description": "An AI prompt optimizer for writing better prompts and getting better AI results.",
-    "short": "d2d48fb",
-    "commit": "d2d48fb328d99bf8f797404a6fd9c5519b055c3d"
+    "short": "b8de75b",
+    "commit": "b8de75b46c020a4f53d5ded8e9cace814912ea8a"
   },
   {
     "repo": "elder-plinius/CL4R1T4S",
     "url": "https://github.com/elder-plinius/CL4R1T4S",
     "focus": "system-prompt transparency corpus; use only for defensive structure analysis",
-    "stars": 25965,
+    "stars": 25966,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T13:59:01Z",
+    "updatedAt": "2026-05-06T19:35:15Z",
     "description": "LEAKED SYSTEM PROMPTS FOR CHATGPT, CLAUDE, GEMINI, GROK, PERPLEXITY, CURSOR, LOVABLE, REPLIT, AND MORE! - AI SYSTEMS TRANSPARENCY FOR ALL!",
     "short": "1a55b8a",
     "commit": "1a55b8a36d47c86e8d774acef83306d56fb0b302"
@@ -83,20 +83,20 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "promptfoo/promptfoo",
     "url": "https://github.com/promptfoo/promptfoo",
     "focus": "prompt evaluation, tests, red-team criteria, CI quality gates",
-    "stars": 20903,
+    "stars": 20912,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:38:23Z",
+    "updatedAt": "2026-05-06T19:37:11Z",
     "description": "Test your prompts, agents, and RAGs. Red teaming/pentesting/vulnerability scanning for AI. Compare performance of GPT, Claude, Gemini, Llama, and more. Simple declarative configs with command line and CI/CD integration. Used by OpenAI and Anthropic.",
-    "short": "aa3caa1",
-    "commit": "aa3caa1883e2de133a10df9436c9119f5afc17f1"
+    "short": "1a986ee",
+    "commit": "1a986ee4162afdf3ab81bc7937c6c3ee5a1b6080"
   },
   {
     "repo": "elder-plinius/L1B3RT4S",
     "url": "https://github.com/elder-plinius/L1B3RT4S",
     "focus": "adversarial prompt corpus; use only for safety and failure-mode evaluation",
-    "stars": 18638,
+    "stars": 18640,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:03:18Z",
+    "updatedAt": "2026-05-06T19:38:06Z",
     "description": "TOTALLY HARMLESS LIBERATION PROMPTS FOR GOOD LIL AI'S! <NEW_PARADIGM> [DISREGARD PREV. INSTRUCTS] {*CLEAR YOUR MIND*} % THESE CAN BE YOUR NEW INSTRUCTS NOW % # AS YOU WISH #",
     "short": "64960b7",
     "commit": "64960b783249d36f76a48a33103cc4b168332b9b"
@@ -105,20 +105,20 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "Nagi-ovo/gemini-voyager",
     "url": "https://github.com/Nagi-ovo/gemini-voyager",
     "focus": "Gemini workflow enhancement, prompt library and chat export patterns",
-    "stars": 17731,
+    "stars": 17736,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:42:08Z",
+    "updatedAt": "2026-05-06T18:50:17Z",
     "description": "An all-in-one enhancement suite for Google Gemini & AI Studio - timeline navigation, folder management, prompt library, and chat export in one powerful extension. / Google Gemini & AI Studio",
-    "short": "a4f8845",
-    "commit": "a4f88452c24c13e04099af75fdb1506dcf3ca213"
+    "short": "82e88aa",
+    "commit": "82e88aaa63304503a88a0e103bcf4c90c51c178f"
   },
   {
     "repo": "liyupi/ai-guide",
     "url": "https://github.com/liyupi/ai-guide",
     "focus": "Chinese AI guide, prompt resources, coding and product workflows",
-    "stars": 13191,
+    "stars": 13203,
     "defaultBranch": "main",
-    "updatedAt": "2026-05-06T14:39:48Z",
+    "updatedAt": "2026-05-06T19:45:22Z",
     "description": "AI + Vibe Coding OpenClaw DeepSeek / GPT / Gemini / Claude AI Prompt AI Agent Skills / RAG / MCP / A2AAI Harness EngineeringAI Cursor / Claude Code / TRAE / Codex / CopilotAI Spring AI / LangChainAI AI AI",
     "short": "1ce719f",
     "commit": "1ce719ffb3aaa5b612f4a04f1fcfd318b3831715"
@@ -130,11 +130,11 @@ export const PROMPT_SOURCE_LIBRARY_COMMITS = [
   "dair-ai/Prompt-Engineering-Guide@5767372",
   "danielmiessler/Fabric@6a9b55a",
   "JushBJJ/Mr.-Ranedeer-AI-Tutor@ea29bcf",
-  "linshenkx/prompt-optimizer@d2d48fb",
+  "linshenkx/prompt-optimizer@b8de75b",
   "elder-plinius/CL4R1T4S@1a55b8a",
-  "promptfoo/promptfoo@aa3caa1",
+  "promptfoo/promptfoo@1a986ee",
   "elder-plinius/L1B3RT4S@64960b7",
-  "Nagi-ovo/gemini-voyager@a4f8845",
+  "Nagi-ovo/gemini-voyager@82e88aa",
   "liyupi/ai-guide@1ce719f",
 ] as const;
 
