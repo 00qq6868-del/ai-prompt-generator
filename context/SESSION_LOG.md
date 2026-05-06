@@ -1786,3 +1786,26 @@ Implementation lesson / common error:
 
 - During this turn, `apply_patch` initially wrote files under the wrong cwd `E:\vscode Claude` instead of the project root. The mistaken files were cleaned, then recreated under `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`.
 - Do not run copy and cleanup of the same temporary path in parallel; one parallel command deleted source files before another copied them. Use explicit project absolute paths for future patches.
+
+Final validation for 2026-05-06 MLOps upgrade:
+
+- Commit pushed to GitHub main: `e3412e9 feat: add mlops feedback pipeline`.
+- GitHub Actions run `25431727555` passed:
+  - Build app succeeded.
+  - E2E tests succeeded.
+- Local validation passed:
+  - `npx tsc --noEmit`
+  - `npm run data:validate`
+  - `python -m py_compile workers\scoring\strict_score.py workers\optimization\optimizer.py`
+  - `git diff --check` (only Windows line-ending warnings)
+  - `npm run build`
+  - `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` -> 12 passed
+  - `npm run test:quality` -> 5 passed
+- Production smoke passed with `SMOKE_SKIP_GENERATE=1`:
+  - homepage ok
+  - `/api/models` ok: total=270, categories text=249 image=7 video=7 tts=7
+  - analytics ok
+- Production new endpoint check passed:
+  - `https://www.myprompt.asia/api/model-preferences` returned HTTP 200 and JSON fallback.
+- One unrelated older scheduled workflow still shows failure:
+  - `Sync Prompt Sources` run `25425140852` failed before this commit. Latest push E2E passed.

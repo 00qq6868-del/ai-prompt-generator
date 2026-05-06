@@ -949,3 +949,9 @@ Expected caveats:
 - Existing E2E test 12 was updated from 0-100 slider to star click (`2 星 2 stars`). If other tests still look for old text, update assertions to the new 1-5 star UI.
 - PostgreSQL/Redis are optional until `DATABASE_URL`/`REDIS_URL` are configured. Local fallback is `.local-data/` and is ignored by Git.
 - The 14 external prompt repos are still read-only source inputs. User data only exports to own/private repo via `GITHUB_DATA_*` or local fallback.
+
+Final validation:
+
+- Pushed `e3412e9 feat: add mlops feedback pipeline` to GitHub main.
+- GitHub Actions run `25431727555` passed.
+- Production smoke passed; `/api/model-preferences` is live on `https://www.myprompt.asia`.
