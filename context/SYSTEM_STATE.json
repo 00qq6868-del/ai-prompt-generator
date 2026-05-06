@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-05-06T06:46:33.895Z",
+  "updatedAt": "2026-05-06T09:13:12.500Z",
   "totalModels": 270,
   "byCategory": {
     "text": 249,
-    "video": 7,
     "image": 7,
+    "video": 7,
     "tts": 7
   },
   "byProvider": {
@@ -31,12 +31,12 @@
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
     "added": 0,
-    "updated": 14,
+    "updated": 15,
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
     "added": 0,
-    "updated": 253,
+    "updated": 255,
     "previousTotal": 270
   }
 }

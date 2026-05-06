@@ -45,6 +45,28 @@
     "category": "text"
   },
   {
+    "id": "gpt-image-2",
+    "name": "GPT Image 2",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 32768,
+    "maxOutput": 4096,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 30,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": false,
+    "isLatest": true,
+    "tags": [
+      "image-gen",
+      "editing",
+      "transparent-background",
+      "text-rendering"
+    ],
+    "releaseDate": "2026-04-01",
+    "category": "image"
+  },
+  {
     "id": "gpt-5.4",
     "name": "GPT-5.4",
     "provider": "OpenAI",
@@ -4375,28 +4397,6 @@
     ],
     "releaseDate": "2026-04-24",
     "category": "text"
-  },
-  {
-    "id": "gpt-image-2",
-    "name": "GPT Image 2",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 32768,
-    "maxOutput": 4096,
-    "inputCostPer1M": 5,
-    "outputCostPer1M": 30,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": false,
-    "isLatest": true,
-    "tags": [
-      "image-gen",
-      "editing",
-      "transparent-background",
-      "text-rendering"
-    ],
-    "releaseDate": "2026-04-01",
-    "category": "image"
   },
   {
     "id": "gpt-realtime-1.5",
