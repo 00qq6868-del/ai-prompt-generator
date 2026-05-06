@@ -13,13 +13,14 @@ import { PromptGenerationProgress, runPromptTournament } from "@/lib/prompt-eval
 import {
   ModelHealthMeta,
   getModelCooldown,
-  getTimeoutMs,
+  getModelTimeoutMs,
   recordModelFailure,
   recordModelSuccess,
   withTimeout,
 } from "@/lib/model-health";
 import { createPrompt, createPromptVersion } from "@/lib/server/storage";
 import { strictPromptScore } from "@/lib/strict-scoring";
+import { toUserFacingErrorMessage } from "@/lib/error-messages";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -144,16 +145,36 @@ function sseResponse(
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      const startedAt = Date.now();
+      let closed = false;
       const send = (data: Record<string, unknown>) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          closed = true;
+        }
       };
+      const heartbeat = setInterval(() => {
+        send({
+          t: "ping",
+          elapsedSec: Math.floor((Date.now() - startedAt) / 1000),
+          message: "连接保持中，仍在等待模型返回。 / Connection kept alive; still waiting for model output.",
+        });
+      }, 12_000);
 
       try {
         await runner(send);
       } catch (err: any) {
-        send({ t: "error", error: err?.message ?? "服务器内部错误 / Internal error" });
+        send({ t: "error", error: toUserFacingErrorMessage(err) });
       } finally {
-        controller.close();
+        clearInterval(heartbeat);
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          // The client may already have disconnected; nothing else to do.
+        }
       }
     },
   });
@@ -508,7 +529,7 @@ export async function POST(req: NextRequest) {
               sentAnyChunk = true;
               send({ t: "chunk", c: chunk });
             }),
-            getTimeoutMs("simple"),
+            getModelTimeoutMs(activeModel, "simple"),
             `${activeModel.name} streaming generation`,
           );
           modelHealth.successful.push(recordModelSuccess(
@@ -561,7 +582,7 @@ export async function POST(req: NextRequest) {
               callProviderStream(makeProviderOpts(fallback.model, fallback.apiProvider), (chunk) => {
                 send({ t: "chunk", c: chunk });
               }),
-              getTimeoutMs("simple"),
+              getModelTimeoutMs(fallback.model, "simple"),
               `${fallback.model.name} fallback streaming generation`,
             );
             modelHealth.successful.push(recordModelSuccess(
@@ -600,7 +621,7 @@ export async function POST(req: NextRequest) {
     try {
       result = await withTimeout(
         callProvider(providerOpts),
-        getTimeoutMs("simple"),
+        getModelTimeoutMs(activeModel, "simple"),
         `${activeModel.name} generation`,
       );
       modelHealth.successful.push(recordModelSuccess(
@@ -615,7 +636,7 @@ export async function POST(req: NextRequest) {
       const fallbackStartedAt = Date.now();
       result = await withTimeout(
         callProvider(makeProviderOpts(fallback.model, fallback.apiProvider)),
-        getTimeoutMs("simple"),
+        getModelTimeoutMs(fallback.model, "simple"),
         `${fallback.model.name} fallback generation`,
       );
       modelHealth.successful.push(recordModelSuccess(
@@ -653,7 +674,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("[generate]", err);
     return NextResponse.json(
-      { error: err?.message ?? "服务器内部错误 / Internal error" },
+      { error: toUserFacingErrorMessage(err) },
       { status: 500 }
     );
   }

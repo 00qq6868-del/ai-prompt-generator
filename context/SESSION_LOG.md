@@ -1847,3 +1847,46 @@ Validation:
 - `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 12/12.
 - `npm run test:quality` passed: 5/5.
 - `git diff --check` passed with Windows line-ending warnings only.
+
+## 2026-05-07 — Harden network/stream failures and local fallback writes
+
+User reported that network errors still fail generation in both Chinese and English, and failures may still waste tokens.
+
+Fix:
+
+- Added `src/lib/error-messages.ts`
+  - Central bilingual error normalizer.
+  - Converts `fetch failed`, `Network Error`, EOF, connection reset, timeout, rate limit, invalid key, permission, unavailable model, and `.local-data` failures into readable Chinese/English messages.
+  - Masks API-key-like strings in errors.
+- `src/app/api/generate/route.ts`
+  - SSE now sends heartbeat `ping` events every 12 seconds so slow models do not look idle to the browser/proxy.
+  - SSE and JSON error responses use the bilingual normalizer instead of raw provider errors.
+  - Simple-generation timeouts now use per-model slow-model-aware `getModelTimeoutMs()`.
+- `src/components/PromptGenerator.tsx`
+  - Handles `ping` events without breaking the stream.
+  - If an SSE error arrives after partial chunks, the partial prompt is preserved as the result instead of being discarded.
+  - If the stream ends without `done` but has partial content, the partial result is kept with a warning.
+  - If the stream ends without any content, user sees a clear bilingual retry/switch-model message.
+  - Displays persistence warnings from generation metadata.
+- `src/components/ResultPanel.tsx`
+  - Shows `meta.persistenceWarning` visibly in the result panel.
+- `src/lib/server/storage.ts`
+  - Local JSON fallback writes are serialized per file.
+  - Copy/write operations retry short-term Windows/serverless file lock errors (`EBUSY`, `EPERM`, `EACCES`).
+  - This removed the model-preferences `EBUSY` warning seen during quality tests.
+- `tests/e2e/prompt-generator.spec.ts`
+  - Added coverage for SSE `ping`.
+  - Added test that an SSE error after partial output keeps the received prompt.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 13/13.
+- `npm run build` passed when run alone.
+- `npm run test:quality` passed: 5/5.
+- `npm run data:validate` passed.
+- `git diff --check` passed with Windows line-ending warnings only.
+
+Operational note:
+
+- Running `npm run build` concurrently with Playwright still causes a false `/_document` PageNotFoundError because both touch `.next`; always run build alone.

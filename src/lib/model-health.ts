@@ -1,4 +1,5 @@
 import { ModelInfo } from "@/lib/models-registry";
+import { sanitizeErrorMessage } from "@/lib/error-messages";
 
 export type ModelCallKind = "generator" | "judge" | "simple";
 
@@ -112,10 +113,10 @@ function statusFromError(err: unknown): number | undefined {
 }
 
 export function errorToMessage(err: unknown): string {
-  if (err instanceof Error && err.message) return err.message;
-  if (typeof err === "string") return err;
+  if (err instanceof Error && err.message) return sanitizeErrorMessage(err.message);
+  if (typeof err === "string") return sanitizeErrorMessage(err);
   try {
-    return JSON.stringify(err);
+    return sanitizeErrorMessage(JSON.stringify(err));
   } catch {
     return "Unknown model error";
   }

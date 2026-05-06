@@ -101,6 +101,7 @@ function resolveLocalDataRoot(): string {
 
 export const localDataRoot = resolveLocalDataRoot();
 let pool: Pool | null | undefined;
+const localJsonLocks = new Map<string, Promise<void>>();
 
 function makeId(): string {
   return crypto.randomUUID();
@@ -129,6 +130,36 @@ function normalizeDeviceId(deviceId?: string | null): string {
 
 async function ensureLocalDir(): Promise<void> {
   await fs.mkdir(localDataRoot, { recursive: true });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retryLocalFileWrite(operation: () => Promise<void>): Promise<void> {
+  let lastError: any;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      await operation();
+      return;
+    } catch (error: any) {
+      lastError = error;
+      if (!["EBUSY", "EPERM", "EACCES"].includes(error?.code)) throw error;
+      await sleep(35 * (attempt + 1));
+    }
+  }
+  throw lastError;
+}
+
+async function withLocalJsonLock<T>(fileName: string, operation: () => Promise<T>): Promise<T> {
+  const previous = localJsonLocks.get(fileName) ?? Promise.resolve();
+  const run = previous.catch(() => undefined).then(operation);
+  const tail = run.then(() => undefined, () => undefined);
+  localJsonLocks.set(fileName, tail);
+  tail.finally(() => {
+    if (localJsonLocks.get(fileName) === tail) localJsonLocks.delete(fileName);
+  });
+  return run;
 }
 
 async function readJsonArray<T>(fileName: string): Promise<T[]> {
@@ -177,16 +208,29 @@ function parseJsonArray(raw: string): unknown {
   }
 }
 
-async function writeJsonArray<T>(fileName: string, rows: T[]): Promise<void> {
+async function writeJsonArrayUnlocked<T>(fileName: string, rows: T[]): Promise<void> {
   await ensureLocalDir();
   const filePath = path.join(localDataRoot, fileName);
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.${crypto.randomUUID()}.tmp`;
   await fs.writeFile(tempPath, `${JSON.stringify(rows, null, 2)}\n`, "utf8");
   try {
-    await fs.copyFile(tempPath, filePath);
+    await retryLocalFileWrite(() => fs.copyFile(tempPath, filePath));
   } finally {
     await fs.rm(tempPath, { force: true });
   }
+}
+
+async function writeJsonArray<T>(fileName: string, rows: T[]): Promise<void> {
+  await withLocalJsonLock(fileName, () => writeJsonArrayUnlocked(fileName, rows));
+}
+
+async function updateJsonArray<T>(fileName: string, updater: (rows: T[]) => T[] | Promise<T[]>): Promise<T[]> {
+  return withLocalJsonLock(fileName, async () => {
+    const rows = await readJsonArray<T>(fileName);
+    const nextRows = await updater(rows);
+    await writeJsonArrayUnlocked(fileName, nextRows);
+    return nextRows;
+  });
 }
 
 export function storageMode(): "postgres" | "local-json" {
@@ -273,8 +317,10 @@ export async function saveModelPreference(input: ModelPreferenceRecord): Promise
     return record;
   }
 
-  const rows = await readJsonArray<ModelPreferenceRecord>("model-preferences.json");
-  await writeJsonArray("model-preferences.json", [record, ...rows.filter((row) => row.deviceId !== record.deviceId)].slice(0, 500));
+  await updateJsonArray<ModelPreferenceRecord>(
+    "model-preferences.json",
+    (rows) => [record, ...rows.filter((row) => row.deviceId !== record.deviceId)].slice(0, 500),
+  );
   return record;
 }
 
@@ -291,9 +337,10 @@ export async function createPrompt(input: PromptRecordInput): Promise<{ id: stri
     return { id: result.rows[0].id };
   }
 
-  const rows = await readJsonArray<Record<string, unknown>>("prompts.json");
-  rows.unshift({ id, ...input, deviceId: normalizeDeviceId(input.deviceId), status: "active", createdAt: nowIso() });
-  await writeJsonArray("prompts.json", rows.slice(0, 2000));
+  await updateJsonArray<Record<string, unknown>>("prompts.json", (rows) => [
+    { id, ...input, deviceId: normalizeDeviceId(input.deviceId), status: "active", createdAt: nowIso() },
+    ...rows,
+  ].slice(0, 2000));
   return { id };
 }
 
@@ -332,23 +379,24 @@ export async function createPromptVersion(input: PromptVersionInput): Promise<{ 
     return { id: result.rows[0].id, versionNumber: result.rows[0].version_number };
   }
 
-  const rows = await readJsonArray<Record<string, any>>("prompt-versions.json");
-  const versionNumber = rows.filter((row) => row.promptId === input.promptId).length + 1;
-  rows.unshift({
-    id,
-    promptId: input.promptId,
-    parentVersionId: input.parentVersionId ?? null,
-    versionNumber,
-    versionType: input.versionType,
-    promptText: input.promptText,
-    generatorModelIds: input.generatorModelIds ?? [],
-    evaluatorModelIds: input.evaluatorModelIds ?? [],
-    sourceRepoCommits: input.sourceRepoCommits ?? [],
-    aiScore: input.aiScore ?? null,
-    decisionStatus: input.decisionStatus ?? "candidate",
-    createdAt: nowIso(),
+  let versionNumber = 1;
+  await updateJsonArray<Record<string, any>>("prompt-versions.json", (rows) => {
+    versionNumber = rows.filter((row) => row.promptId === input.promptId).length + 1;
+    return [{
+      id,
+      promptId: input.promptId,
+      parentVersionId: input.parentVersionId ?? null,
+      versionNumber,
+      versionType: input.versionType,
+      promptText: input.promptText,
+      generatorModelIds: input.generatorModelIds ?? [],
+      evaluatorModelIds: input.evaluatorModelIds ?? [],
+      sourceRepoCommits: input.sourceRepoCommits ?? [],
+      aiScore: input.aiScore ?? null,
+      decisionStatus: input.decisionStatus ?? "candidate",
+      createdAt: nowIso(),
+    }, ...rows].slice(0, 4000);
   });
-  await writeJsonArray("prompt-versions.json", rows.slice(0, 4000));
   return { id, versionNumber };
 }
 
@@ -400,9 +448,10 @@ export async function saveFeedbackRecord(input: FeedbackRecordInput): Promise<{ 
     return { id: result.rows[0].id };
   }
 
-  const rows = await readJsonArray<Record<string, unknown>>("feedback.json");
-  rows.unshift({ id, ...input, deviceId: normalizeDeviceId(input.deviceId), starRating, createdAt: nowIso() });
-  await writeJsonArray("feedback.json", rows.slice(0, 4000));
+  await updateJsonArray<Record<string, unknown>>("feedback.json", (rows) => [
+    { id, ...input, deviceId: normalizeDeviceId(input.deviceId), starRating, createdAt: nowIso() },
+    ...rows,
+  ].slice(0, 4000));
   return { id };
 }
 
@@ -442,13 +491,14 @@ export async function saveDecision(input: {
       [input.promptId, selectedVersionId, input.decision === "new_better" ? input.oldVersionId : input.newVersionId],
     );
   } else {
-    const rows = await readJsonArray<Record<string, any>>("prompt-versions.json");
-    for (const row of rows) {
-      if (row.promptId !== input.promptId) continue;
-      if (row.id === selectedVersionId) row.decisionStatus = "accepted";
-      if (row.id === (input.decision === "new_better" ? input.oldVersionId : input.newVersionId)) row.decisionStatus = "rejected";
-    }
-    await writeJsonArray("prompt-versions.json", rows);
+    await updateJsonArray<Record<string, any>>("prompt-versions.json", (rows) => {
+      for (const row of rows) {
+        if (row.promptId !== input.promptId) continue;
+        if (row.id === selectedVersionId) row.decisionStatus = "accepted";
+        if (row.id === (input.decision === "new_better" ? input.oldVersionId : input.newVersionId)) row.decisionStatus = "rejected";
+      }
+      return rows;
+    });
   }
 
   return { selectedVersionId, syntheticVersionId };
@@ -484,9 +534,10 @@ export async function createTestRun(input: TestRunInput): Promise<{ id: string }
     return { id: result.rows[0].id };
   }
 
-  const rows = await readJsonArray<Record<string, unknown>>("test-runs.json");
-  rows.unshift({ id, ...input, deviceId: normalizeDeviceId(input.deviceId), createdAt: nowIso() });
-  await writeJsonArray("test-runs.json", rows.slice(0, 4000));
+  await updateJsonArray<Record<string, unknown>>("test-runs.json", (rows) => [
+    { id, ...input, deviceId: normalizeDeviceId(input.deviceId), createdAt: nowIso() },
+    ...rows,
+  ].slice(0, 4000));
   return { id };
 }
 
@@ -516,9 +567,10 @@ export async function saveScoreReport(input: ScoreReportInput): Promise<{ id: st
     return { id: result.rows[0].id };
   }
 
-  const rows = await readJsonArray<Record<string, unknown>>("score-reports.json");
-  rows.unshift({ id, ...input, createdAt: nowIso() });
-  await writeJsonArray("score-reports.json", rows.slice(0, 4000));
+  await updateJsonArray<Record<string, unknown>>("score-reports.json", (rows) => [
+    { id, ...input, createdAt: nowIso() },
+    ...rows,
+  ].slice(0, 4000));
   return { id };
 }
 
@@ -549,12 +601,13 @@ export async function saveTestImage(input: TestImageInput): Promise<{ id: string
     return { id: result.rows[0].id };
   }
 
-  const rows = await readJsonArray<Record<string, unknown>>("test-images.json");
-  rows.unshift({
-    id,
-    ...input,
-    createdAt: nowIso(),
-  });
-  await writeJsonArray("test-images.json", rows.slice(0, 4000));
+  await updateJsonArray<Record<string, unknown>>("test-images.json", (rows) => [
+    {
+      id,
+      ...input,
+      createdAt: nowIso(),
+    },
+    ...rows,
+  ].slice(0, 4000));
   return { id };
 }

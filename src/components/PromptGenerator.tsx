@@ -16,6 +16,11 @@ import type { PromptPreference } from "@/lib/prompt-feedback";
 import { HistoryPanel } from "./HistoryPanel";
 import { trackApiCall, trackError, trackTTFT } from "@/lib/analytics";
 import { normalizePromptPreference, preferenceToLegacy } from "@/lib/prompt-feedback";
+import {
+  STREAM_INTERRUPTED_WITHOUT_OUTPUT,
+  STREAM_INTERRUPTED_WITH_PARTIAL_OUTPUT,
+  toUserFacingErrorMessage,
+} from "@/lib/error-messages";
 
 const DEFAULT_TARGET = "gpt-4o";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
@@ -111,6 +116,7 @@ interface GenerateResult {
       sourceCommits?: string[];
     };
     strictScore?: GenerateResult["strictScore"];
+    persistenceWarning?: string;
   };
   generatorModelCost: { input: number; output: number };
 }
@@ -522,8 +528,9 @@ export function PromptGenerator() {
         let accumulated = "";
         let scrolledOnce = false;
         let receivedDoneEvent = false;
+        let shouldStopReading = false;
 
-        while (true) {
+        readLoop: while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -554,11 +561,23 @@ export function PromptGenerator() {
                 );
               } else if (event.t === "chunk") {
                 trackFirstToken();
-                accumulated += event.c;
+                accumulated += typeof event.c === "string" ? event.c : "";
                 setStreamingText(accumulated);
                 if (!scrolledOnce) {
                   scrolledOnce = true;
                   setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+                }
+              } else if (event.t === "ping") {
+                if (typeof event.elapsedSec === "number") setElapsedSec(event.elapsedSec);
+                if (typeof event.message === "string") {
+                  setGenerationProgress(prev => ({
+                    phase: prev?.phase ?? "等待模型返回",
+                    current: prev?.current,
+                    total: prev?.total,
+                    etaSec: prev?.etaSec,
+                    elapsedSec: event.elapsedSec,
+                    message: event.message,
+                  }));
                 }
               } else if (event.t === "done" && event.data) {
                 receivedDoneEvent = true;
@@ -568,16 +587,43 @@ export function PromptGenerator() {
                 setGenerationProgress(null);
                 toast.dismiss(tid);
                 toast.success("提示词生成成功！/ Prompt generated!");
+                if (event.data.meta?.persistenceWarning) {
+                  toast.error(event.data.meta.persistenceWarning);
+                }
                 saveHistory({ userIdea: idea, optimizedPrompt: event.data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
               } else if (event.t === "error") {
+                const message = toUserFacingErrorMessage(event.error);
+                if (accumulated.trim()) {
+                  receivedDoneEvent = true;
+                  shouldStopReading = true;
+                  trackGenerateCall(true, res.status);
+                  setResult({
+                    optimizedPrompt: accumulated,
+                    stats: { inputTokens: 0, outputTokens: 0, latencyMs: 0, tokensDelta: 0, changePercent: 0 },
+                    meta: {
+                      generatorModel: primaryGeneratorModelId,
+                      targetModel: targetModelId,
+                      reviewSummary: STREAM_INTERRUPTED_WITH_PARTIAL_OUTPUT,
+                    },
+                    generatorModelCost: { input: 0, output: 0 },
+                  });
+                  setStreamingText("");
+                  setGenerationProgress(null);
+                  toast.dismiss(tid);
+                  toast.error(`${STREAM_INTERRUPTED_WITH_PARTIAL_OUTPUT} ${message}`);
+                  saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
+                  await reader.cancel().catch(() => {});
+                  break readLoop;
+                }
                 trackGenerateCall(false, res.status);
-                throw new Error(event.error);
+                throw new Error(message);
               }
             } catch (parseErr: any) {
               if (parseErr?.message && !parseErr.message.includes("JSON")) {
                 throw parseErr;
               }
             }
+            if (shouldStopReading) break readLoop;
           }
         }
 
@@ -592,8 +638,11 @@ export function PromptGenerator() {
           setStreamingText("");
           setGenerationProgress(null);
           toast.dismiss(tid);
-          toast.success("提示词生成成功！/ Prompt generated!");
+          toast.error(STREAM_INTERRUPTED_WITH_PARTIAL_OUTPUT);
           saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
+        } else if (!receivedDoneEvent) {
+          trackGenerateCall(false, res.status);
+          throw new Error(STREAM_INTERRUPTED_WITHOUT_OUTPUT);
         }
       } else {
         const data = await res.json().catch(() => ({}));
@@ -608,10 +657,11 @@ export function PromptGenerator() {
       }
     } catch (err: any) {
       trackGenerateCall(false);
-      trackError(err.message ?? "生成失败 Generate failed");
+      const message = toUserFacingErrorMessage(err);
+      trackError(message);
       setGenerationProgress(null);
       toast.dismiss(tid);
-      toast.error(err.message ?? "生成失败，请检查 API Key / Generation failed, check your API Key");
+      toast.error(message);
     } finally {
       setLoading(false);
     }

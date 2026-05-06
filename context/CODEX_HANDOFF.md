@@ -968,3 +968,43 @@ Production bug fixed:
 Validation passed:
 
 - TypeScript, data validation, build, prompt-generator E2E 12/12, quality tests 5/5.
+
+## Current Handoff Addendum — 2026-05-07 Network Error Hardening
+
+New production-facing fix implemented after the user reported that network errors still appeared in both Chinese and English flows and could waste tokens.
+
+Changed:
+
+- `src/lib/error-messages.ts`
+  - New shared bilingual error normalizer.
+  - Handles network/relay interruption, EOF, connection reset, timeout, rate limit, invalid key, model permission, unavailable model, and `.local-data` persistence failures.
+  - Sanitizes API-key-like text.
+- `/api/generate`
+  - SSE sends a heartbeat `ping` every 12 seconds during long waits.
+  - SSE error events and JSON errors now return normalized bilingual messages.
+  - Simple model calls now use slow-model-aware timeouts.
+- `PromptGenerator`
+  - Ignores/uses SSE `ping` events to keep status alive.
+  - Preserves partial generated text if a stream errors or disconnects after chunks arrived.
+  - Shows clear bilingual messages when no usable output arrived.
+  - Surfaces server persistence warnings visibly.
+- `ResultPanel`
+  - Displays `meta.persistenceWarning`.
+- `storage.ts`
+  - Local JSON fallback writes now serialize per file and retry `EBUSY`/`EPERM`/`EACCES`.
+  - This prevents concurrent local preference/test writes from surfacing noisy file-lock errors.
+- E2E:
+  - PromptGenerator suite is now 13 tests, including partial-output preservation after SSE error.
+
+Validation:
+
+- `npx tsc --noEmit`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` -> 13/13
+- `npm run build`
+- `npm run test:quality` -> 5/5
+- `npm run data:validate`
+- `git diff --check` -> line-ending warnings only
+
+Remaining caveat:
+
+- This prevents app-side loss of already received output and avoids idle SSE disconnects. It cannot refund relay/provider tokens if an upstream provider starts processing and then the relay/network dies before returning data. The app now cools failed models and displays a clear switch/retry message to reduce repeated token waste.

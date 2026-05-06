@@ -123,7 +123,7 @@ async function mockAPIs(page: Page) {
 /** Build a SSE response body that streams chunks then sends a done event. */
 function buildSSEBody(optimizedPrompt: string, metaExtra: Record<string, unknown> = {}) {
   const chunks = optimizedPrompt.match(/.{1,20}/g) ?? [optimizedPrompt];
-  let body = "";
+  let body = `data: ${JSON.stringify({ t: "ping", elapsedSec: 1, message: "连接保持中 / Connection alive" })}\n\n`;
   for (const chunk of chunks) {
     body += `data: ${JSON.stringify({ t: "chunk", c: chunk })}\n\n`;
   }
@@ -144,6 +144,15 @@ function buildSSEBody(optimizedPrompt: string, metaExtra: Record<string, unknown
   })}\n\n`;
   body += "data: [DONE]\n\n";
   return body;
+}
+
+function buildPartialThenErrorSSEBody(partialPrompt: string) {
+  return [
+    `data: ${JSON.stringify({ t: "chunk", c: partialPrompt })}`,
+    "",
+    `data: ${JSON.stringify({ t: "error", error: "fetch failed" })}`,
+    "",
+  ].join("\n");
 }
 
 const MOCK_OPTIMIZED =
@@ -330,6 +339,40 @@ test.describe("PromptGenerator E2E", () => {
 
     // Error toast should appear
     await expect(page.locator("text=API Key 无效")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("8b. SSE error after partial output keeps the received prompt", async ({ page }) => {
+    await page.route("**/api/generate", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildPartialThenErrorSSEBody("Partial optimized prompt that should not be lost."),
+      })
+    );
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "ai_prompt_user_keys",
+        JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" })
+      );
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/generate", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildPartialThenErrorSSEBody("Partial optimized prompt that should not be lost."),
+      })
+    );
+
+    await page.locator("textarea").fill("写一条会断流但已有输出的提示词");
+    await page.getByRole("button", { name: /生成优化提示词/ }).click();
+
+    await expect(page.getByText("Partial optimized prompt that should not be lost.")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/已保留收到的部分结果/).first()).toBeVisible({ timeout: 5_000 });
   });
 
   test("9. result panel shows bilingual evaluation criteria", async ({ page }) => {

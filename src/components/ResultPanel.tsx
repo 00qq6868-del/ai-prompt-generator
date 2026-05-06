@@ -48,6 +48,7 @@ interface Meta {
     sourceCommits?: string[];
   };
   strictScore?: StrictScore;
+  persistenceWarning?: string;
 }
 
 interface Props {
@@ -256,6 +257,11 @@ export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictSc
                 {meta.modelHealth?.skippedCooling?.length ? ` 冷却跳过 ${meta.modelHealth.skippedCooling.length} 个` : ""}
                 {meta.modelHealth?.failed?.length ? `，本次失败但未中断 ${meta.modelHealth.failed.length} 个` : ""}
                 。会等待可用模型完整输出，持续失败的模型冷却后再试。 Successful models are waited for; repeatedly failing models cool down before retry.
+              </div>
+            )}
+            {meta.persistenceWarning && (
+              <div className="mx-5 mt-4 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[11px] leading-5 text-amber-100/80">
+                {meta.persistenceWarning}
               </div>
             )}
             {meta.promptEvaluation && (
