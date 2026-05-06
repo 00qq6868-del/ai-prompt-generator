@@ -304,25 +304,34 @@ export async function POST(req: NextRequest) {
         targetModelId: targetModel.id,
         hasReferenceImage: /参考图|真实照片|原图|reference image|image-to-image/i.test(cleanIdea),
       });
-      const promptRecord = await createPrompt({
-        deviceId,
-        userIdea: cleanIdea,
-        targetModelId: targetModel.id,
-        targetModelCategory: targetCategory,
-        language,
-      });
-      const versionRecord = await createPromptVersion({
-        promptId: promptRecord.id,
-        versionType: "optimized",
-        promptText: optimizedPrompt,
-        generatorModelIds: generatorModels.map((model) => model.id),
-        evaluatorModelIds: evaluatorModels.map((model) => model.id),
-        sourceRepoCommits: [
-          ...(((metaExtra?.promptEvaluation as any)?.sourceCommits as string[] | undefined) ?? []),
-        ],
-        aiScore: strictScore.total,
-        decisionStatus: "active",
-      });
+      let promptRecord: { id?: string } = {};
+      let versionRecord: { id?: string; versionNumber?: number } = {};
+      let persistenceWarning: string | undefined;
+      try {
+        const createdPrompt = await createPrompt({
+          deviceId,
+          userIdea: cleanIdea,
+          targetModelId: targetModel.id,
+          targetModelCategory: targetCategory,
+          language,
+        });
+        promptRecord = createdPrompt;
+        versionRecord = await createPromptVersion({
+          promptId: createdPrompt.id,
+          versionType: "optimized",
+          promptText: optimizedPrompt,
+          generatorModelIds: generatorModels.map((model) => model.id),
+          evaluatorModelIds: evaluatorModels.map((model) => model.id),
+          sourceRepoCommits: [
+            ...(((metaExtra?.promptEvaluation as any)?.sourceCommits as string[] | undefined) ?? []),
+          ],
+          aiScore: strictScore.total,
+          decisionStatus: "active",
+        });
+      } catch (error: any) {
+        persistenceWarning = "生成已成功，但服务器保存记录失败；结果仍会返回给用户。 Generation succeeded, but server-side history save failed; the prompt is still returned.";
+        console.warn("[generate:persistence]", error?.message || error);
+      }
 
       return {
         promptId: promptRecord.id,
@@ -336,6 +345,7 @@ export async function POST(req: NextRequest) {
           generatorModel: activeGeneratorModel.name,
           targetModel:    targetModel.name,
           strictScore,
+          persistenceWarning,
           ...metaExtra,
         },
       };

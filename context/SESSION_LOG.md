@@ -1809,3 +1809,41 @@ Final validation for 2026-05-06 MLOps upgrade:
   - `https://www.myprompt.asia/api/model-preferences` returned HTTP 200 and JSON fallback.
 - One unrelated older scheduled workflow still shows failure:
   - `Sync Prompt Sources` run `25425140852` failed before this commit. Latest push E2E passed.
+
+## 2026-05-07 — Fix Vercel read-only .local-data failure after token-consuming generation
+
+User reported screenshot error on production:
+
+- `ENOENT: no such file or directory, mkdir '/var/task/.local-data'`
+- The error appeared in both Chinese/English flows and caused failures after API token had already been spent.
+
+Root cause:
+
+- The local JSON fallback introduced for prompt/model preference persistence used `process.cwd()/.local-data`.
+- On Vercel/serverless, `process.cwd()` is `/var/task`, which is read-only. Creating `/var/task/.local-data` fails.
+- In `/api/generate`, persistence happened after the model returned text. A persistence failure then threw out of `makeDonePayload()`, so the user lost the generated result even though tokens were consumed.
+
+Fix:
+
+- `src/lib/server/storage.ts`
+  - Added `localDataRoot` resolver.
+  - Uses `LOCAL_DATA_DIR` when configured.
+  - Uses `/tmp/ai-prompt-generator/.local-data` on Vercel/AWS Lambda or when cwd is `/var/task`.
+  - Keeps project-root `.local-data` for normal local development.
+- `src/app/api/generate/route.ts`
+  - Wrapped createPrompt/createPromptVersion persistence in try/catch.
+  - Generation result is returned even if server-side history persistence fails.
+  - Adds bilingual `persistenceWarning` in metadata instead of surfacing raw ENOENT to the user.
+- `src/app/api/test-runs/[testRunId]/images/route.ts`
+  - Image upload fallback storage now also uses `localDataRoot`.
+- `.env.example`
+  - Documented `LOCAL_DATA_DIR` and serverless `/tmp` fallback.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npm run data:validate` passed.
+- `npm run build` passed when run alone. Do not run build concurrently with Playwright because both touch `.next` and can cause a false `/_document` PageNotFoundError.
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` passed: 12/12.
+- `npm run test:quality` passed: 5/5.
+- `git diff --check` passed with Windows line-ending warnings only.

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
-import { saveTestImage } from "@/lib/server/storage";
+import { localDataRoot, saveTestImage } from "@/lib/server/storage";
 
 export const runtime = "nodejs";
 
@@ -56,8 +56,8 @@ export async function POST(
       .toBuffer();
     const metadata = await sharp(cleaned).metadata();
     const ext = extensionFor(file.type);
-    const relativeDir = path.join(".local-data", "test-images", params.testRunId);
-    const absoluteDir = path.join(process.cwd(), relativeDir);
+    const relativeDir = path.join("test-images", params.testRunId);
+    const absoluteDir = path.join(localDataRoot, relativeDir);
     await fs.mkdir(absoluteDir, { recursive: true });
     const fileName = `${imageRole}-${sha256.slice(0, 16)}.${ext}`;
     const relativePath = path.join(relativeDir, fileName).replace(/\\/g, "/");

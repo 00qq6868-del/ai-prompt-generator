@@ -955,3 +955,16 @@ Final validation:
 - Pushed `e3412e9 feat: add mlops feedback pipeline` to GitHub main.
 - GitHub Actions run `25431727555` passed.
 - Production smoke passed; `/api/model-preferences` is live on `https://www.myprompt.asia`.
+
+## Current Handoff Addendum — 2026-05-07 Vercel .local-data Fix
+
+Production bug fixed:
+
+- Error: `ENOENT: no such file or directory, mkdir '/var/task/.local-data'`.
+- Cause: Vercel serverless `/var/task` is read-only; local fallback tried to create `.local-data` there.
+- Fix: `src/lib/server/storage.ts` now resolves local fallback to `/tmp/ai-prompt-generator/.local-data` on serverless, or `LOCAL_DATA_DIR` when configured.
+- `/api/generate` no longer fails the whole response if post-generation persistence fails; generated text is still returned, preventing token-spend-with-no-result for persistence errors.
+
+Validation passed:
+
+- TypeScript, data validation, build, prompt-generator E2E 12/12, quality tests 5/5.

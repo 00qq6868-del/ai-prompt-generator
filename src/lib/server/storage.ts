@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import os from "node:os";
 import { Pool } from "pg";
 
 export type PreferenceDecision = "new_better" | "old_better" | "blend_needed" | "both_bad";
@@ -86,7 +87,19 @@ export interface TestImageInput {
   metadata?: Record<string, unknown>;
 }
 
-const dataRoot = path.join(process.cwd(), ".local-data");
+function resolveLocalDataRoot(): string {
+  if (process.env.LOCAL_DATA_DIR?.trim()) return process.env.LOCAL_DATA_DIR.trim();
+  const cwd = process.cwd();
+  const isServerlessReadOnly =
+    Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+    cwd === "/var/task" ||
+    cwd.startsWith("/var/task/");
+  return isServerlessReadOnly
+    ? path.join(os.tmpdir(), "ai-prompt-generator", ".local-data")
+    : path.join(cwd, ".local-data");
+}
+
+export const localDataRoot = resolveLocalDataRoot();
 let pool: Pool | null | undefined;
 
 function makeId(): string {
@@ -115,13 +128,13 @@ function normalizeDeviceId(deviceId?: string | null): string {
 }
 
 async function ensureLocalDir(): Promise<void> {
-  await fs.mkdir(dataRoot, { recursive: true });
+  await fs.mkdir(localDataRoot, { recursive: true });
 }
 
 async function readJsonArray<T>(fileName: string): Promise<T[]> {
   await ensureLocalDir();
   try {
-    const raw = await fs.readFile(path.join(dataRoot, fileName), "utf8");
+    const raw = await fs.readFile(path.join(localDataRoot, fileName), "utf8");
     const parsed = parseJsonArray(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error: any) {
@@ -166,7 +179,7 @@ function parseJsonArray(raw: string): unknown {
 
 async function writeJsonArray<T>(fileName: string, rows: T[]): Promise<void> {
   await ensureLocalDir();
-  const filePath = path.join(dataRoot, fileName);
+  const filePath = path.join(localDataRoot, fileName);
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.${crypto.randomUUID()}.tmp`;
   await fs.writeFile(tempPath, `${JSON.stringify(rows, null, 2)}\n`, "utf8");
   try {
@@ -182,7 +195,7 @@ export function storageMode(): "postgres" | "local-json" {
 
 export async function appendLocalJsonl(relativePath: string, row: unknown): Promise<string> {
   await ensureLocalDir();
-  const filePath = path.join(dataRoot, relativePath);
+  const filePath = path.join(localDataRoot, relativePath);
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.appendFile(filePath, `${JSON.stringify(row)}\n`, "utf8");
   return filePath;
