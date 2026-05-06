@@ -923,3 +923,29 @@ Still needed after commit:
 - Watch GitHub Actions.
 - If deployment succeeds, run production smoke.
 - Configure `PROMPT_FEEDBACK_GITHUB_TOKEN` in Vercel if real GitHub feedback upload is desired. Without it, feedback remains browser-local and still helps future generations in that same browser.
+
+## Current Handoff — 2026-05-06 MLOps Feedback Loop Upgrade
+
+Project root: `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`
+
+Latest implementation status:
+
+- Server/local persistence, strict scoring, model preferences, prompt version ids, 1-5 star feedback, A/B decision APIs, test-run/scoring APIs, GitHub dataset export, PostgreSQL schema, Docker Compose, Python worker scaffolds, and JSONL validation workflow have been implemented.
+- The frontend now persists target/generator/evaluator choices through `/api/model-preferences` and localStorage fallback. Preference hydration happens before default persistence to avoid overwriting the user's target model selection.
+- `/api/generate` returns `promptId`, `versionId`, `versionNumber`, and `strictScore` and stores prompt/version data in DB or `.local-data` fallback.
+- `ResultPanel` displays strict 100-point scoring while user feedback uses 1-5 stars and normalized decisions.
+
+Validation still required before push:
+
+- `npx tsc --noEmit`
+- `npm run data:validate`
+- `npm run build`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium`
+- `npm run test:quality`
+- `git diff --check`
+
+Expected caveats:
+
+- Existing E2E test 12 was updated from 0-100 slider to star click (`2 星 2 stars`). If other tests still look for old text, update assertions to the new 1-5 star UI.
+- PostgreSQL/Redis are optional until `DATABASE_URL`/`REDIS_URL` are configured. Local fallback is `.local-data/` and is ignored by Git.
+- The 14 external prompt repos are still read-only source inputs. User data only exports to own/private repo via `GITHUB_DATA_*` or local fallback.

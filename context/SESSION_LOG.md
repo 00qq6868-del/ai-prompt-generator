@@ -1712,3 +1712,77 @@ Important deployment note:
   - optional `PROMPT_FEEDBACK_GITHUB_REPO`
   - optional `PROMPT_FEEDBACK_GITHUB_BRANCH`
 - Without the token, feedback is still saved in the user's browser and used by that browser for later generations, but the API response reports GitHub sync as not configured.
+
+## 2026-05-06 — Main Site MLOps Feedback Loop Upgrade
+
+User request:
+
+- Implement the large AI prompt platform restructuring plan, not just write a document.
+- Fix target model reselection by adding durable model preferences.
+- Add 1-5 star feedback, text notes, A/B decisions, synthetic blend logic, strict scoring, test-run ingestion, GitHub dataset export, PostgreSQL/Redis/Docker/Python worker scaffolding.
+- Keep the 14 external prompt repositories read-only; user data only writes to own/private dataset repo.
+
+Implemented:
+
+- Server-side/local dual persistence:
+  - `src/lib/server/storage.ts`
+  - Uses PostgreSQL when `DATABASE_URL` exists.
+  - Falls back to ignored `.local-data/` JSON/JSONL when no database is configured, so the website still runs locally/Vercel without a DB.
+- Model preferences:
+  - `GET/PUT /api/model-preferences`
+  - Browser device id: `ai_prompt_device_id`
+  - Persists target, generator, evaluator selections and manual lock state.
+  - Frontend waits for preference hydration before writing defaults, preventing the old bug where `gpt-4o` could overwrite the user's selected target during startup.
+- Prompt versioning:
+  - `/api/generate` now returns `promptId`, `versionId`, `versionNumber`, and `strictScore`.
+  - Each generation is stored as prompt + prompt_version in DB or local JSON fallback.
+- Feedback loop:
+  - `ResultPanel` now uses 1-5 star rating instead of only a 0-100 slider.
+  - Feedback payload includes `starRating`, `promptId`, `promptVersionId/versionId`, strict score, notes, and normalized decisions:
+    - `new_better`
+    - `old_better`
+    - `blend_needed`
+    - `both_bad`
+  - `POST /api/feedback` writes feedback into DB/local fallback and exports sanitized JSONL to own GitHub repo if token exists.
+  - If user chooses blend/both_bad, API builds a synthetic prompt using old/new prompt, notes, and failed strict-score dimensions.
+- A/B/version APIs:
+  - `GET /api/prompts/[promptId]/compare`
+  - `POST /api/prompts/[promptId]/decision`
+  - `POST /api/optimization/jobs`
+- Strict scoring:
+  - `src/lib/strict-scoring.ts`
+  - Prompt dimensions: intent fidelity, detail coverage, target model fit, structure, specificity, negative constraints, output clarity, evaluation readiness, hallucination resistance, generation stability, reference-image consistency.
+  - Image dimensions: composition, color, texture, object proportion, lighting, reference similarity, text rendering, identity preservation, artifact control, commercial finish.
+  - 60/100 is the pass line; core dimensions below 3/10 fail directly.
+- Test data APIs:
+  - `POST /api/test-runs`
+  - `POST /api/scoring/image`
+  - Both can write strict score reports and sanitized dataset rows.
+- GitHub dataset service:
+  - `src/lib/server/github-dataset.ts`
+  - Sanitizes device id as hash and never writes raw API keys/photos.
+  - Uses `GITHUB_DATA_TOKEN` / `GITHUB_DATA_REPO` / `GITHUB_DATA_BRANCH` or falls back to local `.local-data/data/...`.
+- Infrastructure:
+  - `database/schema.sql` with PostgreSQL DDL for users, model_preferences, prompts, prompt_versions, feedback, test_runs, test_images, score_reports, github_repos, github_sync_events.
+  - `Dockerfile`
+  - `docker-compose.yml` with web + postgres + redis + worker.
+  - `workers/Dockerfile`
+  - `workers/requirements.txt`
+  - `workers/scoring/strict_score.py`
+  - `workers/optimization/optimizer.py`
+  - `.github/workflows/prompt-data-sync.yml`
+  - `scripts/validate-feedback-data.cjs`
+  - `npm run data:validate`
+- Env docs:
+  - `.env.example` now documents DB/Redis/GitHub dataset/Object Storage variables.
+
+Important operational boundary:
+
+- The 14 prompt-source GitHub repositories remain read-only. Never push user feedback, real photos, generated images, API keys, or raw personal data to those repos.
+- Real feedback export must target the user's own repo/private data repo via server-side `GITHUB_DATA_TOKEN` or `PROMPT_FEEDBACK_GITHUB_TOKEN`.
+- Raw photos/generated images should go to object storage or ignored local reports; GitHub JSONL stores metadata and scores only.
+
+Implementation lesson / common error:
+
+- During this turn, `apply_patch` initially wrote files under the wrong cwd `E:\vscode Claude` instead of the project root. The mistaken files were cleaned, then recreated under `E:\AI工作台\项目 Projects\ai-prompt-generator-codex`.
+- Do not run copy and cleanup of the same temporary path in parallel; one parallel command deleted source files before another copied them. Use explicit project absolute paths for future patches.

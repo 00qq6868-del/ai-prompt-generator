@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { exportDatasetRow } from "@/lib/server/github-dataset";
+import { saveFeedbackRecord, saveDecision } from "@/lib/server/storage";
+import { buildSyntheticBlendPrompt, normalizeDecision } from "@/lib/prompt-versioning";
 
 interface FeedbackPayload {
   id?: string;
   timestamp?: number;
+  deviceId?: string;
+  promptId?: string;
+  promptVersionId?: string;
+  versionId?: string;
+  oldVersionId?: string;
+  newVersionId?: string;
+  selectedVersionId?: string;
   userIdea?: string;
   originalPrompt?: string;
   previousPrompt?: string;
@@ -13,11 +23,13 @@ interface FeedbackPayload {
   evaluatorModels?: string[];
   language?: "zh" | "en";
   userScore?: number;
+  starRating?: number;
   userNotes?: string;
-  preference?: "new" | "old" | "blend" | "both_bad";
+  preference?: string;
   aiPromptScore?: number | null;
   aiSummary?: string;
   sourceCommits?: string[];
+  strictScore?: unknown;
   localTestRunIds?: string[];
 }
 
@@ -33,24 +45,35 @@ function cleanStringArray(value: unknown, maxItems = 12, maxLength = 160): strin
     : [];
 }
 
-function monthPath(timestamp: number): string {
-  const date = new Date(Number.isFinite(timestamp) ? timestamp : Date.now());
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  return `data/prompt-feedback/${year}-${month}.jsonl`;
+function cleanDeviceId(req: NextRequest, body: FeedbackPayload): string {
+  return (
+    cleanString(body.deviceId, 160) ||
+    cleanString(req.headers.get("x-ai-prompt-device-id"), 160) ||
+    cleanString(req.cookies.get("ai_prompt_device_id")?.value, 160) ||
+    "anonymous-device"
+  );
 }
 
-function sanitizeFeedback(input: FeedbackPayload) {
+function sanitizeFeedback(req: NextRequest, input: FeedbackPayload) {
   const timestamp = Number.isFinite(Number(input.timestamp)) ? Number(input.timestamp) : Date.now();
-  const userScore = Math.max(0, Math.min(100, Number(input.userScore ?? 0)));
-  const preference = ["new", "old", "blend", "both_bad"].includes(String(input.preference))
-    ? input.preference
-    : "new";
+  const legacyScore = Math.max(0, Math.min(100, Number(input.userScore ?? 0)));
+  const starRating = Math.max(
+    1,
+    Math.min(5, Math.round(Number(input.starRating ?? (legacyScore > 0 ? Math.ceil(legacyScore / 20) : 3)))),
+  );
+  const preference = normalizeDecision(input.preference);
+  const promptVersionId = cleanString(input.promptVersionId || input.versionId, 120);
 
   return {
     id: cleanString(input.id, 80) || `${timestamp}`,
     timestamp,
     createdAt: new Date(timestamp).toISOString(),
+    deviceId: cleanDeviceId(req, input),
+    promptId: cleanString(input.promptId, 120),
+    promptVersionId,
+    oldVersionId: cleanString(input.oldVersionId, 120),
+    newVersionId: cleanString(input.newVersionId || input.promptVersionId || input.versionId, 120),
+    selectedVersionId: cleanString(input.selectedVersionId, 120),
     userIdea: cleanString(input.userIdea, 8000),
     originalPrompt: cleanString(input.originalPrompt, 8000),
     previousPrompt: cleanString(input.previousPrompt, 12000),
@@ -60,80 +83,22 @@ function sanitizeFeedback(input: FeedbackPayload) {
     generatorModels: cleanStringArray(input.generatorModels),
     evaluatorModels: cleanStringArray(input.evaluatorModels),
     language: input.language === "en" ? "en" : "zh",
-    userScore,
+    userScore: legacyScore || starRating * 20,
+    starRating,
     userNotes: cleanString(input.userNotes, 4000),
     preference,
     aiPromptScore: typeof input.aiPromptScore === "number" ? input.aiPromptScore : null,
     aiSummary: cleanString(input.aiSummary, 1000),
     sourceCommits: cleanStringArray(input.sourceCommits, 40, 220),
+    strictScore: input.strictScore && typeof input.strictScore === "object" ? input.strictScore : null,
     localTestRunIds: cleanStringArray(input.localTestRunIds, 20, 120),
   };
 }
 
-async function githubJson(url: string, init: RequestInit & { token: string }) {
-  const { token, ...rest } = init;
-  const res = await fetch(url, {
-    ...rest,
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      ...(rest.headers || {}),
-    },
-  });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : {};
-  if (!res.ok && res.status !== 404) {
-    throw new Error(data?.message || `GitHub API failed: ${res.status}`);
-  }
-  return { status: res.status, data };
-}
-
-async function appendToGithub(feedback: ReturnType<typeof sanitizeFeedback>) {
-  const token = process.env.PROMPT_FEEDBACK_GITHUB_TOKEN || process.env.GITHUB_TOKEN;
-  const repository = process.env.PROMPT_FEEDBACK_GITHUB_REPO || process.env.GITHUB_REPOSITORY || "00qq6868-del/ai-prompt-generator";
-  const branch = process.env.PROMPT_FEEDBACK_GITHUB_BRANCH || "main";
-  if (!token) {
-    return {
-      synced: false,
-      reason: "GitHub token not configured. Feedback was accepted by the API response but only the browser local copy is guaranteed.",
-    };
-  }
-
-  const filePath = monthPath(feedback.timestamp);
-  const apiBase = `https://api.github.com/repos/${repository}/contents/${encodeURIComponent(filePath).replace(/%2F/g, "/")}`;
-  const existing = await githubJson(`${apiBase}?ref=${encodeURIComponent(branch)}`, {
-    method: "GET",
-    token,
-  });
-
-  let current = "";
-  let sha: string | undefined;
-  if (existing.status === 200 && typeof existing.data?.content === "string") {
-    current = Buffer.from(existing.data.content, "base64").toString("utf8");
-    sha = existing.data.sha;
-  }
-
-  const next = `${current}${JSON.stringify(feedback)}\n`;
-  await githubJson(apiBase, {
-    method: "PUT",
-    token,
-    body: JSON.stringify({
-      message: `data: append prompt feedback ${feedback.id} [skip ci]`,
-      content: Buffer.from(next, "utf8").toString("base64"),
-      branch,
-      ...(sha ? { sha } : {}),
-    }),
-  });
-
-  return { synced: true, repository, branch, filePath };
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const feedback = sanitizeFeedback(body);
+    const body: FeedbackPayload = await req.json();
+    const feedback = sanitizeFeedback(req, body);
     if (!feedback.userIdea || !feedback.optimizedPrompt || !feedback.selectedPrompt) {
       return NextResponse.json(
         { ok: false, error: "Missing feedback fields / 反馈字段不完整" },
@@ -141,8 +106,69 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const github = await appendToGithub(feedback);
-    return NextResponse.json({ ok: true, feedbackId: feedback.id, github });
+    const failedDimensions = Array.isArray((feedback.strictScore as any)?.deductions)
+      ? (feedback.strictScore as any).deductions
+          .map((deduction: any) => cleanString(deduction?.dimension, 120))
+          .filter(Boolean)
+      : [];
+
+    const syntheticPrompt =
+      feedback.promptId && (feedback.preference === "blend_needed" || feedback.preference === "both_bad")
+        ? buildSyntheticBlendPrompt({
+            userIdea: feedback.userIdea,
+            oldPrompt: feedback.previousPrompt,
+            newPrompt: feedback.optimizedPrompt,
+            feedbackNotes: feedback.userNotes,
+            failedDimensions,
+            language: feedback.language === "en" ? "en" : "zh",
+          })
+        : null;
+
+    const stored = await saveFeedbackRecord({
+      promptId: feedback.promptId || null,
+      promptVersionId: feedback.promptVersionId || null,
+      deviceId: feedback.deviceId,
+      starRating: feedback.starRating,
+      userNotes: feedback.userNotes,
+      preference: feedback.preference,
+      oldVersionId: feedback.oldVersionId || null,
+      newVersionId: feedback.newVersionId || null,
+      selectedVersionId: feedback.selectedVersionId || feedback.promptVersionId || null,
+      payload: feedback as unknown as Record<string, unknown>,
+    });
+
+    let decision: Awaited<ReturnType<typeof saveDecision>> | null = null;
+    if (feedback.promptId) {
+      decision = await saveDecision({
+        promptId: feedback.promptId,
+        decision: feedback.preference,
+        oldVersionId: feedback.oldVersionId || null,
+        newVersionId: feedback.newVersionId || feedback.promptVersionId || null,
+        selectedVersionId:
+          feedback.preference === "old_better"
+            ? feedback.oldVersionId || null
+            : feedback.preference === "new_better"
+              ? feedback.newVersionId || feedback.promptVersionId || null
+              : null,
+        syntheticPrompt,
+      });
+    }
+
+    const github = await exportDatasetRow("prompt-feedback", {
+      ...feedback,
+      id: stored.id,
+      failedDimensions,
+      selectedVersionId: decision?.selectedVersionId ?? feedback.selectedVersionId,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      feedbackId: stored.id,
+      syntheticPrompt,
+      syntheticVersionId: decision?.syntheticVersionId,
+      selectedVersionId: decision?.selectedVersionId,
+      github,
+    });
   } catch (error: any) {
     return NextResponse.json(
       { ok: false, error: error?.message || "Feedback save failed / 反馈保存失败" },

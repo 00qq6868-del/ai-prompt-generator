@@ -1,0 +1,56 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://ai_prompt:ai_prompt_password@postgres:5432/ai_prompt
+      REDIS_URL: redis://redis:6379
+      GITHUB_DATA_REPO: ${GITHUB_DATA_REPO:-00qq6868-del/ai-prompt-generator}
+      GITHUB_DATA_BRANCH: ${GITHUB_DATA_BRANCH:-main}
+      CUSTOM_RELAY_BASE_URL: ${CUSTOM_RELAY_BASE_URL:-}
+      CUSTOM_RELAY_API_KEY: ${CUSTOM_RELAY_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ai_prompt
+      POSTGRES_PASSWORD: ai_prompt_password
+      POSTGRES_DB: ai_prompt
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_prompt -d ai_prompt"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  worker:
+    build:
+      context: .
+      dockerfile: workers/Dockerfile
+    environment:
+      DATABASE_URL: postgres://ai_prompt:ai_prompt_password@postgres:5432/ai_prompt
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  postgres-data:

@@ -2,6 +2,7 @@ const FEEDBACK_STORAGE_KEY = "ai_prompt_feedback";
 const MAX_FEEDBACK_ITEMS = 200;
 
 export type PromptPreference = "new" | "old" | "blend" | "both_bad";
+export type PromptPreferenceV2 = "new_better" | "old_better" | "blend_needed" | "both_bad";
 
 export interface PromptFeedbackItem {
   id: string;
@@ -16,8 +17,9 @@ export interface PromptFeedbackItem {
   evaluatorModels: string[];
   language: "zh" | "en";
   userScore: number;
+  starRating?: number;
   userNotes: string;
-  preference: PromptPreference;
+  preference: PromptPreference | PromptPreferenceV2;
   aiPromptScore?: number | null;
   aiSummary?: string;
   sourceCommits?: string[];
@@ -30,7 +32,7 @@ export interface PromptFeedbackMemory {
     userIdea: string;
     targetModel: string;
     score: number;
-    preference: PromptPreference;
+    preference: PromptPreference | PromptPreferenceV2;
     notes: string;
     selectedPromptPreview: string;
   }>;
@@ -72,6 +74,20 @@ export function savePromptFeedback(input: SavePromptFeedbackInput): PromptFeedba
   return item;
 }
 
+export function normalizePromptPreference(preference: PromptPreference | PromptPreferenceV2): PromptPreferenceV2 {
+  if (preference === "new") return "new_better";
+  if (preference === "old") return "old_better";
+  if (preference === "blend") return "blend_needed";
+  return preference;
+}
+
+export function preferenceToLegacy(preference: PromptPreference | PromptPreferenceV2): PromptPreference {
+  if (preference === "new_better") return "new";
+  if (preference === "old_better") return "old";
+  if (preference === "blend_needed") return "blend";
+  return preference;
+}
+
 export function findPreviousPrompt(userIdea: string, targetModel: string): string | null {
   const ideaKey = normalizeIdea(userIdea);
   if (!ideaKey) return null;
@@ -109,10 +125,10 @@ export function buildPromptFeedbackMemory(userIdea: string, targetModel: string)
     if (item.userScore < 70) {
       rules.add("用户评分低于 70 时，下一版必须明显增加可验证细节、约束、失败规避和输出检查，不要只复述原文。");
     }
-    if (item.preference === "old") {
+    if (item.preference === "old" || item.preference === "old_better") {
       rules.add("如果用户选择旧版更好，后续优化要保留旧版表达结构，只做最小增量修补。");
     }
-    if (item.preference === "blend") {
+    if (item.preference === "blend" || item.preference === "blend_needed") {
       rules.add("如果用户认为新旧都不够好但可折中，后续生成要融合旧版稳定结构和新版新增细节，再输出一个折中改进版。");
     }
     if (item.preference === "both_bad") {

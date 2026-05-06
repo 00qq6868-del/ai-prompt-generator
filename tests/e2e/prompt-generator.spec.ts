@@ -514,14 +514,15 @@ test.describe("PromptGenerator E2E", () => {
 
     await page.locator("textarea").fill("生成一张 GPT Image 2 产品海报提示词");
     await page.getByRole("button", { name: /生成优化提示词/ }).click();
-    await expect(page.getByText("给这条 AI 提示词打分 Feedback")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("给这条 AI 提示词打分 1-5 Stars")).toBeVisible({ timeout: 10_000 });
 
-    await page.getByLabel("提示词评分 Prompt score").fill("42");
+    await page.getByLabel("2 星 2 stars").click();
     await page.getByRole("button", { name: /两版都不好/ }).click();
     await page.getByLabel("提示词评价 Prompt feedback notes").fill("评分虚高，文字和手部要更严格，参考图身份不能漂移。");
     await page.getByRole("button", { name: /保存评分与评价/ }).click();
 
-    await expect.poll(() => feedbackBody?.userScore).toBe(42);
+    await expect.poll(() => feedbackBody?.starRating).toBe(2);
+    expect(feedbackBody.userScore).toBe(40);
     expect(feedbackBody.userNotes).toContain("评分虚高");
     expect(feedbackBody.preference).toBe("both_bad");
     expect(feedbackBody.optimizedPrompt).toContain("senior poet");

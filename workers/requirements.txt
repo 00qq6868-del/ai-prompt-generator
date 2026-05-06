@@ -1,0 +1,5 @@
+psycopg[binary]==3.2.13
+redis==6.0.0
+numpy==2.2.6
+Pillow==11.2.1
+scikit-image==0.25.2

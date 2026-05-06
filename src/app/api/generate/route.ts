@@ -18,6 +18,8 @@ import {
   recordModelSuccess,
   withTimeout,
 } from "@/lib/model-health";
+import { createPrompt, createPromptVersion } from "@/lib/server/storage";
+import { strictPromptScore } from "@/lib/strict-scoring";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -29,6 +31,7 @@ export interface GenerateRequest {
   maxTokens?: number;
   userKeys?: Record<string, string>;
   availableModelIds?: string[];
+  deviceId?: string;
   feedbackMemory?: {
     rules?: string[];
     examples?: Array<{
@@ -169,6 +172,13 @@ function progressEvent(event: PromptGenerationProgress): Record<string, unknown>
   return { t: "progress", ...event };
 }
 
+function cleanDeviceId(req: NextRequest, body: GenerateRequest): string {
+  const fromBody = typeof body.deviceId === "string" ? body.deviceId.trim().slice(0, 160) : "";
+  const fromHeader = req.headers.get("x-ai-prompt-device-id")?.trim().slice(0, 160) ?? "";
+  const fromCookie = req.cookies.get("ai_prompt_device_id")?.value?.trim().slice(0, 160) ?? "";
+  return fromBody || fromHeader || fromCookie || "anonymous-device";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rate = checkRateLimit(req, {
@@ -198,6 +208,7 @@ export async function POST(req: NextRequest) {
       ? body.availableModelIds.filter((id): id is string => typeof id === "string" && id.length > 0)
       : undefined;
     const feedbackMemoryText = summarizeFeedbackMemory(body.feedbackMemory);
+    const deviceId = cleanDeviceId(req, body);
 
     const cleanIdea = userIdea?.trim() ?? "";
 
@@ -279,23 +290,56 @@ export async function POST(req: NextRequest) {
       targetCategory === "image" &&
       (targetModelKey.includes("gpt image 2") || targetModelKey.includes("gpt-image-2"));
 
-    const makeDonePayload = (optimizedPrompt: string, stats: {
+    const makeDonePayload = async (optimizedPrompt: string, stats: {
       inputTokens: number;
       outputTokens: number;
       latencyMs: number;
       tokensDelta: number;
       changePercent: number;
       estimatedCostUsd?: number;
-    }, metaExtra?: Record<string, unknown>, activeGeneratorModel: ModelInfo = generatorModel) => ({
-      optimizedPrompt,
-      stats,
-      generatorModelCost: makeGeneratorModelCost(activeGeneratorModel),
-      meta: {
-        generatorModel: activeGeneratorModel.name,
-        targetModel:    targetModel.name,
-        ...metaExtra,
-      },
-    });
+    }, metaExtra?: Record<string, unknown>, activeGeneratorModel: ModelInfo = generatorModel) => {
+      const strictScore = strictPromptScore({
+        userIdea: cleanIdea,
+        promptText: optimizedPrompt,
+        targetModelId: targetModel.id,
+        hasReferenceImage: /参考图|真实照片|原图|reference image|image-to-image/i.test(cleanIdea),
+      });
+      const promptRecord = await createPrompt({
+        deviceId,
+        userIdea: cleanIdea,
+        targetModelId: targetModel.id,
+        targetModelCategory: targetCategory,
+        language,
+      });
+      const versionRecord = await createPromptVersion({
+        promptId: promptRecord.id,
+        versionType: "optimized",
+        promptText: optimizedPrompt,
+        generatorModelIds: generatorModels.map((model) => model.id),
+        evaluatorModelIds: evaluatorModels.map((model) => model.id),
+        sourceRepoCommits: [
+          ...(((metaExtra?.promptEvaluation as any)?.sourceCommits as string[] | undefined) ?? []),
+        ],
+        aiScore: strictScore.total,
+        decisionStatus: "active",
+      });
+
+      return {
+        promptId: promptRecord.id,
+        versionId: versionRecord.id,
+        versionNumber: versionRecord.versionNumber,
+        optimizedPrompt,
+        stats,
+        strictScore,
+        generatorModelCost: makeGeneratorModelCost(activeGeneratorModel),
+        meta: {
+          generatorModel: activeGeneratorModel.name,
+          targetModel:    targetModel.name,
+          strictScore,
+          ...metaExtra,
+        },
+      };
+    };
 
     const resolveSimpleGenerator = () => {
       const modelHealth: ModelHealthMeta = {
@@ -341,7 +385,7 @@ export async function POST(req: NextRequest) {
           onProgress,
         });
         const comparison = comparePrompts(userIdea, tournament.text);
-        return makeDonePayload(
+        return await makeDonePayload(
           tournament.text,
           {
             inputTokens: tournament.inputTokens,
@@ -393,7 +437,7 @@ export async function POST(req: NextRequest) {
           onProgress,
         });
         const comparison = comparePrompts(userIdea, ensemble.text);
-        return makeDonePayload(
+        return await makeDonePayload(
           ensemble.text,
           {
             inputTokens: ensemble.inputTokens,
@@ -475,7 +519,7 @@ export async function POST(req: NextRequest) {
 
           send({
             t: "done",
-            data: makeDonePayload(
+            data: await makeDonePayload(
               result.text,
               {
                 inputTokens:   result.inputTokens,
@@ -518,7 +562,7 @@ export async function POST(req: NextRequest) {
             const comparison = comparePrompts(userIdea, fallbackResult.text);
             send({
               t: "done",
-              data: makeDonePayload(
+              data: await makeDonePayload(
                 fallbackResult.text,
                 {
                   inputTokens:   fallbackResult.inputTokens,
@@ -569,7 +613,7 @@ export async function POST(req: NextRequest) {
         fallback.apiProvider,
         result.latencyMs || Date.now() - fallbackStartedAt,
       ));
-      return NextResponse.json(makeDonePayload(
+      return NextResponse.json(await makeDonePayload(
         result.text,
         {
           inputTokens:   result.inputTokens,
@@ -584,7 +628,7 @@ export async function POST(req: NextRequest) {
     }
     const comparison = comparePrompts(userIdea, result.text);
 
-    return NextResponse.json(makeDonePayload(
+    return NextResponse.json(await makeDonePayload(
       result.text,
       {
         inputTokens:   result.inputTokens,
