@@ -4413,6 +4413,23 @@
     "category": "image"
   },
   {
+    "id": "gpt-chat-latest",
+    "name": "gpt-chat-latest",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "gpt-5.5-pro",
     "name": "GPT-5.5 Pro",
     "provider": "OpenAI",
@@ -4852,6 +4869,26 @@
       "computer-use"
     ],
     "releaseDate": "2025-10-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-flash-lite",
+    "name": "Gemini 3.1 Flash Lite",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
     "category": "text"
   },
   {
