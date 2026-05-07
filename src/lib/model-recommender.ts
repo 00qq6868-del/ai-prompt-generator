@@ -13,7 +13,7 @@ const RULES: { pattern: RegExp; category: RecommendedCategory; label: string; mo
   { pattern: /音乐|歌曲|作曲|编曲|旋律|music|song|compose|melody|beat|lyrics|instrumental|soundtrack/i, category: "tts", label: "Suno", modelId: "suno" },
   { pattern: /代码|编程|函数|调试|重构|bug|code|program|function|debug|refactor|implement|algorithm|api|sdk|compile|deploy|script/i, category: "code", label: "GPT-5.5 Pro", modelId: "gpt-5.5-pro" },
   { pattern: /数学|计算|证明|方程|公式|统计|math|calcul|proof|equation|formula|statistic|theorem|integral|derivative|probability/i, category: "reasoning", label: "GPT-5.5 Pro", modelId: "gpt-5.5-pro" },
-  { pattern: /推理|逻辑|分析|推导|思考|reason|logic|analy|deduc|think|evaluate|assess|diagnos/i, category: "reasoning", label: "GPT-5.5", modelId: "gpt-5.5" },
+  { pattern: /推理|逻辑|分析|推导|思考|reason|logic|analy|deduc|think|evaluate|assess|diagnos/i, category: "reasoning", label: "GPT-5.5 Pro", modelId: "gpt-5.5-pro" },
 ];
 
 export function recommendModel(input: string): Recommendation | null {

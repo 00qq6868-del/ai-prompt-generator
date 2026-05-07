@@ -19,6 +19,8 @@ The Claude workspace may contain unfinished local changes. Treat it as another c
 ## Before Any Code Change
 
 1. Read:
+   - `context/MEMORY_PROTOCOL.md`
+   - `context/CURRENT_HANDOFF.md`
    - `context/AI_TOOLCHAIN.md`
    - `context/QUICK_START.md`
    - `context/PROJECT_CONTEXT.md`
@@ -26,7 +28,10 @@ The Claude workspace may contain unfinished local changes. Treat it as another c
    - `context/SESSION_LOG.md`
    - `CLAUDE.md`
 2. Run:
+   - `npm run memory:boot`
    - `powershell -ExecutionPolicy Bypass -File "E:\AI工作台\工具 Tools\ai-chain.ps1" status`
+   - `gh repo view 00qq6868-del/ai-prompt-generator --json nameWithOwner,defaultBranchRef,url,visibility,updatedAt,pushedAt`
+   - `gh run list --repo 00qq6868-del/ai-prompt-generator --limit 8`
 3. State whether this Codex branch is ahead/behind `origin/main`.
 
 ## Shared AI Toolchain
@@ -68,6 +73,7 @@ The launcher writes independent logs to `E:\AI工作台\日志 Logs\ai-chain` an
 
 Update:
 
+- `context/CURRENT_HANDOFF.md`
 - `context/PROGRESS.md`
 - `context/SESSION_LOG.md`
 
@@ -79,6 +85,12 @@ Include:
 - Known risks
 - Git branch/status
 - Whether anything must be reviewed against Claude's workspace
+
+Run:
+
+```powershell
+npm run memory:checkpoint
+```
 
 ## Anti-Hallucination Rule
 

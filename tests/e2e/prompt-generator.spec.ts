@@ -259,19 +259,20 @@ test.describe("PromptGenerator E2E", () => {
     await expect(genBtn).toBeDisabled();
   });
 
-  test("5. target model cards select and generator picker opens", async ({ page }) => {
+  test("5. target model cards select and unified model picker opens", async ({ page }) => {
     const targetCards = page.locator("button[aria-pressed]");
     await expect(targetCards.first()).toBeVisible({ timeout: 15_000 });
     await targetCards.first().click();
     await expect(targetCards.first()).toHaveAttribute("aria-pressed", "true");
 
     const generatorTrigger = page.getByRole("button", {
-      name: "选择生成器模型 Open generator model picker",
+      name: "选择生成和评价模型 Open generation and evaluation model picker",
     });
     await generatorTrigger.click();
 
-    const dialog = page.getByRole("dialog", { name: "选择生成器模型" });
+    const dialog = page.getByRole("dialog", { name: "选择生成/评价模型" });
     await expect(dialog).toBeVisible({ timeout: 3000 });
+    await expect(page.getByRole("button", { name: "选择评价模型 Open evaluator model picker" })).toHaveCount(0);
   });
 
   test("6. SSE streaming generation flow", async ({ page }) => {
@@ -405,8 +406,25 @@ test.describe("PromptGenerator E2E", () => {
 
     await expect(page.getByText("当前已选目标模型 Selected target")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("GPT-5.5 Pro").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "选择生成器模型 Open generator model picker" })).toContainText("GPT-5.5 Pro");
-    await expect(page.getByRole("button", { name: "选择评价模型 Open evaluator model picker" })).toContainText("GPT-5.5 Pro");
+    await expect(page.getByRole("button", { name: "选择生成和评价模型 Open generation and evaluation model picker" })).toContainText("GPT-5.5 Pro");
+    await expect(page.getByRole("button", { name: "选择评价模型 Open evaluator model picker" })).toHaveCount(0);
+  });
+
+  test("5c. saved GPT-5.5 generator preference upgrades to GPT-5.5 Pro", async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5-pro");
+      localStorage.setItem("ai_prompt_target_model_locked", "0");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5"]));
+      localStorage.setItem("ai_prompt_last_evaluator_model_ids", JSON.stringify(["gpt-5.5-pro", "gpt-5.5"]));
+    });
+
+    await page.reload();
+    await mockAPIs(page);
+
+    await expect(page.getByText("当前已选目标模型 Selected target")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("GPT-5.5 Pro").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "选择生成和评价模型 Open generation and evaluation model picker" })).toContainText("GPT-5.5 Pro");
+    await expect(page.getByRole("button", { name: "选择评价模型 Open evaluator model picker" })).toHaveCount(0);
   });
 
   test("8b. SSE error after partial output keeps the received prompt", async ({ page }) => {
@@ -566,14 +584,14 @@ test.describe("PromptGenerator E2E", () => {
     );
 
     await page.reload();
-    await page.getByRole("button", { name: "选择生成器模型 Open generator model picker" }).click();
-    const dialog = page.getByRole("dialog", { name: "选择生成器模型" });
+    await page.getByRole("button", { name: "选择生成和评价模型 Open generation and evaluation model picker" }).click();
+    const dialog = page.getByRole("dialog", { name: "选择生成/评价模型" });
     await expect(dialog).toBeVisible();
     await dialog.getByLabel("搜索模型 Search models").fill("ZhipuAI");
     await dialog.getByRole("button", { name: /ZhipuAI\/GLM-5\.1/ }).click();
     await dialog.getByRole("button", { name: "完成 Done" }).click();
 
-    const generatorTrigger = page.getByRole("button", { name: "选择生成器模型 Open generator model picker" });
+    const generatorTrigger = page.getByRole("button", { name: "选择生成和评价模型 Open generation and evaluation model picker" });
     await expect(generatorTrigger).toContainText("已选 2");
     await expect(generatorTrigger).toContainText("智谱AI");
   });

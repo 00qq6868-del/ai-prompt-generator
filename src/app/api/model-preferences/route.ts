@@ -15,6 +15,10 @@ function cleanIds(value: unknown): string[] {
     : [];
 }
 
+function mirrorEvaluatorIds(generatorModelIds: string[]): string[] {
+  return generatorModelIds.filter(Boolean).slice(0, 6);
+}
+
 function deviceIdFrom(req: NextRequest, body?: Record<string, unknown>): string {
   return (
     cleanString(body?.deviceId, 160) ||
@@ -44,16 +48,20 @@ export async function GET(req: NextRequest) {
         ? {
             targetModelId: preference.targetModelId,
             generatorModelIds: preference.generatorModelIds,
-            evaluatorModelIds: preference.evaluatorModelIds,
+            evaluatorModelIds: mirrorEvaluatorIds(preference.generatorModelIds),
             upgraded: false,
           }
         : normalizeBestModelPreference(preference);
-      if (normalized.upgraded) {
+      const evaluatorModelIds = mirrorEvaluatorIds(normalized.generatorModelIds);
+      const shouldSaveUnified =
+        normalized.upgraded ||
+        preference.evaluatorModelIds.join(",") !== evaluatorModelIds.join(",");
+      if (shouldSaveUnified) {
         const upgraded = await saveModelPreference({
           ...preference,
           targetModelId: normalized.targetModelId,
           generatorModelIds: normalized.generatorModelIds,
-          evaluatorModelIds: normalized.evaluatorModelIds,
+          evaluatorModelIds,
           isLocked: false,
           source: "auto",
           deviceId,
@@ -90,7 +98,7 @@ export async function PUT(req: NextRequest) {
       ? {
           targetModelId,
           generatorModelIds: cleanIds(body.generatorModelIds),
-          evaluatorModelIds: cleanIds(body.evaluatorModelIds),
+          evaluatorModelIds: mirrorEvaluatorIds(cleanIds(body.generatorModelIds)),
           upgraded: false,
         }
       : normalizeBestModelPreference({
@@ -103,7 +111,7 @@ export async function PUT(req: NextRequest) {
     const preference = await saveModelPreference({
       targetModelId: normalized.targetModelId,
       generatorModelIds: normalized.generatorModelIds,
-      evaluatorModelIds: normalized.evaluatorModelIds,
+      evaluatorModelIds: mirrorEvaluatorIds(normalized.generatorModelIds),
       imageJudgeModelIds: cleanIds(body.imageJudgeModelIds),
       isLocked: Boolean(body.isLocked) && !normalized.upgraded,
       source: normalized.upgraded ? "auto" : source,

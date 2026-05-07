@@ -15,6 +15,8 @@ AI prompt optimizer web app. User inputs rough idea → system generates optimiz
 
 | File | What it tells you |
 |------|------------------|
+| `context/MEMORY_PROTOCOL.md` | Mandatory memory rules: what to read, when to checkpoint, GitHub rules |
+| `context/CURRENT_HANDOFF.md` | Highest-priority compressed state for the current handoff |
 | `context/PROGRESS.md` | What's done, what's pending, what to do next |
 | `context/MEMORIES.md` | All decisions, user preferences, technical gotchas |
 | `context/SESSION_LOG.md` | What each AI session did — read the latest entry |
@@ -56,6 +58,7 @@ node scripts/patch-models.cjs  # Re-apply META data to models.json
 
 ## Before You End Your Session
 
+0. Run `npm run memory:checkpoint` so `context/CURRENT_HANDOFF.md` captures the current Git/GitHub state
 1. Update `context/PROGRESS.md` with what you completed and what's pending
 2. Add a new entry to `context/SESSION_LOG.md`
 3. Run `bash scripts/save-context.sh` to commit and push context to GitHub

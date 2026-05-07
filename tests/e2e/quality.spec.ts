@@ -210,13 +210,10 @@ test.describe("Quality and accessibility audit", () => {
     };
 
     await checkDialogScroll(
-      /选择生成器模型 Open generator model picker/,
-      "选择生成器模型",
+      /选择生成和评价模型 Open generation and evaluation model picker/,
+      "选择生成/评价模型",
     );
-    await checkDialogScroll(
-      /选择评价模型 Open evaluator model picker/,
-      "选择评价模型",
-    );
+    await expect(page.getByRole("button", { name: /选择评价模型 Open evaluator model picker/ })).toHaveCount(0);
   });
 
   test("download page exposes desktop and mobile download entries", async ({

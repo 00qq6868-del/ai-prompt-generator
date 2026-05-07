@@ -3,6 +3,62 @@
 > Last updated: 2026-05-02
 > Updated by: Codex (completion pass)
 
+## 2026-05-08 — Memory Protocol And Unified Generation/Evaluation Model Selection
+
+User correction:
+
+- The project must always restore memory before work; context compression must not erase requirements.
+- The AI must check the project GitHub information before continuing project work.
+- The generator model and evaluator model must be one user-facing choice: once the user selects the generation model, the evaluator model is automatically the same selection. The user should not separately choose an evaluator model in the main UI.
+
+Implemented:
+
+- Added first-class memory protocol:
+  - `context/MEMORY_PROTOCOL.md`
+  - `context/CURRENT_HANDOFF.md`
+  - `scripts/update-memory-checkpoint.cjs`
+  - `npm run memory:boot`
+  - `npm run memory:checkpoint`
+- Updated project onboarding:
+  - `AGENTS.md`
+  - `context/QUICK_START.md`
+  - `context/MEMORIES.md`
+- The checkpoint script captures:
+  - Git status
+  - remotes
+  - recent commits
+  - diff stat
+  - GitHub repo metadata
+  - recent GitHub Actions runs
+  - latest user-critical note
+- Unified model selection in the main UI:
+  - `src/components/ModelSelector.tsx` now shows one `生成/评价模型` picker.
+  - The separate evaluator picker was removed from the main UI.
+  - `src/components/PromptGenerator.tsx` mirrors `evaluatorModelIds` from selected generator ids for preference saves, generation requests, history restore, provider defaults, and relay probing.
+  - `src/app/api/model-preferences/route.ts` mirrors evaluator ids from generator ids on GET/PUT for compatibility.
+  - `src/lib/best-model-policy.ts` normalizes evaluator ids to selected generator ids.
+- GPT-5.5 Pro preference hardening:
+  - saved `gpt-5.5` generator preferences auto-upgrade to `gpt-5.5-pro`.
+  - AihubMix default and reasoning recommendations now prefer `gpt-5.5-pro`.
+  - generator affinity lists now prefer `gpt-5.5-pro` first.
+
+Validation passed locally:
+
+- `npx tsc --noEmit`
+- `npm run data:validate`
+- `npm run build`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium` -> 15/15 passed
+- `npm run test:quality` -> 5/5 passed
+- `git diff --check` -> no errors, line-ending warnings only
+
+Operational rule added:
+
+- Do not run `npm run build` concurrently with Playwright. Both touch `.next` and can create a false `/_document` PageNotFoundError.
+
+Next required step:
+
+- Commit and push this change set to GitHub `main`, then watch GitHub Actions.
+
 ## Codex Safety Setup — 2026-05-01
 
 Codex created a safe worktree to avoid overwriting Claude's existing workspace.

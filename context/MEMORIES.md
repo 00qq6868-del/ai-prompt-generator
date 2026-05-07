@@ -15,6 +15,20 @@
 
 ## Key Decisions Made
 
+### Memory / Handoff Decisions
+
+1. **Memory-first workflow is mandatory** (2026-05-08)
+   - Every AI window must read `context/MEMORY_PROTOCOL.md` and `context/CURRENT_HANDOFF.md` before any code change or project conclusion.
+   - Every substantial change, user correction, failed test, passed validation, pre-compression point, and end-of-session point must run `npm run memory:checkpoint`.
+   - The checkpoint records current Git status, GitHub repo metadata, recent workflow runs, diff summary, and the latest user-critical note.
+   - Reason: The user repeatedly saw context compression cause loss of project requirements. The project now treats memory persistence as a first-class engineering requirement.
+
+2. **Generation and evaluation model selection is unified** (2026-05-08)
+   - The main UI must not ask the user to choose a separate evaluator model.
+   - The visible selector is `生成/评价模型`: the selected model ids are used for both prompt generation and AI evaluation.
+   - Backend fields such as `evaluatorModelIds` remain only for compatibility with existing APIs, DB rows, reports, and workers; new preferences mirror them from `generatorModelIds`.
+   - Reason: The user explicitly clarified that selecting the generator model should naturally select the evaluator model too.
+
 ### Architecture Decisions
 
 1. **Three-tier model loading** (2026-04-23)

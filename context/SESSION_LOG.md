@@ -1890,3 +1890,81 @@ Validation:
 Operational note:
 
 - Running `npm run build` concurrently with Playwright still causes a false `/_document` PageNotFoundError because both touch `.next`; always run build alone.
+
+
+## 2026-05-07T16:22:24.496Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: 用户最新核心要求：以后任何工作先读项目记忆和 GitHub 状态；上下文压缩前必须保存 CURRENT_HANDOFF；当前功能任务是把生成器模型和评价模型合并为一个用户选择，评价模型后台镜像生成模型，不再单独选择。
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M AGENTS.md
+ M context/QUICK_START.md
+ M package.json
+ M src/app/api/model-preferences/route.ts
+ M src/components/ModelSelector.tsx
+ M src/components/PromptGenerator.tsx
+ M src/lib/best-model-policy.ts
+ M src/lib/model-recommender.ts
+ M src/lib/models-registry.ts
+ M tests/e2e/prompt-generator.spec.ts
+?? context/CURRENT_HANDOFF.md
+?? context/MEMORY_PROTOCOL.md
+?? scripts/update-memory-checkpoint.cjs
+```
+
+
+## 2026-05-07T16:37:42.610Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: 已实现记忆协议和 checkpoint 脚本；已把主站生成器模型与评价模型合并为一个生成/评价模型选择器，评价模型后台镜像生成模型；GPT-5.5 自动升级 GPT-5.5 Pro；验证已通过 tsc、data:validate、build、prompt-generator E2E 15/15、quality 5/5，准备提交推送。
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M AGENTS.md
+ M context/QUICK_START.md
+ M context/SESSION_LOG.md
+ M package.json
+ M src/app/api/model-preferences/route.ts
+ M src/components/ModelSelector.tsx
+ M src/components/PromptGenerator.tsx
+ M src/lib/best-model-policy.ts
+ M src/lib/model-recommender.ts
+ M src/lib/models-registry.ts
+ M tests/e2e/prompt-generator.spec.ts
+ M tests/e2e/quality.spec.ts
+?? context/CURRENT_HANDOFF.md
+?? context/MEMORY_PROTOCOL.md
+?? scripts/update-memory-checkpoint.cjs
+```
+
+
+## 2026-05-07T16:39:32.506Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: 最终提交前：记忆协议、CURRENT_HANDOFF、PROGRESS、MEMORIES 已更新；生成/评价模型合并已实现；本地验证全部通过；下一步提交并推送到 GitHub main。
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M AGENTS.md
+ M context/MEMORIES.md
+ M context/PROGRESS.md
+ M context/QUICK_START.md
+ M context/SESSION_LOG.md
+ M package.json
+ M src/app/api/model-preferences/route.ts
+ M src/components/ModelSelector.tsx
+ M src/components/PromptGenerator.tsx
+ M src/lib/best-model-policy.ts
+ M src/lib/model-recommender.ts
+ M src/lib/models-registry.ts
+ M tests/e2e/prompt-generator.spec.ts
+ M tests/e2e/quality.spec.ts
+?? context/CURRENT_HANDOFF.md
+?? context/MEMORY_PROTOCOL.md
+?? scripts/update-memory-checkpoint.cjs
+```

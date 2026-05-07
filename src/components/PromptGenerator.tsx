@@ -17,10 +17,8 @@ import { HistoryPanel } from "./HistoryPanel";
 import { trackApiCall, trackError, trackTTFT } from "@/lib/analytics";
 import { normalizePromptPreference, preferenceToLegacy } from "@/lib/prompt-feedback";
 import {
-  BEST_EVALUATOR_MODEL_PRIORITY,
   BEST_IMAGE_MODEL_ID,
   BEST_TARGET_MODEL_ID,
-  chooseBestEvaluatorIds,
   chooseBestGeneratorIds,
   isLegacyAutoModelId,
   normalizeBestModelPreference,
@@ -60,7 +58,7 @@ const PROVIDER_KEY_MAP: Record<string, string> = {
 
 const PROVIDER_PRIORITY = [
   { provider: "custom",    modelId: "gpt-5.5-pro" },
-  { provider: "aihubmix",  modelId: "gpt-5.5" },
+  { provider: "aihubmix",  modelId: "gpt-5.5-pro" },
   { provider: "openai",    modelId: "gpt-5.5-pro" },
   { provider: "anthropic", modelId: "claude-opus-4-7" },
   { provider: "google",    modelId: "gemini-3.1-pro-preview" },
@@ -196,6 +194,10 @@ function readStoredIds(key: string): string[] {
   }
 }
 
+function mirrorEvaluatorIds(generatorIds: string[]): string[] {
+  return generatorIds.filter(Boolean).slice(0, 6);
+}
+
 export function PromptGenerator() {
   const [idea, setIdea]           = useState("");
   const [language, setLanguage]   = useState<"zh" | "en">("zh");
@@ -243,7 +245,7 @@ export function PromptGenerator() {
     void persistModelPreference({
       targetModelId: id,
       generatorIds: generatorModelIds,
-      evaluatorIds: evaluatorModelIds,
+      evaluatorIds: mirrorEvaluatorIds(generatorModelIds),
       isLocked: source !== "auto",
       source,
     });
@@ -259,7 +261,7 @@ export function PromptGenerator() {
     if (typeof window === "undefined") return;
     const tid = input?.targetModelId ?? targetModelId;
     const gids = input?.generatorIds ?? generatorModelIds;
-    const eids = input?.evaluatorIds ?? evaluatorModelIds;
+    const eids = mirrorEvaluatorIds(input?.evaluatorIds ?? input?.generatorIds ?? gids);
     const targetModelCategory = tid === BEST_IMAGE_MODEL_ID ? "image" : "text";
     localStorage.setItem(TARGET_STORAGE_KEY, tid);
     localStorage.setItem(TARGET_LOCK_STORAGE_KEY, (input?.isLocked ?? targetManuallyLocked) ? "1" : "0");
@@ -292,7 +294,7 @@ export function PromptGenerator() {
   }) => {
     if (input.targetModelId === BEST_IMAGE_MODEL_ID) {
       const nextGeneratorModelIds = (input.generatorModelIds ?? []).filter(Boolean).slice(0, 6);
-      const nextEvaluatorModelIds = (input.evaluatorModelIds ?? []).filter(Boolean).slice(0, 6);
+      const nextEvaluatorModelIds = mirrorEvaluatorIds(nextGeneratorModelIds);
       if (targetModelId !== BEST_IMAGE_MODEL_ID) setTargetModelId(BEST_IMAGE_MODEL_ID);
       if (nextGeneratorModelIds.length && nextGeneratorModelIds.join(",") !== generatorModelIds.join(",")) {
         setGeneratorModelIds(nextGeneratorModelIds);
@@ -324,7 +326,7 @@ export function PromptGenerator() {
       void persistModelPreference({
         targetModelId: normalized.targetModelId,
         generatorIds: normalized.generatorModelIds,
-        evaluatorIds: normalized.evaluatorModelIds,
+        evaluatorIds: mirrorEvaluatorIds(normalized.generatorModelIds),
         isLocked: false,
         source: "auto",
       });
@@ -343,7 +345,7 @@ export function PromptGenerator() {
         const pref = data?.preference;
         if (!pref?.targetModelId) {
           const storedGenerators = readStoredIds(GENERATOR_STORAGE_KEY);
-          const storedEvaluators = readStoredIds(EVALUATOR_STORAGE_KEY);
+          const storedEvaluators = mirrorEvaluatorIds(storedGenerators);
           const normalized = applyBestPolicyPreference({
             targetModelId: localStorage.getItem(TARGET_STORAGE_KEY) || DEFAULT_TARGET,
             generatorModelIds: storedGenerators,
@@ -360,7 +362,7 @@ export function PromptGenerator() {
         const normalized = applyBestPolicyPreference({
           targetModelId: pref.targetModelId,
           generatorModelIds: Array.isArray(pref.generatorModelIds) ? pref.generatorModelIds : [],
-          evaluatorModelIds: Array.isArray(pref.evaluatorModelIds) ? pref.evaluatorModelIds : [],
+          evaluatorModelIds: mirrorEvaluatorIds(Array.isArray(pref.generatorModelIds) ? pref.generatorModelIds : []),
           isLocked: Boolean(pref.isLocked),
           source: pref.source,
         });
@@ -373,7 +375,7 @@ export function PromptGenerator() {
       })
       .catch(() => {
         const storedGenerators = readStoredIds(GENERATOR_STORAGE_KEY);
-        const storedEvaluators = readStoredIds(EVALUATOR_STORAGE_KEY);
+        const storedEvaluators = mirrorEvaluatorIds(storedGenerators);
         const normalized = applyBestPolicyPreference({
           targetModelId: localStorage.getItem(TARGET_STORAGE_KEY) || DEFAULT_TARGET,
           generatorModelIds: storedGenerators,
@@ -432,13 +434,13 @@ export function PromptGenerator() {
             if (!readStoredIds(GENERATOR_STORAGE_KEY).length || generatorModelIds.every(isLegacyAutoModelId)) selectBestFromProbe(data.models);
           } else {
             setGeneratorModelIds([BEST_TARGET_MODEL_ID]);
-            setEvaluatorModelIds((prev) => prev.length ? prev : BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+            setEvaluatorModelIds([BEST_TARGET_MODEL_ID]);
           }
         })
         .catch(() => {
           toast.error("探测中转站失败，使用默认模型 / Probe failed, using default model");
           setGeneratorModelIds([BEST_TARGET_MODEL_ID]);
-          setEvaluatorModelIds((prev) => prev.length ? prev : BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+          setEvaluatorModelIds([BEST_TARGET_MODEL_ID]);
         });
       return;
     }
@@ -446,8 +448,11 @@ export function PromptGenerator() {
     for (const { provider, modelId } of PROVIDER_PRIORITY) {
       const keyName = PROVIDER_KEY_MAP[provider];
       if (keyName && userKeys[keyName]?.trim().length > 5) {
-        setGeneratorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : [modelId]);
-        setEvaluatorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+        setGeneratorModelIds((prev) => {
+          const next = prev.length && !prev.every(isLegacyAutoModelId) ? prev : [modelId];
+          setEvaluatorModelIds(mirrorEvaluatorIds(next));
+          return next;
+        });
         return;
       }
     }
@@ -460,19 +465,35 @@ export function PromptGenerator() {
       .then((data: { configured: string[] }) => {
         for (const { provider, modelId } of PROVIDER_PRIORITY) {
           if (data.configured.includes(provider)) {
-            setGeneratorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : [modelId]);
-            setEvaluatorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+            setGeneratorModelIds((prev) => {
+              const next = prev.length && !prev.every(isLegacyAutoModelId) ? prev : [modelId];
+              setEvaluatorModelIds(mirrorEvaluatorIds(next));
+              return next;
+            });
             return;
           }
         }
-        setGeneratorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : [PROVIDER_PRIORITY[0].modelId]);
-        setEvaluatorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+        setGeneratorModelIds((prev) => {
+          const next = prev.length && !prev.every(isLegacyAutoModelId) ? prev : [PROVIDER_PRIORITY[0].modelId];
+          setEvaluatorModelIds(mirrorEvaluatorIds(next));
+          return next;
+        });
       })
       .catch(() => {
-        setGeneratorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : [PROVIDER_PRIORITY[0].modelId]);
-        setEvaluatorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+        setGeneratorModelIds((prev) => {
+          const next = prev.length && !prev.every(isLegacyAutoModelId) ? prev : [PROVIDER_PRIORITY[0].modelId];
+          setEvaluatorModelIds(mirrorEvaluatorIds(next));
+          return next;
+        });
       });
   }, []);
+
+  useEffect(() => {
+    const mirrored = mirrorEvaluatorIds(generatorModelIds);
+    if (mirrored.join(",") !== evaluatorModelIds.join(",")) {
+      setEvaluatorModelIds(mirrored);
+    }
+  }, [generatorModelIds.join(","), evaluatorModelIds.join(",")]);
 
   useEffect(() => {
     if (!preferenceHydrated) return;
@@ -493,8 +514,9 @@ export function PromptGenerator() {
         );
         if (available.length === 0) {
           const allTextModels = allModels.filter((m) => (m.category ?? "text") === "text");
-          setGeneratorModelIds(chooseBestGeneratorIds(allTextModels, 1));
-          setEvaluatorModelIds((prev) => prev.length && !prev.every(isLegacyAutoModelId) ? prev : chooseBestEvaluatorIds(allTextModels, 6));
+          const chosen = chooseBestGeneratorIds(allTextModels, 1);
+          setGeneratorModelIds(chosen);
+          setEvaluatorModelIds(mirrorEvaluatorIds(chosen));
           return;
         }
 
@@ -505,11 +527,7 @@ export function PromptGenerator() {
           const match = affinity.recommended.find(id => available.some(model => model.id.toLowerCase() === id.toLowerCase()));
           if (match) {
             setGeneratorModelIds([match]);
-            setEvaluatorModelIds(prev => prev.length && !prev.every(isLegacyAutoModelId) ? prev : sortBestModels(available
-              .filter(m => m.id !== match)
-              , "evaluator")
-              .slice(0, 3)
-              .map(m => m.id));
+            setEvaluatorModelIds([match]);
             return;
           }
         }
@@ -517,15 +535,11 @@ export function PromptGenerator() {
         const best = sortBestModels(available, "generator")[0];
         if (!best) return;
         setGeneratorModelIds([best.id]);
-        setEvaluatorModelIds(prev => prev.length && !prev.every(isLegacyAutoModelId) ? prev : sortBestModels(available
-          .filter(m => m.id !== best.id)
-          , "evaluator")
-          .slice(0, 3)
-          .map(m => m.id));
+        setEvaluatorModelIds([best.id]);
       })
       .catch(() => {
         setGeneratorModelIds([BEST_TARGET_MODEL_ID]);
-        setEvaluatorModelIds(BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6));
+        setEvaluatorModelIds([BEST_TARGET_MODEL_ID]);
       });
   };
 
@@ -863,7 +877,9 @@ export function PromptGenerator() {
               onReuse={(item) => {
                 setIdea(item.userIdea);
                 setTargetModel(item.targetModel, "history");
-                setGeneratorModelIds(item.generatorModel.split(",").map(id => id.trim()).filter(Boolean));
+                const restoredGeneratorIds = item.generatorModel.split(",").map(id => id.trim()).filter(Boolean);
+                setGeneratorModelIds(restoredGeneratorIds);
+                setEvaluatorModelIds(mirrorEvaluatorIds(restoredGeneratorIds));
                 setLanguage(item.language);
       }}
             />
@@ -914,15 +930,16 @@ export function PromptGenerator() {
       <ModelSelector
         selectedTargetId={targetModelId}
         selectedGeneratorIds={generatorModelIds}
-        selectedEvaluatorIds={evaluatorModelIds}
-              onTargetChange={(id) => setTargetModel(id, "manual")}
+        onTargetChange={(id) => setTargetModel(id, "manual")}
         onGeneratorChange={(ids) => {
           setGeneratorModelIds(ids);
-          void persistModelPreference({ generatorIds: ids, source: "manual", isLocked: targetManuallyLocked });
-        }}
-        onEvaluatorChange={(ids) => {
-          setEvaluatorModelIds(ids);
-          void persistModelPreference({ evaluatorIds: ids, source: "manual", isLocked: targetManuallyLocked });
+          setEvaluatorModelIds(mirrorEvaluatorIds(ids));
+          void persistModelPreference({
+            generatorIds: ids,
+            evaluatorIds: mirrorEvaluatorIds(ids),
+            source: "manual",
+            isLocked: targetManuallyLocked,
+          });
         }}
         availableModelIds={availableModelIds}
       />

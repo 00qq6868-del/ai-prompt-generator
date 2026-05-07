@@ -57,6 +57,14 @@ export const LEGACY_AUTO_MODEL_IDS = new Set([
   "deepseek-reasoner",
 ]);
 
+const AUTO_UPGRADE_TO_PRO_GENERATOR_IDS = new Set([
+  "gpt-5.5",
+  "gpt-5.4-pro",
+  "gpt-5.4",
+  "gpt-5-pro",
+  "gpt-5",
+]);
+
 function lower(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -69,6 +77,12 @@ export function isLegacyAutoModelId(modelId: string | null | undefined): boolean
   if (!modelId) return true;
   if (isImageModelId(modelId)) return false;
   return LEGACY_AUTO_MODEL_IDS.has(lower(modelId));
+}
+
+function shouldAutoUpgradeGeneratorIds(modelIds: string[]): boolean {
+  if (modelIds.length === 0) return true;
+  if (modelIds.some((id) => lower(id) === BEST_TARGET_MODEL_ID)) return false;
+  return modelIds.every((id) => isLegacyAutoModelId(id) || AUTO_UPGRADE_TO_PRO_GENERATOR_IDS.has(lower(id)));
 }
 
 export function priorityIndex(modelId: string, priority: string[]): number {
@@ -156,14 +170,14 @@ export function normalizeBestModelPreference(input: {
   }
 
   let generatorModelIds = (input.generatorModelIds ?? []).filter(Boolean).slice(0, 6);
-  if (generatorModelIds.length === 0 || generatorModelIds.every(isLegacyAutoModelId)) {
+  if (shouldAutoUpgradeGeneratorIds(generatorModelIds)) {
     generatorModelIds = [BEST_TARGET_MODEL_ID];
     upgraded = true;
   }
 
-  let evaluatorModelIds = (input.evaluatorModelIds ?? []).filter(Boolean).slice(0, 6);
-  if (evaluatorModelIds.length === 0 || evaluatorModelIds.some(isLegacyAutoModelId)) {
-    evaluatorModelIds = BEST_EVALUATOR_MODEL_PRIORITY.slice(0, 6);
+  const requestedEvaluatorModelIds = (input.evaluatorModelIds ?? []).filter(Boolean).slice(0, 6);
+  const evaluatorModelIds = generatorModelIds.slice(0, 6);
+  if (requestedEvaluatorModelIds.join(",") !== evaluatorModelIds.join(",")) {
     upgraded = true;
   }
 
