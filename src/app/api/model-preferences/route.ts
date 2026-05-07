@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getModelPreference, saveModelPreference } from "@/lib/server/storage";
+import { BEST_IMAGE_MODEL_ID, normalizeBestModelPreference } from "@/lib/best-model-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,9 +24,44 @@ function deviceIdFrom(req: NextRequest, body?: Record<string, unknown>): string 
   );
 }
 
+function hasImageIntent(req: NextRequest, body?: Record<string, unknown>): boolean {
+  const explicit = cleanString(body?.targetModelCategory, 40).toLowerCase();
+  if (explicit === "image") return true;
+  const target = cleanString(body?.targetModelId, 180).toLowerCase();
+  if (target === BEST_IMAGE_MODEL_ID) return true;
+  const queryCategory = cleanString(req.nextUrl.searchParams.get("targetModelCategory"), 40).toLowerCase();
+  if (queryCategory === "image") return true;
+  const queryTarget = cleanString(req.nextUrl.searchParams.get("targetModelId"), 180).toLowerCase();
+  return queryTarget === BEST_IMAGE_MODEL_ID;
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const preference = await getModelPreference(deviceIdFrom(req));
+    const deviceId = deviceIdFrom(req);
+    const preference = await getModelPreference(deviceId);
+    if (preference) {
+      const normalized = hasImageIntent(req)
+        ? {
+            targetModelId: preference.targetModelId,
+            generatorModelIds: preference.generatorModelIds,
+            evaluatorModelIds: preference.evaluatorModelIds,
+            upgraded: false,
+          }
+        : normalizeBestModelPreference(preference);
+      if (normalized.upgraded) {
+        const upgraded = await saveModelPreference({
+          ...preference,
+          targetModelId: normalized.targetModelId,
+          generatorModelIds: normalized.generatorModelIds,
+          evaluatorModelIds: normalized.evaluatorModelIds,
+          isLocked: false,
+          source: "auto",
+          deviceId,
+          updatedAt: new Date().toISOString(),
+        });
+        return NextResponse.json({ ok: true, preference: upgraded, upgraded: true });
+      }
+    }
     return NextResponse.json({ ok: true, preference });
   } catch (error: any) {
     console.warn("[model-preferences:get]", error?.message || error);
@@ -50,13 +86,27 @@ export async function PUT(req: NextRequest) {
     const source = ["auto", "manual", "history", "server"].includes(String(body.source))
       ? body.source
       : "manual";
+    const normalized = hasImageIntent(req, body)
+      ? {
+          targetModelId,
+          generatorModelIds: cleanIds(body.generatorModelIds),
+          evaluatorModelIds: cleanIds(body.evaluatorModelIds),
+          upgraded: false,
+        }
+      : normalizeBestModelPreference({
+          targetModelId,
+          generatorModelIds: cleanIds(body.generatorModelIds),
+          evaluatorModelIds: cleanIds(body.evaluatorModelIds),
+          isLocked: Boolean(body.isLocked),
+          source: String(source),
+        });
     const preference = await saveModelPreference({
-      targetModelId,
-      generatorModelIds: cleanIds(body.generatorModelIds),
-      evaluatorModelIds: cleanIds(body.evaluatorModelIds),
+      targetModelId: normalized.targetModelId,
+      generatorModelIds: normalized.generatorModelIds,
+      evaluatorModelIds: normalized.evaluatorModelIds,
       imageJudgeModelIds: cleanIds(body.imageJudgeModelIds),
-      isLocked: Boolean(body.isLocked),
-      source,
+      isLocked: Boolean(body.isLocked) && !normalized.upgraded,
+      source: normalized.upgraded ? "auto" : source,
       deviceId: deviceIdFrom(req, body),
       updatedAt: new Date().toISOString(),
     });

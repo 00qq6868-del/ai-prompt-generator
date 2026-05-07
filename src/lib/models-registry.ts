@@ -3,6 +3,8 @@
 //  Fetched at runtime from MODELS_REGISTRY_URL for auto-updates
 // ============================================================
 
+import { bestPolicyScore } from "./best-model-policy";
+
 export type SpeedRating = "ultrafast" | "fast" | "medium" | "slow";
 export type AccuracyRating = "supreme" | "high" | "medium" | "low";
 export type OptimizationMode = "token" | "accurate" | "fast" | "aligned";
@@ -167,20 +169,37 @@ export const BUNDLED_MODELS: ModelInfo[] = [
     category: "text",
   },
   {
+    id: "gpt-5.5-pro",
+    name: "GPT-5.5 Pro",
+    provider: "OpenAI",
+    apiProvider: "openai",
+    contextWindow: 1048576,
+    maxOutput: 128000,
+    inputCostPer1M: 30,
+    outputCostPer1M: 180,
+    speed: "medium",
+    accuracy: "supreme",
+    supportsStreaming: true,
+    isLatest: true,
+    tags: ["reasoning", "code", "vision", "agentic", "flagship"],
+    releaseDate: "2026-04-24",
+    category: "text",
+  },
+  {
     id: "gpt-5.5",
     name: "GPT-5.5",
     provider: "OpenAI",
     apiProvider: "openai",
-    contextWindow: 200000,
-    maxOutput: 100000,
-    inputCostPer1M: 10,
-    outputCostPer1M: 40,
+    contextWindow: 1048576,
+    maxOutput: 128000,
+    inputCostPer1M: 5,
+    outputCostPer1M: 30,
     speed: "fast",
     accuracy: "supreme",
     supportsStreaming: true,
-    isLatest: false,
-    tags: ["reasoning", "code"],
-    releaseDate: "2025-11-01",
+    isLatest: true,
+    tags: ["reasoning", "code", "vision", "agentic"],
+    releaseDate: "2026-04-24",
     category: "text",
   },
   {
@@ -993,22 +1012,28 @@ export function getTopModels(
   n = 5
 ): ModelInfo[] {
   return [...models]
-    .sort((a, b) => scoreModel(b, mode) - scoreModel(a, mode))
+    .sort((a, b) => {
+      if (mode === "accurate" || mode === "aligned") {
+        const bestDiff = bestPolicyScore(b, "target") - bestPolicyScore(a, "target");
+        if (bestDiff !== 0) return bestDiff;
+      }
+      return scoreModel(b, mode) - scoreModel(a, mode);
+    })
     .slice(0, n);
 }
 
 export const GENERATOR_AFFINITY: { prefix: string; recommended: string[] }[] = [
-  { prefix: "gpt-5",     recommended: ["claude-sonnet-4-6", "gpt-4.1", "gemini-2.5-pro-preview-03-25"] },
-  { prefix: "gpt-4",     recommended: ["claude-sonnet-4-6", "gpt-4.1", "gemini-2.5-pro-preview-03-25"] },
-  { prefix: "o3",        recommended: ["claude-sonnet-4-6", "gpt-4.1"] },
-  { prefix: "o4",        recommended: ["claude-sonnet-4-6", "gpt-4.1"] },
-  { prefix: "claude-",   recommended: ["gpt-4.1", "gemini-2.5-pro", "claude-sonnet-4-6"] },
-  { prefix: "gemini-",   recommended: ["claude-sonnet-4-6", "gpt-4.1", "gemini-2.5-pro"] },
-  { prefix: "grok-",     recommended: ["claude-sonnet-4-6", "gpt-4.1"] },
-  { prefix: "deepseek-", recommended: ["claude-sonnet-4-6", "gpt-4.1"] },
-  { prefix: "llama-",    recommended: ["claude-sonnet-4-6", "gpt-4.1"] },
-  { prefix: "glm-",      recommended: ["qwen-max", "claude-sonnet-4-6", "deepseek-chat"] },
-  { prefix: "qwen-",     recommended: ["claude-sonnet-4-6", "deepseek-chat", "glm-4-plus"] },
-  { prefix: "moonshot-", recommended: ["claude-sonnet-4-6", "qwen-max", "deepseek-chat"] },
-  { prefix: "ernie-",    recommended: ["qwen-max", "claude-sonnet-4-6", "deepseek-chat"] },
+  { prefix: "gpt-5",     recommended: ["gpt-5.5-pro", "gpt-5.5", "gpt-5.4"] },
+  { prefix: "gpt-4",     recommended: ["gpt-5.5-pro", "gpt-5.5", "claude-opus-4-7"] },
+  { prefix: "o3",        recommended: ["gpt-5.5-pro", "gpt-5.5", "claude-opus-4-7"] },
+  { prefix: "o4",        recommended: ["gpt-5.5", "gpt-5.5-pro", "claude-opus-4-7"] },
+  { prefix: "claude-",   recommended: ["gpt-5.5-pro", "gpt-5.5", "gemini-3.1-pro-preview"] },
+  { prefix: "gemini-",   recommended: ["gpt-5.5-pro", "gpt-5.5", "claude-opus-4-7"] },
+  { prefix: "grok-",     recommended: ["gpt-5.5-pro", "gpt-5.5", "claude-opus-4-7"] },
+  { prefix: "deepseek-", recommended: ["gpt-5.5-pro", "gpt-5.5", "claude-opus-4-7"] },
+  { prefix: "llama-",    recommended: ["gpt-5.5", "gpt-5.5-pro", "claude-opus-4-7"] },
+  { prefix: "glm-",      recommended: ["gpt-5.5", "gpt-5.5-pro", "qwen3-235b-a22b"] },
+  { prefix: "qwen-",     recommended: ["gpt-5.5", "gpt-5.5-pro", "qwen3-235b-a22b"] },
+  { prefix: "moonshot-", recommended: ["gpt-5.5", "gpt-5.5-pro", "qwen3-235b-a22b"] },
+  { prefix: "ernie-",    recommended: ["gpt-5.5", "gpt-5.5-pro", "qwen3-235b-a22b"] },
 ];

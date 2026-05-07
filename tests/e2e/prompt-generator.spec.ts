@@ -21,6 +21,57 @@ async function mockAPIs(page: Page) {
       body: JSON.stringify({
         models: [
           {
+            id: "gpt-5.5-pro",
+            name: "GPT-5.5 Pro",
+            provider: "OpenAI",
+            apiProvider: "openai",
+            category: "text",
+            contextWindow: 1048576,
+            maxOutput: 128000,
+            inputCostPer1M: 30,
+            outputCostPer1M: 180,
+            speed: "medium",
+            accuracy: "supreme",
+            supportsStreaming: true,
+            isLatest: true,
+            tags: ["reasoning", "code", "vision", "agentic", "pro"],
+            releaseDate: "2026-04-24",
+          },
+          {
+            id: "gpt-5.5",
+            name: "GPT-5.5",
+            provider: "OpenAI",
+            apiProvider: "openai",
+            category: "text",
+            contextWindow: 1048576,
+            maxOutput: 128000,
+            inputCostPer1M: 5,
+            outputCostPer1M: 30,
+            speed: "fast",
+            accuracy: "supreme",
+            supportsStreaming: true,
+            isLatest: true,
+            tags: ["reasoning", "code", "vision", "agentic"],
+            releaseDate: "2026-04-24",
+          },
+          {
+            id: "claude-sonnet-4-6",
+            name: "Claude Sonnet 4.6",
+            provider: "Anthropic",
+            apiProvider: "anthropic",
+            category: "text",
+            contextWindow: 1048576,
+            maxOutput: 64000,
+            inputCostPer1M: 3,
+            outputCostPer1M: 15,
+            speed: "fast",
+            accuracy: "supreme",
+            supportsStreaming: true,
+            isLatest: true,
+            tags: ["vision", "code", "thinking"],
+            releaseDate: "2025-11-24",
+          },
+          {
             id: "gpt-4o",
             name: "GPT-4o",
             provider: "OpenAI",
@@ -339,6 +390,23 @@ test.describe("PromptGenerator E2E", () => {
 
     // Error toast should appear
     await expect(page.locator("text=API Key 无效")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("5b. old model preferences migrate to GPT-5.5-first defaults", async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem("ai_prompt_target_model_id", "claude-sonnet-4-6");
+      localStorage.setItem("ai_prompt_target_model_locked", "1");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["claude-sonnet-4-6"]));
+      localStorage.setItem("ai_prompt_last_evaluator_model_ids", JSON.stringify(["gemini-3.1-pro-high"]));
+    });
+
+    await page.reload();
+    await mockAPIs(page);
+
+    await expect(page.getByText("当前已选目标模型 Selected target")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("GPT-5.5 Pro").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "选择生成器模型 Open generator model picker" })).toContainText("GPT-5.5 Pro");
+    await expect(page.getByRole("button", { name: "选择评价模型 Open evaluator model picker" })).toContainText("GPT-5.5 Pro");
   });
 
   test("8b. SSE error after partial output keeps the received prompt", async ({ page }) => {

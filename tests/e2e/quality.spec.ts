@@ -180,16 +180,30 @@ test.describe("Quality and accessibility audit", () => {
       await expectScrollable(scroller, page, !isMobile);
       await expectDragScrollable(scroller, page);
 
-      const selectableCard = dialog
-        .locator('[role="button"][aria-pressed="false"][aria-disabled="false"]')
+      const selectedCard = dialog
+        .locator('[role="button"][aria-pressed="true"][aria-disabled="false"]')
         .first();
-      await expect(selectableCard).toBeVisible({ timeout: 15_000 });
-      const selectableLabel = await selectableCard.getAttribute("aria-label");
-      expect(selectableLabel).toBeTruthy();
-      await selectableCard.click();
-      await expect(
-        dialog.getByRole("button", { name: selectableLabel ?? "" })
-      ).toHaveAttribute("aria-pressed", "true");
+      const canDeselect = await selectedCard.isVisible({ timeout: 3000 }).catch(() => false);
+
+      if (canDeselect) {
+        const selectedLabel = await selectedCard.getAttribute("aria-label");
+        expect(selectedLabel).toBeTruthy();
+        await selectedCard.click();
+        await expect(
+          dialog.getByRole("button", { name: selectedLabel ?? "" })
+        ).toHaveAttribute("aria-pressed", "false");
+      } else {
+        const unselectedCard = dialog
+          .locator('[role="button"][aria-pressed="false"][aria-disabled="false"]')
+          .first();
+        await expect(unselectedCard).toBeVisible({ timeout: 15_000 });
+        const selectableLabel = await unselectedCard.getAttribute("aria-label");
+        expect(selectableLabel).toBeTruthy();
+        await unselectedCard.click();
+        await expect(
+          dialog.getByRole("button", { name: selectableLabel ?? "" })
+        ).toHaveAttribute("aria-pressed", "true");
+      }
 
       await dialog.getByRole("button", { name: "完成 Done" }).click();
       await expect(dialog).toBeHidden();
