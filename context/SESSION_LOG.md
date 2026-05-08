@@ -1979,3 +1979,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-08T00:14:34.363Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: FINAL GitHub release sync: download artifacts are complete in GitHub Releases, not GitHub Packages. Release tag desktop-v1.0.0 contains Windows setup EXE, Windows portable EXE, Windows blockmap, macOS DMG, macOS ZIP, Linux AppImage, and Android APK. Download API endpoints all return 302 redirects to the expected release asset URLs. After this checkpoint is pushed, rerun Desktop Release and Android Release from the checkpoint HEAD so release binaries match latest main exactly.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
