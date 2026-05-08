@@ -10,12 +10,13 @@ import toast from "react-hot-toast";
 import { ModelInfo, GENERATOR_AFFINITY } from "@/lib/models-registry";
 import { isRelayModelListed, mergeRelayModelIds } from "@/lib/relay-models";
 import { recommendModel } from "@/lib/model-recommender";
-import { saveHistory } from "@/lib/history";
-import { buildPromptFeedbackMemory, findPreviousPrompt, savePromptFeedback } from "@/lib/prompt-feedback";
+import { getHistory, saveHistory } from "@/lib/history";
+import { buildPromptFeedbackMemory, findPreviousPrompt, saveIntentMemoryEvent, savePromptFeedback } from "@/lib/prompt-feedback";
 import type { PromptPreference } from "@/lib/prompt-feedback";
 import { HistoryPanel } from "./HistoryPanel";
 import { trackApiCall, trackError, trackTTFT } from "@/lib/analytics";
 import { normalizePromptPreference, preferenceToLegacy } from "@/lib/prompt-feedback";
+import { analyzeUserIntent, applyClarificationChoice, type IntentAnalysis } from "@/lib/intent-router";
 import {
   BEST_IMAGE_MODEL_ID,
   BEST_TARGET_MODEL_ID,
@@ -39,6 +40,7 @@ const TARGET_LOCK_STORAGE_KEY = "ai_prompt_target_model_locked";
 const DEVICE_ID_STORAGE_KEY = "ai_prompt_device_id";
 const GENERATOR_STORAGE_KEY = "ai_prompt_last_generator_model_ids";
 const EVALUATOR_STORAGE_KEY = "ai_prompt_last_evaluator_model_ids";
+const HISTORY_SYNC_STORAGE_KEY = "ai_prompt_history_last_sync_at";
 const MAX_REFERENCE_IMAGE_BYTES = 7 * 1024 * 1024;
 
 const PROVIDER_KEY_MAP: Record<string, string> = {
@@ -264,6 +266,9 @@ export function PromptGenerator() {
   const [deviceId, setDeviceId] = useState(() => ensureDeviceId());
   const [preferenceHydrated, setPreferenceHydrated] = useState(false);
   const [referenceImage, setReferenceImage] = useState<ReferenceImageDraft | null>(null);
+  const [intentAnalysis, setIntentAnalysis] = useState<IntentAnalysis | null>(null);
+  const [clarificationChoice, setClarificationChoice] = useState("");
+  const [acceptedCorrection, setAcceptedCorrection] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const referenceInputRef = useRef<HTMLInputElement>(null);
 
@@ -525,6 +530,27 @@ export function PromptGenerator() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!deviceId) return;
+    const lastSync = Number(localStorage.getItem(HISTORY_SYNC_STORAGE_KEY) || "0");
+    if (Date.now() - lastSync < 6 * 60 * 60 * 1000) return;
+    const items = getHistory().slice(0, 50);
+    if (!items.length) return;
+    fetch("/api/history/sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ai-prompt-device-id": deviceId,
+      },
+      body: JSON.stringify({ deviceId, items }),
+    })
+      .then((res) => {
+        if (res.ok) localStorage.setItem(HISTORY_SYNC_STORAGE_KEY, String(Date.now()));
+      })
+      .catch(() => {});
+  }, [deviceId]);
+
+  useEffect(() => {
     const mirrored = mirrorEvaluatorIds(generatorModelIds);
     if (mirrored.join(",") !== evaluatorModelIds.join(",")) {
       setEvaluatorModelIds(mirrored);
@@ -621,6 +647,17 @@ export function PromptGenerator() {
       toast.error("请先输入你的想法或需求！/ Please enter your idea first!");
       return;
     }
+    const nextIntentAnalysis = analyzeUserIntent(idea, language);
+    if (nextIntentAnalysis.status === "needs_clarification" && !clarificationChoice.trim()) {
+      setIntentAnalysis(nextIntentAnalysis);
+      toast.error("检测到意图冲突，请先确认方向 / Please clarify the main intent first");
+      return;
+    }
+    if (nextIntentAnalysis.status === "suggest_correction" && !acceptedCorrection) {
+      setIntentAnalysis(nextIntentAnalysis);
+      toast.error("检测到可能的输入错误，请确认是否纠正 / Please confirm the suggested correction");
+      return;
+    }
     const primaryGeneratorModelId = generatorModelIds[0] ?? "";
     if (!primaryGeneratorModelId) {
       toast.error("请先点击右上角钥匙图标填入至少一个 API Key / Please set at least one API Key first");
@@ -671,12 +708,26 @@ export function PromptGenerator() {
 
     try {
       const userKeys = loadUserKeys();
-      const feedbackMemory = buildPromptFeedbackMemory(idea, targetModelId);
+      const effectiveIdea =
+        intentAnalysis?.status === "suggest_correction" && acceptedCorrection && intentAnalysis.suggestedInput
+          ? intentAnalysis.suggestedInput
+          : clarificationChoice.trim()
+            ? applyClarificationChoice(idea, clarificationChoice)
+            : idea;
+      if (clarificationChoice.trim() || acceptedCorrection) {
+        setIntentAnalysis(null);
+      }
+      const effectiveIntentAnalysis = analyzeUserIntent(effectiveIdea, language);
+      const feedbackMemory = buildPromptFeedbackMemory(effectiveIdea, targetModelId);
+      feedbackMemory.rules = [
+        ...effectiveIntentAnalysis.feedbackMemoryHints.map((hint) => `内部意图路由提示：${hint}`),
+        ...feedbackMemory.rules,
+      ].slice(0, 16);
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userIdea: idea,
+          userIdea: effectiveIdea,
           targetModelId,
           generatorModelId: primaryGeneratorModelId,
           generatorModelIds,
@@ -687,6 +738,7 @@ export function PromptGenerator() {
           availableModelIds,
           deviceId,
           feedbackMemory,
+          intentAnalysis: effectiveIntentAnalysis,
           referenceImage: referenceImage
             ? {
                 dataUrl: referenceImage.dataUrl,
@@ -798,7 +850,7 @@ export function PromptGenerator() {
                   setGenerationProgress(null);
                   toast.dismiss(tid);
                   toast.error(`${STREAM_INTERRUPTED_WITH_PARTIAL_OUTPUT} ${message}`);
-                  saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
+                  saveHistory({ userIdea: effectiveIdea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
                   await reader.cancel().catch(() => {});
                   break readLoop;
                 }
@@ -826,7 +878,7 @@ export function PromptGenerator() {
           setGenerationProgress(null);
           toast.dismiss(tid);
           toast.error(STREAM_INTERRUPTED_WITH_PARTIAL_OUTPUT);
-          saveHistory({ userIdea: idea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
+          saveHistory({ userIdea: effectiveIdea, optimizedPrompt: accumulated, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
         } else if (!receivedDoneEvent) {
           trackGenerateCall(false, res.status);
           throw new Error(STREAM_INTERRUPTED_WITHOUT_OUTPUT);
@@ -839,7 +891,7 @@ export function PromptGenerator() {
         setGenerationProgress(null);
         toast.dismiss(tid);
         toast.success("提示词生成成功！/ Prompt generated!");
-        saveHistory({ userIdea: idea, optimizedPrompt: data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
+        saveHistory({ userIdea: effectiveIdea, optimizedPrompt: data.optimizedPrompt, targetModel: targetModelId, generatorModel: generatorModelIds.join(","), language });
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
     } catch (err: any) {
@@ -958,6 +1010,9 @@ export function PromptGenerator() {
             <HistoryPanel
               onReuse={(item) => {
                 setIdea(item.userIdea);
+                setIntentAnalysis(null);
+                setClarificationChoice("");
+                setAcceptedCorrection(false);
                 setTargetModel(item.targetModel, "history");
                 const restoredGeneratorIds = item.generatorModel.split(",").map(id => id.trim()).filter(Boolean);
                 setGeneratorModelIds(restoredGeneratorIds);
@@ -979,7 +1034,12 @@ export function PromptGenerator() {
         <div className="relative">
           <textarea
             value={idea}
-            onChange={(e) => setIdea(e.target.value)}
+            onChange={(e) => {
+              setIdea(e.target.value);
+              setIntentAnalysis(null);
+              setClarificationChoice("");
+              setAcceptedCorrection(false);
+            }}
             placeholder="例如：写一首关于秋天的古风诗 / Write a function that validates email addresses / 帮我分析这段代码的时间复杂度…"
             rows={5}
             aria-label="输入你的想法或需求 Enter your idea or requirement"
@@ -989,6 +1049,90 @@ export function PromptGenerator() {
             <span className="absolute bottom-3 right-4 text-xs text-white/60">{charCount}</span>
           )}
         </div>
+
+        {intentAnalysis && intentAnalysis.status !== "ready" && (
+          <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-500/10 p-3">
+            <div className="text-sm font-semibold text-amber-100">
+              {intentAnalysis.status === "needs_clarification" ? "需要确认主方向" : "检测到可能的输入错误"}
+            </div>
+            <div className="mt-1 text-xs leading-5 text-amber-50/75">
+              {intentAnalysis.clarificationQuestion}
+            </div>
+            {intentAnalysis.conflicts.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {intentAnalysis.conflicts[0].options.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      setClarificationChoice(option);
+                      setAcceptedCorrection(false);
+                      saveIntentMemoryEvent({
+                        userIdea: idea,
+                        decision: "clarified",
+                        selectedDirection: option,
+                        reason: intentAnalysis.conflicts[0]?.message,
+                      });
+                      toast.success(`已确认主方向：${option}`);
+                    }}
+                    className={`rounded-xl border px-3 py-2 text-xs font-medium transition ${
+                      clarificationChoice === option
+                        ? "border-amber-200/60 bg-amber-300/20 text-white"
+                        : "border-white/10 bg-white/[0.04] text-amber-50/75 hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    按「{option}」优化
+                  </button>
+                ))}
+              </div>
+            )}
+            {intentAnalysis.suggestedInput && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdea(intentAnalysis.suggestedInput || idea);
+                    setAcceptedCorrection(true);
+                    setClarificationChoice("");
+                    saveIntentMemoryEvent({
+                      userIdea: idea,
+                      decision: "correction_accepted",
+                      suggestedInput: intentAnalysis.suggestedInput,
+                      reason: intentAnalysis.clarificationQuestion,
+                    });
+                    setIntentAnalysis(null);
+                    toast.success("已使用纠正后的输入 / Correction applied");
+                  }}
+                  className="rounded-xl border border-emerald-300/30 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-50 transition hover:bg-emerald-500/25"
+                >
+                  使用纠正版本
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAcceptedCorrection(true);
+                    saveIntentMemoryEvent({
+                      userIdea: idea,
+                      decision: "correction_rejected",
+                      suggestedInput: intentAnalysis.suggestedInput,
+                      reason: intentAnalysis.clarificationQuestion,
+                    });
+                    setIntentAnalysis(null);
+                    toast.success("已保留原文继续 / Original input kept");
+                  }}
+                  className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.08]"
+                >
+                  保留原文继续
+                </button>
+              </div>
+            )}
+            {clarificationChoice && (
+              <div className="mt-2 text-xs text-amber-50/65">
+                已选择：{clarificationChoice}。再次点击生成会按这个方向继续，不会把冲突词当成主目标。
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
           <input

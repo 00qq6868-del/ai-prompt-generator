@@ -13,7 +13,14 @@ function cleanString(value: unknown, max = 8000): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
-function monthPath(kind: "prompt-feedback" | "test-runs" | "score-reports", timestamp = Date.now()): string {
+export type DatasetKind =
+  | "prompt-feedback"
+  | "test-runs"
+  | "score-reports"
+  | "prompt-history"
+  | "github-projects";
+
+function monthPath(kind: DatasetKind, timestamp = Date.now()): string {
   const date = new Date(Number.isFinite(timestamp) ? timestamp : Date.now());
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -59,6 +66,11 @@ export function sanitizeDatasetRow(input: Record<string, unknown>) {
     source_commits: Array.isArray(input.sourceCommits)
       ? input.sourceCommits.map((item) => cleanString(item, 220)).filter(Boolean).slice(0, 40)
       : [],
+    github_project_count: Number.isFinite(Number(input.project_count)) ? Number(input.project_count) : null,
+    github_top_by_group: input.top_by_group && typeof input.top_by_group === "object" ? input.top_by_group : null,
+    github_extracted_rules: Array.isArray(input.extracted_rules)
+      ? input.extracted_rules.map((item) => cleanString(item, 800)).filter(Boolean).slice(0, 50)
+      : [],
   };
 }
 
@@ -83,7 +95,7 @@ async function githubJson(url: string, init: RequestInit & { token: string }) {
 }
 
 export async function exportDatasetRow(
-  kind: "prompt-feedback" | "test-runs" | "score-reports",
+  kind: DatasetKind,
   row: Record<string, unknown>,
 ): Promise<DatasetExportResult> {
   const timestamp = Number.isFinite(Number(row.timestamp)) ? Number(row.timestamp) : Date.now();

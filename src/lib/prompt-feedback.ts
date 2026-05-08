@@ -1,4 +1,5 @@
 const FEEDBACK_STORAGE_KEY = "ai_prompt_feedback";
+const INTENT_MEMORY_STORAGE_KEY = "ai_prompt_intent_memory";
 const MAX_FEEDBACK_ITEMS = 200;
 
 export type PromptPreference = "new" | "old" | "blend" | "both_bad";
@@ -38,6 +39,16 @@ export interface PromptFeedbackMemory {
   }>;
 }
 
+export interface IntentMemoryEvent {
+  id: string;
+  timestamp: number;
+  userIdea: string;
+  decision: "clarified" | "correction_accepted" | "correction_rejected";
+  selectedDirection?: string;
+  suggestedInput?: string;
+  reason?: string;
+}
+
 export interface SavePromptFeedbackInput extends Omit<PromptFeedbackItem, "id" | "timestamp"> {}
 
 function generateId(): string {
@@ -71,6 +82,29 @@ export function savePromptFeedback(input: SavePromptFeedbackInput): PromptFeedba
     timestamp: Date.now(),
   };
   saveAll([item, ...getPromptFeedback()].slice(0, MAX_FEEDBACK_ITEMS));
+  return item;
+}
+
+export function getIntentMemoryEvents(): IntentMemoryEvent[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(INTENT_MEMORY_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveIntentMemoryEvent(input: Omit<IntentMemoryEvent, "id" | "timestamp">): IntentMemoryEvent {
+  const item: IntentMemoryEvent = {
+    ...input,
+    id: generateId(),
+    timestamp: Date.now(),
+  };
+  if (typeof window !== "undefined") {
+    localStorage.setItem(INTENT_MEMORY_STORAGE_KEY, JSON.stringify([item, ...getIntentMemoryEvents()].slice(0, 100)));
+  }
   return item;
 }
 
@@ -136,6 +170,18 @@ export function buildPromptFeedbackMemory(userIdea: string, targetModel: string)
     }
     if (/评分.*高|太高|虚高|不真实|不像|细节|抠|手|脸|文字|比例|构图|光影|真实照片/.test(item.userNotes)) {
       rules.add("评分要更严格：发现手、脸、文字、比例、构图、光影、真实感或商业完成度问题时，不能给高分。");
+    }
+  }
+
+  for (const item of getIntentMemoryEvents().slice(0, 12)) {
+    if (item.decision === "clarified" && item.selectedDirection) {
+      rules.add(`用户曾因输入冲突澄清主方向为「${item.selectedDirection}」；遇到相似冲突时必须先确认，不要擅自选择。`);
+    }
+    if (item.decision === "correction_accepted" && item.suggestedInput) {
+      rules.add("用户接受过自动纠错；高置信误写可以提示纠正，但必须保留用户确认记录。");
+    }
+    if (item.decision === "correction_rejected") {
+      rules.add("用户曾拒绝自动纠错；低置信纠错必须追问或允许保留原文，不能强行改写。");
     }
   }
 

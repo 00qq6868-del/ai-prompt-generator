@@ -169,6 +169,14 @@ async function mockAPIs(page: Page) {
       body: JSON.stringify({ ok: true, feedbackId: "feedback-e2e", github: { synced: false } }),
     })
   );
+
+  await page.route("**/api/history/sync", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, received: 0, synced: 0 }),
+    })
+  );
 }
 
 /** Build a SSE response body that streams chunks then sends a done event. */
@@ -767,5 +775,50 @@ test.describe("PromptGenerator E2E", () => {
     expect(generateBody.referenceImage.dataUrl).toContain("data:image/png;base64,");
     expect(generateBody.referenceImage.name).toBe("reference.png");
     expect(generateBody.referenceImage.size).toBeGreaterThan(0);
+  });
+
+  test("14. conflicting user input asks for clarification before generation", async ({ page }) => {
+    let generateBody: any = null;
+    await page.route("**/api/generate", async (route) => {
+      generateBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(MOCK_OPTIMIZED),
+      });
+    });
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "ai_prompt_user_keys",
+        JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" })
+      );
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/generate", async (route) => {
+      generateBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(MOCK_OPTIMIZED),
+      });
+    });
+
+    await page.locator("textarea").fill("帮我生成汽车广告提示词，但关键词里也写了手机外观");
+    await page.getByRole("button", { name: /生成优化提示词/ }).click();
+
+    await expect(page.getByText("需要确认主方向")).toBeVisible();
+    await expect(page.getByRole("button", { name: /按「汽车」优化/ })).toBeVisible();
+    expect(generateBody).toBeNull();
+
+    await page.getByRole("button", { name: /按「汽车」优化/ }).click();
+    await page.getByRole("button", { name: /生成优化提示词/ }).click();
+
+    await expect(page.locator("text=senior poet")).toBeVisible({ timeout: 10_000 });
+    expect(generateBody.userIdea).toContain("用户已澄清主要方向：汽车");
+    expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("intent_domain"))).toBeTruthy();
   });
 });

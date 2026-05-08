@@ -19,6 +19,7 @@ import {
   withTimeout,
 } from "@/lib/model-health";
 import { createPrompt, createPromptVersion } from "@/lib/server/storage";
+import { exportDatasetRow } from "@/lib/server/github-dataset";
 import { strictPromptScore } from "@/lib/strict-scoring";
 import { toUserFacingErrorMessage } from "@/lib/error-messages";
 import {
@@ -34,6 +35,8 @@ import {
   modelSupportsVision,
   scoreReferencePromptCandidate,
 } from "@/lib/reference-image";
+import { analyzeUserIntent, type IntentAnalysis } from "@/lib/intent-router";
+import { GITHUB_PROJECT_TRACKER_RULES } from "@/lib/github-project-tracker-status";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -57,6 +60,7 @@ export interface GenerateRequest {
       selectedPromptPreview?: string;
     }>;
   };
+  intentAnalysis?: IntentAnalysis;
   referenceImage?: ReferenceImageInput | null;
   stream?: boolean;
 }
@@ -82,6 +86,24 @@ function summarizeFeedbackMemory(memory: GenerateRequest["feedbackMemory"]): str
         `- score=${item.score ?? "n/a"}, preference=${item.preference ?? "n/a"}, target=${item.targetModel ?? "n/a"}, notes=${String(item.notes || "").slice(0, 500)}`,
       );
     }
+  }
+  return lines.join("\n");
+}
+
+function summarizeIntentAnalysis(analysis: IntentAnalysis | null | undefined): string {
+  if (!analysis) return "";
+  const lines = [
+    "Internal intent routing. Use it to select the right prompt structure, but do not expose internal taxonomy unless the user asks:",
+    `- status=${analysis.status}`,
+    `- confidence=${Math.round(analysis.confidence * 100)}%`,
+    `- modality=${analysis.modality}`,
+    `- domain=${analysis.domain}`,
+    `- taskType=${analysis.taskType}`,
+  ];
+  if (analysis.tags.length) lines.push(`- tags=${analysis.tags.join(", ")}`);
+  if (analysis.feedbackMemoryHints.length) lines.push(`- hints=${analysis.feedbackMemoryHints.join("; ")}`);
+  if (analysis.conflicts.length) {
+    lines.push(`- conflicts=${analysis.conflicts.map((item) => `${item.type}:${item.options.join(" vs ")}`).join("; ")}`);
   }
   return lines.join("\n");
 }
@@ -286,7 +308,6 @@ export async function POST(req: NextRequest) {
     const availableModelIds = Array.isArray(body.availableModelIds)
       ? body.availableModelIds.filter((id): id is string => typeof id === "string" && id.length > 0)
       : undefined;
-    const feedbackMemoryText = summarizeFeedbackMemory(body.feedbackMemory);
     const deviceId = cleanDeviceId(req, body);
 
     const cleanIdea = userIdea?.trim() ?? "";
@@ -304,6 +325,29 @@ export async function POST(req: NextRequest) {
         { status: 413 },
       );
     }
+
+    const serverIntentAnalysis = analyzeUserIntent(cleanIdea, language);
+    const alreadyClarified = /用户已澄清主要方向|main direction/i.test(cleanIdea);
+    if (serverIntentAnalysis.status === "needs_clarification" && !alreadyClarified) {
+      return NextResponse.json(
+        {
+          error: serverIntentAnalysis.clarificationQuestion || "需要确认主方向 / Clarification required",
+          clarification: serverIntentAnalysis,
+        },
+        { status: 409 },
+      );
+    }
+
+    const feedbackMemoryText = [
+      summarizeFeedbackMemory(body.feedbackMemory),
+      summarizeIntentAnalysis(body.intentAnalysis || serverIntentAnalysis),
+      GITHUB_PROJECT_TRACKER_RULES.length
+        ? [
+            "Rules distilled from the GitHub project tracker. Apply them as quality guidance:",
+            ...GITHUB_PROJECT_TRACKER_RULES.slice(0, 8).map((rule, index) => `${index + 1}. ${rule}`),
+          ].join("\n")
+        : "",
+    ].filter(Boolean).join("\n\n");
 
     const models         = mergeRelayModelIds(await getModels(), availableModelIds);
     const targetModel    = models.find((m: ModelInfo) => m.id === targetModelId);
@@ -424,6 +468,8 @@ export async function POST(req: NextRequest) {
       let promptRecord: { id?: string } = {};
       let versionRecord: { id?: string; versionNumber?: number } = {};
       let persistenceWarning: string | undefined;
+      let historyExportWarning: string | undefined;
+      let historyExport: Awaited<ReturnType<typeof exportDatasetRow>> | undefined;
       try {
         const createdPrompt = await createPrompt({
           deviceId,
@@ -445,9 +491,31 @@ export async function POST(req: NextRequest) {
           aiScore: strictScore.total,
           decisionStatus: "active",
         });
+        historyExport = await exportDatasetRow("prompt-history", {
+          id: versionRecord.id,
+          timestamp: Date.now(),
+          deviceId,
+          promptId: createdPrompt.id,
+          promptVersionId: versionRecord.id,
+          userIdea: cleanIdea,
+          optimizedPrompt: finalPrompt,
+          selectedPrompt: finalPrompt,
+          targetModel: targetModel.id,
+          generatorModels: generatorModels.map((model) => model.id),
+          evaluatorModels: evaluatorModels.map((model) => model.id),
+          language,
+          aiPromptScore: strictScore.total,
+          strictScore,
+          sourceCommits: [
+            ...(((metaExtra?.promptEvaluation as any)?.sourceCommits as string[] | undefined) ?? []),
+          ],
+        });
       } catch (error: any) {
         persistenceWarning = "生成已成功，但服务器保存记录失败；结果仍会返回给用户。 Generation succeeded, but server-side history save failed; the prompt is still returned.";
         console.warn("[generate:persistence]", error?.message || error);
+      }
+      if (!historyExport && !persistenceWarning) {
+        historyExportWarning = "生成已成功，但历史同步未返回状态。 Generation succeeded, but history sync did not return a status.";
       }
 
       return {
@@ -464,6 +532,8 @@ export async function POST(req: NextRequest) {
           strictScore,
           qualityGateRepair,
           persistenceWarning,
+          historyExport,
+          historyExportWarning,
           ...metaExtra,
         },
       };

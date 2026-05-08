@@ -167,3 +167,93 @@ CREATE TABLE IF NOT EXISTS github_sync_events (
 
 CREATE INDEX IF NOT EXISTS idx_github_sync_events_repo ON github_sync_events(repo_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_github_sync_events_status ON github_sync_events(status);
+
+CREATE TABLE IF NOT EXISTS prompt_history_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source TEXT NOT NULL CHECK (source IN ('main-site-local-history','test-panel','imported-jsonl')),
+  device_id_hash TEXT NOT NULL,
+  user_idea TEXT NOT NULL,
+  optimized_prompt TEXT NOT NULL,
+  target_model_id TEXT NOT NULL,
+  generator_model_ids TEXT[] NOT NULL DEFAULT '{}',
+  language TEXT NOT NULL DEFAULT 'zh',
+  is_favorite BOOLEAN NOT NULL DEFAULT false,
+  source_event_id TEXT,
+  source_created_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(source, device_id_hash, source_event_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_prompt_history_records_created ON prompt_history_records(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_prompt_history_records_target ON prompt_history_records(target_model_id);
+
+CREATE TABLE IF NOT EXISTS intent_clarification_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  prompt_id UUID REFERENCES prompts(id) ON DELETE SET NULL,
+  device_id TEXT NOT NULL,
+  raw_user_input TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('ready','needs_clarification','suggest_correction')),
+  selected_direction TEXT,
+  suggested_input TEXT,
+  confidence NUMERIC(5,4),
+  modality TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  task_type TEXT NOT NULL,
+  conflicts JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_intent_clarification_device ON intent_clarification_events(device_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_intent_clarification_status ON intent_clarification_events(status);
+
+CREATE TABLE IF NOT EXISTS github_project_watchlist (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  repo_full_name TEXT NOT NULL,
+  repo_url TEXT NOT NULL,
+  project_group TEXT NOT NULL CHECK (project_group IN ('hallucination','prompt_optimization','gpt_image_2')),
+  required_by_user BOOLEAN NOT NULL DEFAULT false,
+  verification_status TEXT NOT NULL DEFAULT 'pending',
+  stars INT,
+  forks INT,
+  open_issues INT,
+  pushed_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ,
+  quality_score NUMERIC(6,2) NOT NULL DEFAULT 0,
+  focus TEXT NOT NULL DEFAULT '',
+  extracted_rules JSONB NOT NULL DEFAULT '[]',
+  verified_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(repo_full_name, project_group)
+);
+
+CREATE INDEX IF NOT EXISTS idx_github_project_watchlist_group ON github_project_watchlist(project_group, quality_score DESC);
+
+CREATE TABLE IF NOT EXISTS optimization_rule_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_type TEXT NOT NULL CHECK (source_type IN ('github_project','feedback_memory','manual','ab_test')),
+  source_ref TEXT NOT NULL,
+  rule_text TEXT NOT NULL,
+  applies_to_modality TEXT NOT NULL DEFAULT 'all',
+  applies_to_domain TEXT NOT NULL DEFAULT 'all',
+  status TEXT NOT NULL DEFAULT 'active',
+  success_count INT NOT NULL DEFAULT 0,
+  failure_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_optimization_rule_versions_scope ON optimization_rule_versions(applies_to_modality, applies_to_domain, status);
+
+CREATE TABLE IF NOT EXISTS refactor_comparison_results (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module_name TEXT NOT NULL,
+  old_version_ref TEXT NOT NULL,
+  new_version_ref TEXT NOT NULL,
+  hybrid_version_ref TEXT,
+  decision TEXT NOT NULL CHECK (decision IN ('old','new','hybrid','redesign')),
+  metrics JSONB NOT NULL,
+  accepted_parts JSONB NOT NULL DEFAULT '[]',
+  rejected_parts JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_refactor_comparison_module ON refactor_comparison_results(module_name, created_at DESC);
