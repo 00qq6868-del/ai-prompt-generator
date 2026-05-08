@@ -44,7 +44,20 @@ interface TestChannelResult {
     score: { total: number; pass: boolean; dimensionScores: Record<string, number> };
     latencyMs: number;
     preview: string;
+    modelId?: string;
+    apiProvider?: string;
   }>;
+  modelDiagnostics?: Array<{
+    modelId: string;
+    modelName: string;
+    apiProvider: string;
+    status: "success" | "failed" | "skipped";
+    error?: string;
+    attempts: number;
+    bestScore?: number;
+    latencyMs?: number;
+  }>;
+  improvementPlan?: string[];
   stats: {
     latencyMs: number;
     inputTokens: number;
@@ -117,9 +130,24 @@ function formatDuration(ms: number): string {
 }
 
 function statusCopy(status?: "pass" | "warn" | "fail") {
-  if (status === "pass") return { text: "通过", tone: "text-emerald-300", border: "border-emerald-300/25", bg: "bg-emerald-500/10", Icon: CheckCircle2 };
-  if (status === "warn") return { text: "需关注", tone: "text-amber-200", border: "border-amber-300/25", bg: "bg-amber-500/10", Icon: AlertTriangle };
-  return { text: "未通过", tone: "text-rose-200", border: "border-rose-300/25", bg: "bg-rose-500/10", Icon: XCircle };
+  if (status === "pass") return { text: "通过 / Passed", tone: "text-emerald-300", border: "border-emerald-300/25", bg: "bg-emerald-500/10", Icon: CheckCircle2 };
+  if (status === "warn") return { text: "需关注 / Needs attention", tone: "text-amber-200", border: "border-amber-300/25", bg: "bg-amber-500/10", Icon: AlertTriangle };
+  return { text: "未通过 / Failed", tone: "text-rose-200", border: "border-rose-300/25", bg: "bg-rose-500/10", Icon: XCircle };
+}
+
+function isBilingualText(value: string): boolean {
+  return /[\u3400-\u9fff]/.test(value) && (
+    /\s\/\s[A-Z][A-Za-z]/.test(value) ||
+    /\b(Test|Generation|Model|Network|API Key|Raw keys|Provider|Switch|Open|Save|No |The |This )\b/.test(value)
+  );
+}
+
+function normalizeTestChannelError(value: unknown): string {
+  const message = typeof value === "string" && value.trim()
+    ? value.trim()
+    : "测试通道运行失败 / Test channel failed";
+  if (isBilingualText(message)) return message;
+  return `测试通道运行失败：${message} / Test channel failed: ${message}`;
 }
 
 export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanelProps) {
@@ -163,7 +191,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
     setRunning(true);
     setError("");
     setResult(null);
-    const tid = toast.loading("测试通道正在真实调用模型并检查质量…");
+    const tid = toast.loading("测试通道正在真实调用模型并检查质量… / Calling the model and checking quality...");
     try {
       const res = await fetch("/api/test-channel/run", {
         method: "POST",
@@ -190,12 +218,50 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "测试通道运行失败 / Test channel failed");
+        if (data && (Array.isArray(data.modelDiagnostics) || Array.isArray(data.checks) || Array.isArray(data.improvementPlan))) {
+          setResult({
+            ok: false,
+            status: "fail",
+            reportId: data.reportId || "failed-test-channel-run",
+            model: data.model || {
+              id: storedGenerators[0] || "unknown",
+              name: storedGenerators[0] || "unknown",
+              provider: "unknown",
+              apiProvider: "unknown",
+              targetModelId: storedTarget,
+              targetModelName: storedTarget,
+            },
+            strictScore: data.strictScore || {
+              total: 0,
+              pass: false,
+              dimensionScores: {},
+              deductions: [],
+            },
+            checks: data.checks || [],
+            attempts: data.attempts || [],
+            stats: data.stats || {
+              latencyMs: 0,
+              inputTokens: 0,
+              outputTokens: 0,
+            },
+            providerStatus: data.providerStatus || { configured: [], keys: [] },
+            bestPromptPreview: data.bestPromptPreview || "",
+            github: data.github || {
+              synced: false,
+              target: "local",
+              filePath: "not-written",
+            },
+            modelDiagnostics: data.modelDiagnostics || [],
+            improvementPlan: data.improvementPlan || [],
+            secretHandling: data.secretHandling || "原始密钥不会出现在诊断或报告中 / Raw keys are not included in diagnostics or reports",
+          });
+        }
+        throw new Error(normalizeTestChannelError(data.error));
       }
       setResult(data);
       toast.success(data.status === "pass" ? "测试通过 / Test passed" : "测试完成，需要继续优化 / Test completed with warnings");
     } catch (err: any) {
-      const message = String(err?.message || "测试通道运行失败 / Test channel failed");
+      const message = normalizeTestChannelError(err?.message);
       setError(message);
       toast.error(message);
     } finally {
@@ -226,7 +292,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
               <div>
                 <h2 className="text-base font-bold text-white">AI 提示词测试通道</h2>
                 <p className="text-[11px] text-white/60">
-                  真实验证模型连通、质量门、目标达成和密钥防泄露
+                  真实验证模型连通、质量门、目标达成和密钥防泄露 / Verify connectivity, quality gates, target fit, and key safety
                 </p>
               </div>
             </div>
@@ -245,37 +311,37 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                 <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
                     <KeyRound size={15} className="text-violet-300" />
-                    密钥状态
+                    密钥状态 / Key status
                   </div>
                   <div className="mt-2 text-2xl font-bold text-white">{keyCount}</div>
                   <p className="mt-1 text-xs leading-5 text-white/50">
-                    已保存到本浏览器。测试报告只写入脱敏指纹，不写完整 Key。
+                    已保存到本浏览器。测试报告只写入脱敏指纹，不写完整 Key。 / Stored in this browser. Reports write only masked fingerprints, never full keys.
                   </p>
                   <button
                     type="button"
                     onClick={onOpenKeys}
                     className="mt-3 rounded-xl border border-violet-300/20 bg-violet-500/10 px-3 py-2 text-xs font-medium text-violet-100 transition hover:bg-violet-500/20"
                   >
-                    打开密钥设置
+                    打开密钥设置 / Open key settings
                   </button>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
                     <Activity size={15} className="text-cyan-300" />
-                    当前测试模型
+                    当前测试模型 / Current test model
                   </div>
                   <div className="mt-2 text-sm font-semibold text-white">{storedGenerators[0] || "gpt-5.5-pro"}</div>
                   <p className="mt-1 text-xs leading-5 text-white/50">
-                    目标模型：{storedTarget || "gpt-5.5-pro"}。生成/评价模型保持合并，不单独选择评价模型。
+                    目标模型：{storedTarget || "gpt-5.5-pro"}。生成/评价模型保持合并，不单独选择评价模型。 / Target model: {storedTarget || "gpt-5.5-pro"}. Generation and evaluation stay unified.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
                     <ShieldCheck size={15} className="text-emerald-300" />
-                    防泄露规则
+                    防泄露规则 / Secret leak prevention
                   </div>
                   <p className="mt-2 text-xs leading-5 text-white/55">
-                    原始密钥只随本次请求发送到测试接口；不返回前端结果、不写日志、不进入 GitHub JSONL、不进入项目记忆。
+                    原始密钥只随本次请求发送到测试接口；不返回前端结果、不写日志、不进入 GitHub JSONL、不进入项目记忆。 / Raw keys are sent only for this test request; they are not returned, logged, written to GitHub JSONL, or saved in memory.
                   </p>
                 </div>
               </div>
@@ -283,9 +349,9 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
               <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <label htmlFor="test-channel-idea" className="text-sm font-semibold text-white/85">
-                    测试目标
+                    测试目标 / Test objective
                   </label>
-                  <span className="text-xs text-white/45">运行后会自动评分，不合格会内部重试一次</span>
+                  <span className="text-xs text-white/45">运行后会自动评分，不合格会内部重试一次 / Auto-scored after running; weak output is retried internally once</span>
                 </div>
                 <textarea
                   id="test-channel-idea"
@@ -306,13 +372,14 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                   }`}
                 >
                   {running ? <Loader2 size={16} className="animate-spin" /> : <FlaskConical size={16} />}
-                  {running ? "正在运行真实验证" : "运行真实验证"}
+                  {running ? "正在运行真实验证 / Running real validation" : "运行真实验证 / Run real validation"}
                 </motion.button>
               </section>
 
               {error && (
                 <div className="rounded-2xl border border-rose-300/25 bg-rose-500/10 p-4 text-sm leading-6 text-rose-50/85">
-                  {error}
+                  <div className="font-semibold">测试未通过 / Test failed</div>
+                  <div className="mt-1">{error}</div>
                 </div>
               )}
 
@@ -324,13 +391,13 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                       <div>
                         <div className={`text-lg font-bold ${status.tone}`}>测试{status.text}</div>
                         <p className="text-xs text-white/55">
-                          {result.model.name} · {formatDuration(result.stats.latencyMs)} · 报告 {result.reportId}
+                          {result.model.name} · {formatDuration(result.stats.latencyMs)} · 报告 / Report {result.reportId}
                         </p>
                       </div>
                     </div>
                     <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right">
                       <div className="text-2xl font-bold text-white">{Math.round(result.strictScore.total)}</div>
-                      <div className="text-[11px] text-white/50">严格质量分</div>
+                      <div className="text-[11px] text-white/50">严格质量分 / Strict quality score</div>
                     </div>
                   </div>
 
@@ -344,25 +411,65 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                             <span className={`text-xs font-bold ${itemStatus.tone}`}>{itemStatus.text}</span>
                           </div>
                           <div className="mt-1 text-xs text-white/45">
-                            值：{Math.round(check.value * 100) / 100} · 目标：{check.threshold}
+                            值 / Value：{Math.round(check.value * 100) / 100} · 目标 / Target：{check.threshold}
                           </div>
                         </div>
                       );
                     })}
                   </div>
 
+                  {Array.isArray(result.modelDiagnostics) && result.modelDiagnostics.length > 0 && (
+                    <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
+                      <div className="text-sm font-semibold text-white/80">模型诊断 / Model diagnostics</div>
+                      <div className="mt-2 space-y-2">
+                        {result.modelDiagnostics.map((item) => {
+                          const diagStatus = statusCopy(item.status === "success" ? "pass" : "fail");
+                          return (
+                            <div key={`${item.modelId}-${item.apiProvider}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="text-xs font-semibold text-white/75">
+                                  {item.modelName || item.modelId} · {item.apiProvider}
+                                </div>
+                                <div className={`text-xs font-bold ${diagStatus.tone}`}>
+                                  {item.status === "success" ? "可用 / Available" : "失败 / Failed"}
+                                </div>
+                              </div>
+                              {typeof item.bestScore === "number" && (
+                                <div className="mt-1 text-xs text-white/50">最佳分 / Best score：{Math.round(item.bestScore)}</div>
+                              )}
+                              {item.error && (
+                                <div className="mt-2 text-xs leading-5 text-rose-100/75">{normalizeTestChannelError(item.error)}</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {Array.isArray(result.improvementPlan) && result.improvementPlan.length > 0 && (
+                    <div className="mt-4 rounded-xl border border-cyan-300/15 bg-cyan-500/10 p-3">
+                      <div className="text-sm font-semibold text-cyan-50/90">下一步改进 / Next improvements</div>
+                      <ul className="mt-2 space-y-1 text-xs leading-5 text-cyan-50/75">
+                        {result.improvementPlan.map((item) => (
+                          <li key={item}>- {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   <details className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
                     <summary className="cursor-pointer text-sm font-semibold text-white/80">
-                      查看最佳提示词预览与脱敏同步状态
+                      查看最佳提示词预览与脱敏同步状态 / View best prompt preview and sanitized sync status
                     </summary>
                     <pre className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl bg-black/30 p-3 text-xs leading-5 text-white/70">
                       {result.bestPromptPreview}
                     </pre>
                     <div className="mt-3 grid gap-2 text-xs text-white/55 md:grid-cols-2">
-                      <div>GitHub/本地报告：{result.github.target} · {result.github.filePath}</div>
-                      <div>同步状态：{result.github.synced ? "已同步 GitHub" : "本地脱敏保存或等待服务器令牌"}</div>
-                      <div>输入 tokens：{result.stats.inputTokens}</div>
-                      <div>输出 tokens：{result.stats.outputTokens}</div>
+                      <div>GitHub/本地报告 / GitHub/local report：{result.github.target} · {result.github.filePath}</div>
+                      <div>同步状态 / Sync status：{result.github.synced ? "已同步 GitHub / Synced to GitHub" : "本地脱敏保存或等待服务器令牌 / Saved locally after sanitization or waiting for server token"}</div>
+                      <div>输入 tokens / Input tokens：{result.stats.inputTokens}</div>
+                      <div>输出 tokens / Output tokens：{result.stats.outputTokens}</div>
                     </div>
                     <div className="mt-3 rounded-xl border border-emerald-300/15 bg-emerald-500/10 p-3 text-xs leading-5 text-emerald-50/75">
                       {result.secretHandling}

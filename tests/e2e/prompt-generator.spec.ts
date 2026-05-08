@@ -1002,4 +1002,64 @@ test.describe("PromptGenerator E2E", () => {
     expect(testBody.userKeys.OPENAI_API_KEY).toBe(fakeRawKey);
     await expect(page.locator("body")).not.toContainText(fakeRawKey);
   });
+
+  test("16. test channel shows model diagnostics when provider returns invalid choices", async ({ page }) => {
+    const fakeRawKey = "sk-test-fake-key-for-e2e";
+    await page.evaluate((key) => {
+      localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: key }));
+      localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5-pro");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5"]));
+    }, fakeRawKey);
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/test-channel/run", async (route) => {
+      await route.fulfill({
+        status: 502,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: false,
+          status: "fail",
+          error: "测试通道没有收到任何可评分的模型输出。已尝试可用模型，但都失败或返回空内容。",
+          providerStatus: {
+            configured: ["openai"],
+            keys: [{ keyName: "OPENAI_API_KEY", source: "browser", masked: "sk-...-e2e", hash: "hash-e2e" }],
+          },
+          checks: [
+            { id: "provider_connectivity", label: "真实模型连通性 / Provider connectivity", value: 0, threshold: 10, status: "fail" },
+          ],
+          modelDiagnostics: [
+            {
+              modelId: "gpt-5.5",
+              modelName: "GPT-5.5",
+              apiProvider: "openai",
+              status: "failed",
+              attempts: 1,
+              error: "模型 gpt-5.5 返回了空 choices 或非标准响应。请换一个生成/评价模型，或刷新中转站模型列表。",
+            },
+          ],
+          improvementPlan: [
+            "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
+            "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
+          ],
+          secretHandling: "原始密钥不会出现在诊断或报告中。 / Raw keys are not included in diagnostics or reports.",
+        }),
+      });
+    });
+
+    await page.getByRole("button", { name: "打开 AI 提示词测试通道 Open AI prompt test channel" }).click();
+    const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
+    await dialog.getByRole("button", { name: "运行真实验证" }).click();
+
+    await expect(dialog.getByText("测试未通过 / Test failed").first()).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByText(/Test channel failed:/).first()).toBeVisible();
+    await expect(dialog.getByText("模型诊断 / Model diagnostics")).toBeVisible();
+    await expect(dialog.getByText(/空 choices/)).toBeVisible();
+    await expect(dialog.getByText(/Switch model or refresh relay model availability|Test channel failed: 模型 gpt-5\.5/)).toBeVisible();
+    await expect(dialog.getByText("下一步改进 / Next improvements")).toBeVisible();
+    await expect(dialog.getByText(/Open the model picker/)).toBeVisible();
+    await expect(dialog.getByText(/换成该中转站明确支持/)).toBeVisible();
+    await dialog.getByText(/查看最佳提示词预览与脱敏同步状态/).click();
+    await expect(dialog.getByText(/Raw keys are not included/)).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(fakeRawKey);
+  });
 });

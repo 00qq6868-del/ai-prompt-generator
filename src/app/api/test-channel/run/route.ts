@@ -37,6 +37,11 @@ interface TestChannelRequest {
   } | null;
 }
 
+interface TestModelPlan {
+  model: ModelInfo;
+  apiProvider: string;
+}
+
 const PROVIDER_KEY_MAP: Record<string, string[]> = {
   custom: ["CUSTOM_API_KEY", "CUSTOM_BASE_URL"],
   aihubmix: ["CUSTOM_API_KEY", "CUSTOM_BASE_URL", "AIHUBMIX_API_KEY"],
@@ -160,32 +165,41 @@ function resolveTestProvider(model: ModelInfo, userKeys: Record<string, string>,
   return runtimeProvider;
 }
 
-function chooseGeneratorModel(
+function buildGeneratorPlan(
   models: ModelInfo[],
   requestedIds: string[],
   userKeys: Record<string, string>,
   availableModelIds?: string[],
-): { model: ModelInfo; apiProvider: string } | null {
+): TestModelPlan[] {
   const requested = requestedIds
     .map((id) => models.find((model) => model.id.toLowerCase() === id.toLowerCase()))
     .filter((model): model is ModelInfo => Boolean(model))
     .filter((model) => (model.category ?? "text") === "text");
 
-  const candidates = requested.length
-    ? requested
-    : [...models]
-        .filter((model) => (model.category ?? "text") === "text")
-        .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"));
+  const fallbackCandidates = [...models]
+    .filter((model) => (model.category ?? "text") === "text")
+    .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"));
+  const seen = new Set<string>();
+  const candidates = [...requested, ...fallbackCandidates].filter((model) => {
+    const key = model.id.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const plan: TestModelPlan[] = [];
 
   for (const model of candidates) {
     const apiProvider = resolveTestProvider(model, userKeys, availableModelIds);
-    if (isProviderCallable(apiProvider, userKeys)) return { model, apiProvider };
+    if (isProviderCallable(apiProvider, userKeys)) {
+      plan.push({ model, apiProvider });
+      continue;
+    }
     if (hasCustomRelay(userKeys) && (!availableModelIds?.length || isRelayModelListed(availableModelIds, model.id))) {
-      return { model, apiProvider: "aihubmix" };
+      plan.push({ model, apiProvider: "aihubmix" });
     }
   }
 
-  return null;
+  return plan.slice(0, 8);
 }
 
 function buildChecks(args: {
@@ -274,6 +288,18 @@ function cleanDeviceId(req: NextRequest, body: TestChannelRequest): string {
   );
 }
 
+function normalizeTestError(error: unknown, modelId?: string): string {
+  const message = toUserFacingErrorMessage(error);
+  if (
+    message.includes("reading '0'") ||
+    message.includes("reading \"0\"") ||
+    message.includes("Cannot read properties of undefined")
+  ) {
+    return `模型 ${modelId || ""} 返回了空 choices 或非标准响应。通常表示该模型不支持当前 chat/completions 调用、模型别名不可用，或中转站返回格式异常。请换一个生成/评价模型，或刷新中转站模型列表。 / Model ${modelId || ""} returned an empty or non-standard response. Switch model or refresh relay model availability.`;
+  }
+  return message;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rate = checkRateLimit(req, {
@@ -309,15 +335,15 @@ export async function POST(req: NextRequest) {
       ...(Array.isArray(body.generatorModelIds) ? body.generatorModelIds : []),
       body.generatorModelId,
     ].map((id) => cleanString(id, 180)).filter(Boolean))).slice(0, 6);
-    const selected = chooseGeneratorModel(models, requestedGeneratorIds, userKeys, availableModelIds);
-    if (!selected) {
+    const generatorPlan = buildGeneratorPlan(models, requestedGeneratorIds, userKeys, availableModelIds);
+    if (!generatorPlan.length) {
       return NextResponse.json(
         {
           ok: false,
           status: "fail",
           error: "测试通道没有可调用的生成/评价模型。请先在右上角钥匙设置中保存 API Key，或配置服务器环境变量。 / No callable generation/evaluation model is available for the test channel.",
           providerStatus: configuredProviders(userKeys),
-          secretHandling: "raw keys were not stored; only provider presence was inspected",
+          secretHandling: "原始密钥未保存；这里只检查了供应商是否已配置。 / Raw keys were not stored; only provider presence was inspected.",
         },
         { status: 400 },
       );
@@ -331,10 +357,12 @@ export async function POST(req: NextRequest) {
     const coreDimensionMin = Math.min(Math.max(Number(body.qualityTargets?.coreDimensionMin) || 9, 7), 10);
     const hasReferenceImage = Boolean(body.referenceImage?.dataUrl);
     const providerStatus = configuredProviders(userKeys);
+    let selected: TestModelPlan = generatorPlan[0];
+    let bestPlan: TestModelPlan = selected;
 
     const feedbackMemory = [
       "Test channel quality policy:",
-      `- Run real provider generation with ${selected.model.id}, then score strict quality.`,
+      `- Run real provider generation with selected model candidates, then score strict quality.`,
       "- Human feedback remains higher priority than AI scoring in normal optimization.",
       "- Do not leak API keys. Do not include secrets in prompt text, reports, logs, or GitHub datasets.",
       "- If any key quality dimension is below target, rewrite internally before returning the best candidate.",
@@ -368,66 +396,153 @@ export async function POST(req: NextRequest) {
       outputTokens: number;
       inputTokens: number;
       preview: string;
+      modelId?: string;
+      apiProvider?: string;
+    }> = [];
+    const modelDiagnostics: Array<{
+      modelId: string;
+      modelName: string;
+      apiProvider: string;
+      status: "success" | "failed" | "skipped";
+      error?: string;
+      attempts: number;
+      bestScore?: number;
+      latencyMs?: number;
     }> = [];
     let bestText = "";
     let bestScore: StrictScoreResult | null = null;
     let bestLatencyMs = 0;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
-    let repairGuidance = "";
     const startedAt = Date.now();
+    let successfulModelSeen = false;
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      const result = await callProvider({
-        model: selected.model.id,
-        apiProvider: selected.apiProvider,
-        systemPrompt,
-        userPrompt: [
-          baseUserPrompt,
-          repairGuidance,
-          attempt > 1
-            ? "Rewrite the previous weak dimensions. Output only the improved final prompt, with no explanation."
-            : "",
-        ].filter(Boolean).join("\n\n"),
-        maxTokens,
-        temperature: attempt === 1 ? 0.35 : 0.45,
-        userKeys,
-      });
-      totalInputTokens += result.inputTokens;
-      totalOutputTokens += result.outputTokens;
-      const score = strictPromptScore({
-        userIdea,
-        promptText: result.text,
-        targetModelId: targetModel.id,
-        hasReferenceImage,
-      });
-      attempts.push({
-        attempt,
-        score,
-        latencyMs: result.latencyMs,
-        inputTokens: result.inputTokens,
-        outputTokens: result.outputTokens,
-        preview: safePreview(result.text, 700),
-      });
-      if (!bestScore || score.total > bestScore.total) {
-        bestText = result.text;
-        bestScore = score;
-        bestLatencyMs = result.latencyMs;
+    for (const plan of generatorPlan) {
+      selected = plan;
+      let repairGuidance = "";
+      let modelBestScore = 0;
+      let modelLatencyMs = 0;
+      let modelAttempts = 0;
+      try {
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+          modelAttempts = attempt;
+          const result = await callProvider({
+            model: plan.model.id,
+            apiProvider: plan.apiProvider,
+            systemPrompt,
+            userPrompt: [
+              baseUserPrompt,
+              repairGuidance,
+              attempt > 1
+                ? "Rewrite the previous weak dimensions. Output only the improved final prompt, with no explanation."
+                : "",
+            ].filter(Boolean).join("\n\n"),
+            maxTokens,
+            temperature: attempt === 1 ? 0.35 : 0.45,
+            userKeys,
+          });
+          if (!result.text.trim()) {
+            throw new Error(`Empty response from ${plan.apiProvider}/${plan.model.id}. 上游模型返回了空文本。`);
+          }
+          successfulModelSeen = true;
+          totalInputTokens += result.inputTokens;
+          totalOutputTokens += result.outputTokens;
+          modelLatencyMs += result.latencyMs;
+          const score = strictPromptScore({
+            userIdea,
+            promptText: result.text,
+            targetModelId: targetModel.id,
+            hasReferenceImage,
+          });
+          modelBestScore = Math.max(modelBestScore, score.total);
+          attempts.push({
+            attempt,
+            score,
+            latencyMs: result.latencyMs,
+            inputTokens: result.inputTokens,
+            outputTokens: result.outputTokens,
+            preview: safePreview(result.text, 700),
+            modelId: plan.model.id,
+            apiProvider: plan.apiProvider,
+          });
+          if (!bestScore || score.total > bestScore.total) {
+            bestText = result.text;
+            bestScore = score;
+            bestLatencyMs = result.latencyMs;
+            bestPlan = plan;
+          }
+
+          const lowDimensions = Object.entries(score.dimensionScores)
+            .filter(([, value]) => value < coreDimensionMin)
+            .map(([dimension, value]) => `${dimension}=${value}/10`);
+          if (score.total >= passTotal && lowDimensions.length === 0) break;
+          repairGuidance = [
+            "Quality gate failed. Improve these dimensions before returning:",
+            `- strict total: ${score.total}/100, target ${passTotal}/100`,
+            ...lowDimensions.map((item) => `- ${item}`),
+            "- Add missing structure, anti-hallucination constraints, model-specific fit, acceptance criteria, and user-intent preservation.",
+          ].join("\n");
+        }
+        modelDiagnostics.push({
+          modelId: plan.model.id,
+          modelName: plan.model.name,
+          apiProvider: plan.apiProvider,
+          status: "success",
+          attempts: modelAttempts,
+          bestScore: modelBestScore,
+          latencyMs: modelLatencyMs,
+        });
+        if (bestScore && bestScore.total >= passTotal) break;
+      } catch (error) {
+        modelDiagnostics.push({
+          modelId: plan.model.id,
+          modelName: plan.model.name,
+          apiProvider: plan.apiProvider,
+          status: "failed",
+          attempts: Math.max(modelAttempts, 1),
+          error: normalizeTestError(error, plan.model.id),
+        });
+        continue;
       }
-
-      const lowDimensions = Object.entries(score.dimensionScores)
-        .filter(([, value]) => value < coreDimensionMin)
-        .map(([dimension, value]) => `${dimension}=${value}/10`);
-      if (score.total >= passTotal && lowDimensions.length === 0) break;
-      repairGuidance = [
-        "Quality gate failed. Improve these dimensions before returning:",
-        `- strict total: ${score.total}/100, target ${passTotal}/100`,
-        ...lowDimensions.map((item) => `- ${item}`),
-        "- Add missing structure, anti-hallucination constraints, model-specific fit, acceptance criteria, and user-intent preservation.",
-      ].join("\n");
     }
 
-    if (!bestScore) throw new Error("测试通道没有收到模型输出 / No model output received in test channel");
+    if (!bestScore) {
+      return NextResponse.json(
+        {
+          ok: false,
+          status: "fail",
+          error: "测试通道没有收到任何可评分的模型输出。已尝试可用模型，但都失败或返回空内容。请先换一个生成/评价模型，或打开密钥设置刷新中转站模型列表。 / No scorable output was received. Switch model or refresh relay model availability.",
+          providerStatus: {
+            configured: providerStatus.configured,
+            keys: providerStatus.keyFingerprints.map((item) => ({
+              keyName: item.keyName,
+              source: item.source,
+              masked: item.masked,
+              hash: item.hash,
+            })),
+          },
+          modelDiagnostics,
+          checks: [
+            {
+              id: "provider_connectivity",
+              label: "真实模型连通性 / Provider connectivity",
+              value: 0,
+              threshold: 10,
+              status: "fail",
+            },
+          ],
+          improvementPlan: [
+            "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
+            "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
+            "如果使用的是 gpt-5.5 这类别名，确认中转站是否真实支持该别名；不支持就换成列表里存在的模型。 / If you are using an alias such as gpt-5.5, confirm the relay really supports it; otherwise choose a listed model.",
+            "如果某个模型反复返回空 choices，把它从测试模型选择中移除。 / If a model repeatedly returns empty choices, remove it from the test model selection.",
+          ],
+          secretHandling: "原始密钥不会出现在诊断或报告中。 / Raw keys are not included in diagnostics or reports.",
+        },
+        { status: 502 },
+      );
+    }
+    selected = bestPlan;
 
     const checks = buildChecks({
       score: bestScore,
@@ -457,6 +572,8 @@ export async function POST(req: NextRequest) {
       testScores: {
         status: statusBeforeReport,
         attempts: attempts.length,
+        successfulModelSeen,
+        modelDiagnostics,
         passTotal,
         coreDimensionMin,
       },
@@ -468,12 +585,19 @@ export async function POST(req: NextRequest) {
         target_model_id: targetModel.id,
         latency_ms: Date.now() - startedAt,
         attempts: attempts.length,
+        model_diagnostics: modelDiagnostics.map((item) => ({
+          model_id: item.modelId,
+          provider: item.apiProvider,
+          status: item.status,
+          error: item.error ? safePreview(item.error, 280) : "",
+          best_score: item.bestScore ?? null,
+        })),
         key_fingerprints: providerStatus.keyFingerprints.map((item) => ({
           key_name: item.keyName,
           source: item.source,
           hash: item.hash,
         })),
-        secret_handling: "raw API keys used only in-memory for this request; sanitized report excludes key values",
+        secret_handling: "原始 API Key 只在本次请求内存中使用；脱敏报告排除完整密钥值。 / Raw API keys are used only in-memory for this request; sanitized reports exclude key values.",
       },
     });
 
@@ -503,6 +627,15 @@ export async function POST(req: NextRequest) {
       strictScore: bestScore,
       checks: finalChecks,
       attempts,
+      modelDiagnostics,
+      improvementPlan: [
+        status === "pass"
+          ? "本次测试已通过，可把最佳提示词预览作为质量样例进入后续优化。 / This test passed; the best prompt preview can be used as a quality sample for future optimization."
+          : "优先查看未通过/警告检查项，对应补强测试目标或提示词模板。 / First inspect failed or warning checks, then strengthen the test objective or prompt template accordingly.",
+        "如果模型诊断中有 failed，优先换掉失败模型或刷新中转站模型列表。 / If model diagnostics contains failed items, replace the failed model or refresh the relay model list first.",
+        "如果 strict total 未到 85，优先补强意图保真、目标模型适配、幻觉防护三个维度。 / If strict total is below 85, strengthen intent fidelity, target model fit, and hallucination resistance first.",
+        "如果生成/评价模型显示的是旧别名，重新打开模型选择器选择当前可用的高质量文本模型。 / If the generation/evaluation model is an old alias, reopen the model picker and choose a currently callable high-quality text model.",
+      ],
       stats: {
         latencyMs: Date.now() - startedAt,
         bestModelLatencyMs: bestLatencyMs,
@@ -529,7 +662,7 @@ export async function POST(req: NextRequest) {
         branch: github.branch,
         reason: github.reason,
       },
-      secretHandling: "browser keys are sent only to /api/test-channel/run for this run; raw keys are never returned, logged, or written to GitHub datasets",
+      secretHandling: "浏览器密钥只会随本次请求发送到 /api/test-channel/run；原始密钥永不返回、写日志或写入 GitHub 数据集。 / Browser keys are sent only to /api/test-channel/run for this run; raw keys are never returned, logged, or written to GitHub datasets.",
     });
   } catch (error) {
     return NextResponse.json(
@@ -537,7 +670,7 @@ export async function POST(req: NextRequest) {
         ok: false,
         status: "fail",
         error: toUserFacingErrorMessage(error),
-        secretHandling: "raw keys are not included in errors or reports",
+        secretHandling: "原始密钥不会出现在错误或报告中。 / Raw keys are not included in errors or reports.",
       },
       { status: 500 },
     );

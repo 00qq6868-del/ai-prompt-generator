@@ -127,6 +127,30 @@ function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
+function extractOpenAIText(response: unknown, provider: string, model: string): string {
+  const data = response as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+  };
+  const choice = Array.isArray(data?.choices) ? data.choices[0] : undefined;
+  const text = choice?.message?.content;
+  if (typeof text === "string") return text;
+  throw new Error(
+    `Empty or invalid chat completion response from ${provider}/${model}. 上游模型或中转站返回了空 choices 或非标准响应，请换一个模型、刷新中转站模型列表，或检查该模型是否支持 chat/completions。`
+  );
+}
+
+function extractAxiosText(responseData: unknown, provider: string, model: string): string {
+  const data = responseData as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+  };
+  const choice = Array.isArray(data?.choices) ? data.choices[0] : undefined;
+  const text = choice?.message?.content;
+  if (typeof text === "string") return text;
+  throw new Error(
+    `Empty or invalid chat completion response from ${provider}/${model}. 上游模型或中转站返回了空 choices 或非标准响应，请换一个模型、刷新中转站模型列表，或检查该模型是否支持 chat/completions。`
+  );
+}
+
 // ── OpenAI-compatible (OpenAI / xAI / DeepSeek / Moonshot) ────
 
 async function callOpenAICompatible(
@@ -153,7 +177,7 @@ async function callOpenAICompatible(
     ],
   });
   return {
-    text: res.choices[0].message.content ?? "",
+    text: extractOpenAIText(res, provider, opts.model),
     inputTokens:  res.usage?.prompt_tokens ?? 0,
     outputTokens: res.usage?.completion_tokens ?? 0,
     latencyMs: Date.now() - t0,
@@ -186,7 +210,7 @@ async function callAxiosOpenAI(
     }
   );
   return {
-    text: res.data.choices[0].message.content ?? "",
+    text: extractAxiosText(res.data, provider, opts.model),
     inputTokens:  res.data.usage?.prompt_tokens ?? 0,
     outputTokens: res.data.usage?.completion_tokens ?? 0,
     latencyMs: Date.now() - t0,
@@ -264,7 +288,7 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
     }
   );
   return {
-    text: res.data.choices[0].message.content ?? "",
+    text: extractAxiosText(res.data, "qwen", opts.model),
     inputTokens:  res.data.usage?.input_tokens ?? 0,
     outputTokens: res.data.usage?.output_tokens ?? 0,
     latencyMs: Date.now() - t0,
@@ -384,7 +408,7 @@ async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
       ],
     });
     return {
-      text: res.choices[0].message.content ?? "",
+      text: extractOpenAIText(res, "custom", opts.model),
       inputTokens:  res.usage?.prompt_tokens ?? 0,
       outputTokens: res.usage?.completion_tokens ?? 0,
       latencyMs: Date.now() - t0,
@@ -426,7 +450,7 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
       ],
     });
     return {
-      text: res.choices[0].message.content ?? "",
+      text: extractOpenAIText(res, "aihubmix", opts.model),
       inputTokens:  res.usage?.prompt_tokens ?? 0,
       outputTokens: res.usage?.completion_tokens ?? 0,
       latencyMs: Date.now() - t0,

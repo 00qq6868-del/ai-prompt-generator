@@ -96,6 +96,18 @@ export function sanitizeDatasetRow(input: Record<string, unknown>) {
                 };
               }).filter((item) => item.key_name && item.hash).slice(0, 30)
             : [],
+          model_diagnostics: Array.isArray((input.testChannel as Record<string, unknown>).model_diagnostics)
+            ? ((input.testChannel as Record<string, unknown>).model_diagnostics as unknown[]).map((item) => {
+                const record = item && typeof item === "object" ? item as Record<string, unknown> : {};
+                return {
+                  model_id: cleanString(record.model_id, 180),
+                  provider: cleanString(record.provider, 80),
+                  status: cleanString(record.status, 40),
+                  error: cleanString(record.error, 500),
+                  best_score: Number.isFinite(Number(record.best_score)) ? Number(record.best_score) : null,
+                };
+              }).filter((item) => item.model_id).slice(0, 20)
+            : [],
           secret_handling: cleanString((input.testChannel as Record<string, unknown>).secret_handling, 300),
         }
       : null,

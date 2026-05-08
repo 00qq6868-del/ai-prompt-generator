@@ -2126,3 +2126,37 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main [ahead 2]
 ```
+
+
+## 2026-05-08T15:05:17.620Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed screenshot-reported AI Prompt Test Channel invalid upstream choices crash: provider adapters no longer dereference choices[0] unsafely; test channel tries fallback text models, records modelDiagnostics and improvementPlan, frontend shows model diagnostics/next steps even on 502; sanitized dataset stores diagnostics only. Validation passed before checkpoint: tsc, data:validate, build, prompt-generator E2E 19/19, quality E2E 5/5, diff check, secret scan only fake E2E keys. Need commit, merge latest origin/main auto model update, rerun validation, push.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main [behind 1]
+ M src/app/api/test-channel/run/route.ts
+ M src/components/TestChannelPanel.tsx
+ M src/lib/providers/index.ts
+ M src/lib/server/github-dataset.ts
+ M tests/e2e/prompt-generator.spec.ts
+```
+
+
+## 2026-05-08T16:13:01.637Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed test channel bilingual error display after user correction: frontend now bilingualizes single-language test-channel errors and model diagnostic errors, UI labels/statuses/next steps/secret handling are zh/en, backend improvementPlan and secretHandling are zh/en. Validation passed: tsc, data:validate, diff check, secret scan only fake E2E keys, targeted test-channel E2E 2/2, full prompt-generator E2E 19/19, quality 5/5, build. Next: commit, merge latest origin/main auto model update, rerun minimal validation if merge changes, push and watch CI.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main [behind 1]
+ M context/CURRENT_HANDOFF.md
+ M context/SESSION_LOG.md
+ M src/app/api/test-channel/run/route.ts
+ M src/components/TestChannelPanel.tsx
+ M src/lib/providers/index.ts
+ M src/lib/server/github-dataset.ts
+ M tests/e2e/prompt-generator.spec.ts
+```
