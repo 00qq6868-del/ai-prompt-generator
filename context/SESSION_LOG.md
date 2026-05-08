@@ -1968,3 +1968,14 @@ Operational note:
 ?? context/MEMORY_PROTOCOL.md
 ?? scripts/update-memory-checkpoint.cjs
 ```
+
+
+## 2026-05-08T00:01:54.772Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: GitHub Release sync completed from latest main a745e57. Desktop Release and Android Release workflows succeeded. Release desktop-v1.0.0 contains Windows installer, Windows portable, Windows blockmap, macOS DMG, macOS ZIP, Linux AppImage, and Android APK assets. Production download API endpoints all redirect to the expected GitHub Release asset URLs. Production smoke homepage/models passed; full generation probe could not run locally because generation API secrets are not configured.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
