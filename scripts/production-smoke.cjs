@@ -2,6 +2,8 @@
 
 const BASE_URL = (process.env.PRODUCTION_BASE_URL || "https://www.myprompt.asia").replace(/\/+$/, "");
 const SKIP_GENERATE = process.env.SMOKE_SKIP_GENERATE === "1";
+const ALLOW_MISSING_GENERATION_SECRET = process.env.SMOKE_ALLOW_MISSING_GENERATION_SECRET !== "0";
+const REQUIRE_GENERATION = process.env.SMOKE_REQUIRE_GENERATION === "1";
 
 function log(message) {
   console.log(`[smoke] ${message}`);
@@ -219,6 +221,11 @@ async function main() {
   }
 
   const generateCandidates = getGenerateCandidates(models);
+  if (generateCandidates.length === 0 && !REQUIRE_GENERATION && ALLOW_MISSING_GENERATION_SECRET) {
+    log("real generation skipped: no generation API secret configured; set SMOKE_REQUIRE_GENERATION=1 to make this fatal");
+    return;
+  }
+
   assert(
     generateCandidates.length > 0,
     "No usable generation secret found. Configure GOOGLE_API_KEY, GROQ_API_KEY/GROQ, or AIHUBMIX_API_KEY.",

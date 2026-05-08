@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "types": ["@ducanh2912/next-pwa/workbox"],
     "plugins": [{ "name": "next" }],
     "paths": { "@/*": ["./src/*"] }
   },

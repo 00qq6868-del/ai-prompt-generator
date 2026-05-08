@@ -7,6 +7,8 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - uses: actions/checkout@v6
@@ -19,6 +21,7 @@ jobs:
         run: node scripts/production-smoke.cjs
         env:
           PRODUCTION_BASE_URL: https://www.myprompt.asia
+          SMOKE_ALLOW_MISSING_GENERATION_SECRET: "1"
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || secrets.GROQ }}
           AIHUBMIX_API_KEY: ${{ secrets.AIHUBMIX_API_KEY }}

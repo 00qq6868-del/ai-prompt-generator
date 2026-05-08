@@ -9,6 +9,8 @@ jobs:
   validate-data-and-build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - uses: actions/checkout@v6
@@ -44,3 +46,7 @@ jobs:
 
       - name: E2E
         run: npx playwright test --project=chromium
+        env:
+          HOSTNAME: 127.0.0.1
+          PORT: 3000
+          PLAYWRIGHT_WEB_SERVER_COMMAND: npm run start:e2e

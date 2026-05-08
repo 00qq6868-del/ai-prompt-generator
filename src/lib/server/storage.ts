@@ -136,12 +136,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function retryLocalFileWrite(operation: () => Promise<void>): Promise<void> {
+async function retryLocalFileOperation<T>(operation: () => Promise<T>): Promise<T> {
   let lastError: any;
   for (let attempt = 0; attempt < 6; attempt += 1) {
     try {
-      await operation();
-      return;
+      return await operation();
     } catch (error: any) {
       lastError = error;
       if (!["EBUSY", "EPERM", "EACCES"].includes(error?.code)) throw error;
@@ -149,6 +148,10 @@ async function retryLocalFileWrite(operation: () => Promise<void>): Promise<void
     }
   }
   throw lastError;
+}
+
+async function retryLocalFileWrite(operation: () => Promise<void>): Promise<void> {
+  await retryLocalFileOperation(operation);
 }
 
 async function withLocalJsonLock<T>(fileName: string, operation: () => Promise<T>): Promise<T> {
@@ -165,7 +168,9 @@ async function withLocalJsonLock<T>(fileName: string, operation: () => Promise<T
 async function readJsonArray<T>(fileName: string): Promise<T[]> {
   await ensureLocalDir();
   try {
-    const raw = await fs.readFile(path.join(localDataRoot, fileName), "utf8");
+    const raw = await retryLocalFileOperation(() =>
+      fs.readFile(path.join(localDataRoot, fileName), "utf8"),
+    );
     const parsed = parseJsonArray(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error: any) {
@@ -241,7 +246,7 @@ export async function appendLocalJsonl(relativePath: string, row: unknown): Prom
   await ensureLocalDir();
   const filePath = path.join(localDataRoot, relativePath);
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.appendFile(filePath, `${JSON.stringify(row)}\n`, "utf8");
+  await retryLocalFileWrite(() => fs.appendFile(filePath, `${JSON.stringify(row)}\n`, "utf8"));
   return filePath;
 }
 
