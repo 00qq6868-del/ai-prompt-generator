@@ -1990,3 +1990,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-08T01:08:58.597Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed and verified warning/error cleanup. Latest main 3151a0a updates GitHub Actions to avoid Node 20 deprecation, pins Windows release runner to windows-2025-vs2026, makes production smoke pass without local generation secrets unless SMOKE_REQUIRE_GENERATION=1, switches E2E to production server without Fast Refresh noise, filters only known benign PWA build info, and adds local JSON file lock retry for read/append/write. Local validation passed: node syntax checks, npx tsc --noEmit, npm run build, chromium E2E 20/20, npm run smoke:prod. GitHub validation passed on main: E2E Tests, Production Smoke Test, Android Release, Desktop Release all successful. Release desktop-v1.0.0 assets re-uploaded from latest main and all download API endpoints redirect correctly.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
