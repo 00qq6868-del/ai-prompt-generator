@@ -2160,3 +2160,14 @@ Operational note:
  M src/lib/server/github-dataset.ts
  M tests/e2e/prompt-generator.spec.ts
 ```
+
+
+## 2026-05-08T16:18:41.523Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Completed and pushed test channel diagnostics fix. User corrected that errors must display bilingual zh/en. Implemented: provider adapters harden empty choices; test channel tries fallback models and returns modelDiagnostics/improvementPlan; frontend displays bilingual error/status/diagnostics/next improvements and bilingualizes old single-language errors; no raw keys shown/saved. Pushed e9a4ced to main. GitHub E2E run 25566380567 succeeded, annotation 24 passed. Production smoke passed: homepage/models/analytics ok, total models 277; real generation skipped because no local smoke generation secret.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
