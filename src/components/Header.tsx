@@ -1,14 +1,16 @@
 "use client";
 
-import { Sparkles, QrCode, X, ExternalLink, KeyRound, Download } from "lucide-react";
+import { Sparkles, QrCode, X, ExternalLink, KeyRound, Download, FlaskConical } from "lucide-react";
 import { NetworkStatus } from "./NetworkStatus";
 import { KeysSettings } from "./KeysSettings";
+import { TestChannelPanel } from "./TestChannelPanel";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
   const [showQR, setShowQR]     = useState(false);
   const [showKeys, setShowKeys] = useState(false);
+  const [showTestChannel, setShowTestChannel] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/[0.08] bg-black/30 backdrop-blur-xl">
@@ -24,6 +26,16 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <NetworkStatus />
+
+        {/* Test channel */}
+        <button
+          onClick={() => setShowTestChannel(true)}
+          title="测试通道"
+          aria-label="打开 AI 提示词测试通道 Open AI prompt test channel"
+          className="text-white/70 hover:text-cyan-300 transition-colors"
+        >
+          <FlaskConical size={16} />
+        </button>
 
         {/* API Key settings */}
         <button
@@ -101,6 +113,14 @@ export function Header() {
       </div>
 
       <KeysSettings open={showKeys} onClose={() => setShowKeys(false)} />
+      <TestChannelPanel
+        open={showTestChannel}
+        onClose={() => setShowTestChannel(false)}
+        onOpenKeys={() => {
+          setShowTestChannel(false);
+          setShowKeys(true);
+        }}
+      />
     </header>
   );
 }

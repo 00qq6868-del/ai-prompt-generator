@@ -177,6 +177,59 @@ async function mockAPIs(page: Page) {
       body: JSON.stringify({ ok: true, received: 0, synced: 0 }),
     })
   );
+
+  await page.route("**/api/test-channel/run", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        status: "pass",
+        reportId: "test-channel-e2e",
+        model: {
+          id: "gpt-5.5-pro",
+          name: "GPT-5.5 Pro",
+          provider: "OpenAI",
+          apiProvider: "openai",
+          targetModelId: "gpt-5.5-pro",
+          targetModelName: "GPT-5.5 Pro",
+        },
+        strictScore: {
+          total: 91,
+          pass: true,
+          scoreType: "prompt",
+          dimensionScores: {
+            intent_fidelity: 9.4,
+            target_model_fit: 9.2,
+            hallucination_resistance: 9.1,
+            reference_image_consistency: 8.6,
+          },
+          deductions: [],
+        },
+        checks: [
+          { id: "provider_connectivity", label: "真实模型连通性 / Provider connectivity", value: 10, threshold: 10, status: "pass" },
+          { id: "strict_total", label: "严格总分 / Strict total score", value: 91, threshold: 85, status: "pass" },
+          { id: "secret_handling", label: "密钥防泄露 / Secret handling", value: 10, threshold: 10, status: "pass" },
+        ],
+        attempts: [
+          {
+            attempt: 1,
+            score: { total: 91, pass: true, dimensionScores: { intent_fidelity: 9.4 } },
+            latencyMs: 500,
+            preview: "Safe preview.",
+          },
+        ],
+        stats: { latencyMs: 900, inputTokens: 100, outputTokens: 200 },
+        providerStatus: {
+          configured: ["openai"],
+          keys: [{ keyName: "OPENAI_API_KEY", source: "browser", masked: "sk-...-e2e", hash: "hash-e2e" }],
+        },
+        bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
+        github: { synced: false, target: "local", filePath: "data/test-channel-runs/2026-05.jsonl" },
+        secretHandling: "raw keys are never returned, logged, or written to GitHub datasets",
+      }),
+    })
+  );
 }
 
 /** Build a SSE response body that streams chunks then sends a done event. */
@@ -820,5 +873,133 @@ test.describe("PromptGenerator E2E", () => {
     await expect(page.locator("text=senior poet")).toBeVisible({ timeout: 10_000 });
     expect(generateBody.userIdea).toContain("用户已澄清主要方向：汽车");
     expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("intent_domain"))).toBeTruthy();
+  });
+
+  test("15. test channel runs with saved keys and never displays the raw key", async ({ page }) => {
+    let testBody: any = null;
+    const fakeRawKey = "sk-test-fake-key-for-e2e";
+    await page.route("**/api/test-channel/run", async (route) => {
+      testBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          status: "pass",
+          reportId: "test-channel-e2e",
+          model: {
+            id: "gpt-5.5-pro",
+            name: "GPT-5.5 Pro",
+            provider: "OpenAI",
+            apiProvider: "openai",
+            targetModelId: "gpt-5.5-pro",
+            targetModelName: "GPT-5.5 Pro",
+          },
+          strictScore: {
+            total: 91,
+            pass: true,
+            scoreType: "prompt",
+            dimensionScores: {
+              intent_fidelity: 9.4,
+              target_model_fit: 9.2,
+              hallucination_resistance: 9.1,
+            },
+            deductions: [],
+          },
+          checks: [
+            { id: "provider_connectivity", label: "真实模型连通性 / Provider connectivity", value: 10, threshold: 10, status: "pass" },
+            { id: "strict_total", label: "严格总分 / Strict total score", value: 91, threshold: 85, status: "pass" },
+            { id: "secret_handling", label: "密钥防泄露 / Secret handling", value: 10, threshold: 10, status: "pass" },
+          ],
+          attempts: [
+            {
+              attempt: 1,
+              score: { total: 91, pass: true, dimensionScores: { intent_fidelity: 9.4 } },
+              latencyMs: 500,
+              preview: "Safe preview.",
+            },
+          ],
+          stats: { latencyMs: 900, inputTokens: 100, outputTokens: 200 },
+          providerStatus: {
+            configured: ["openai"],
+            keys: [{ keyName: "OPENAI_API_KEY", source: "browser", masked: "sk-...-e2e", hash: "hash-e2e" }],
+          },
+          bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
+          github: { synced: false, target: "local", filePath: "data/test-channel-runs/2026-05.jsonl" },
+          secretHandling: "raw keys are never returned, logged, or written to GitHub datasets",
+        }),
+      });
+    });
+
+    await page.evaluate((key) => {
+      localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: key }));
+      localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5-pro");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5-pro"]));
+    }, fakeRawKey);
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/test-channel/run", async (route) => {
+      testBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          status: "pass",
+          reportId: "test-channel-e2e",
+          model: {
+            id: "gpt-5.5-pro",
+            name: "GPT-5.5 Pro",
+            provider: "OpenAI",
+            apiProvider: "openai",
+            targetModelId: "gpt-5.5-pro",
+            targetModelName: "GPT-5.5 Pro",
+          },
+          strictScore: {
+            total: 91,
+            pass: true,
+            scoreType: "prompt",
+            dimensionScores: {
+              intent_fidelity: 9.4,
+              target_model_fit: 9.2,
+              hallucination_resistance: 9.1,
+            },
+            deductions: [],
+          },
+          checks: [
+            { id: "provider_connectivity", label: "真实模型连通性 / Provider connectivity", value: 10, threshold: 10, status: "pass" },
+            { id: "strict_total", label: "严格总分 / Strict total score", value: 91, threshold: 85, status: "pass" },
+            { id: "secret_handling", label: "密钥防泄露 / Secret handling", value: 10, threshold: 10, status: "pass" },
+          ],
+          attempts: [
+            {
+              attempt: 1,
+              score: { total: 91, pass: true, dimensionScores: { intent_fidelity: 9.4 } },
+              latencyMs: 500,
+              preview: "Safe preview.",
+            },
+          ],
+          stats: { latencyMs: 900, inputTokens: 100, outputTokens: 200 },
+          providerStatus: {
+            configured: ["openai"],
+            keys: [{ keyName: "OPENAI_API_KEY", source: "browser", masked: "sk-...-e2e", hash: "hash-e2e" }],
+          },
+          bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
+          github: { synced: false, target: "local", filePath: "data/test-channel-runs/2026-05.jsonl" },
+          secretHandling: "raw keys are never returned, logged, or written to GitHub datasets",
+        }),
+      });
+    });
+
+    await page.getByRole("button", { name: "打开 AI 提示词测试通道 Open AI prompt test channel" }).click();
+    const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("密钥状态");
+    await dialog.getByRole("button", { name: "运行真实验证" }).click();
+
+    await expect(dialog.getByText("测试通过")).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByText("密钥防泄露 / Secret handling")).toBeVisible();
+    expect(testBody.userKeys.OPENAI_API_KEY).toBe(fakeRawKey);
+    await expect(page.locator("body")).not.toContainText(fakeRawKey);
   });
 });

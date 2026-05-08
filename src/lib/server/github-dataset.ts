@@ -9,13 +9,26 @@ export interface DatasetExportResult {
   reason?: string;
 }
 
+function maskSensitiveText(value: string): string {
+  return value
+    .replace(/sk-[A-Za-z0-9_-]{8,}/g, "sk-***")
+    .replace(/gsk_[A-Za-z0-9_-]{8,}/g, "gsk_***")
+    .replace(/xai-[A-Za-z0-9_-]{8,}/g, "xai-***")
+    .replace(/AIza[0-9A-Za-z_-]{12,}/g, "AIza***")
+    .replace(/Bearer\s+[A-Za-z0-9._-]{12,}/gi, "Bearer ***")
+    .replace(/api[_-]?key["']?\s*[:=]\s*["']?[A-Za-z0-9._-]{12,}/gi, "apiKey=***")
+    .replace(/secret["']?\s*[:=]\s*["']?[A-Za-z0-9._-]{12,}/gi, "secret=***")
+    .replace(/token["']?\s*[:=]\s*["']?[A-Za-z0-9._-]{16,}/gi, "token=***");
+}
+
 function cleanString(value: unknown, max = 8000): string {
-  return typeof value === "string" ? value.trim().slice(0, max) : "";
+  return typeof value === "string" ? maskSensitiveText(value.trim()).slice(0, max) : "";
 }
 
 export type DatasetKind =
   | "prompt-feedback"
   | "test-runs"
+  | "test-channel-runs"
   | "score-reports"
   | "prompt-history"
   | "github-projects";
@@ -60,6 +73,32 @@ export function sanitizeDatasetRow(input: Record<string, unknown>) {
     ai_prompt_score: Number.isFinite(Number(input.aiPromptScore)) ? Number(input.aiPromptScore) : null,
     strict_score: input.strictScore && typeof input.strictScore === "object" ? input.strictScore : null,
     test_scores: input.testScores && typeof input.testScores === "object" ? input.testScores : null,
+    test_channel: input.testChannel && typeof input.testChannel === "object"
+      ? {
+          status: cleanString((input.testChannel as Record<string, unknown>).status, 40),
+          provider: cleanString((input.testChannel as Record<string, unknown>).provider, 80),
+          model_id: cleanString((input.testChannel as Record<string, unknown>).model_id, 180),
+          model_name: cleanString((input.testChannel as Record<string, unknown>).model_name, 180),
+          target_model_id: cleanString((input.testChannel as Record<string, unknown>).target_model_id, 180),
+          latency_ms: Number.isFinite(Number((input.testChannel as Record<string, unknown>).latency_ms))
+            ? Number((input.testChannel as Record<string, unknown>).latency_ms)
+            : null,
+          attempts: Number.isFinite(Number((input.testChannel as Record<string, unknown>).attempts))
+            ? Number((input.testChannel as Record<string, unknown>).attempts)
+            : null,
+          key_fingerprints: Array.isArray((input.testChannel as Record<string, unknown>).key_fingerprints)
+            ? ((input.testChannel as Record<string, unknown>).key_fingerprints as unknown[]).map((item) => {
+                const record = item && typeof item === "object" ? item as Record<string, unknown> : {};
+                return {
+                  key_name: cleanString(record.key_name, 80),
+                  source: cleanString(record.source, 40),
+                  hash: cleanString(record.hash, 80),
+                };
+              }).filter((item) => item.key_name && item.hash).slice(0, 30)
+            : [],
+          secret_handling: cleanString((input.testChannel as Record<string, unknown>).secret_handling, 300),
+        }
+      : null,
     failed_dimensions: Array.isArray(input.failedDimensions)
       ? input.failedDimensions.map((item) => cleanString(item, 120)).filter(Boolean).slice(0, 30)
       : [],
