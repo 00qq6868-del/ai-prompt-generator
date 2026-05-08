@@ -209,6 +209,9 @@ function buildPartialThenErrorSSEBody(partialPrompt: string) {
 const MOCK_OPTIMIZED =
   "# Role\nYou are a senior poet specializing in classical Chinese poetry.\n\n# Task\nWrite a poem about autumn using Tang dynasty style.";
 
+const ONE_PIXEL_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
+
 // ── Tests ────────────────────────────────────────────────────────
 
 test.describe("PromptGenerator E2E", () => {
@@ -658,5 +661,111 @@ test.describe("PromptGenerator E2E", () => {
     expect(feedbackBody.selectedPrompt).toContain("senior poet");
     expect(feedbackBody.targetModel).toBeTruthy();
     expect(feedbackBody.generatorModels.length).toBeGreaterThan(0);
+  });
+
+  test("13. reference image upload sends image-to-image request and shows gated summary", async ({ page }) => {
+    let generateBody: any = null;
+    await page.route("**/api/generate", async (route) => {
+      generateBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(
+          "正向提示词 / Positive Prompt\nUse the uploaded reference image composition, palette, lighting, and style.\n\n负向提示词 / Negative Prompt\nbad hands, distorted face, unreadable text\n\n推荐参数 / Recommended Parameters\naspect ratio 1:1, reference image weight 0.85",
+          {
+            referenceImage: {
+              enabled: true,
+              width: 1024,
+              height: 1024,
+              aspectRatio: "1:1",
+              palette: ["#111111", "#eeeeee"],
+              averageColor: "#777777",
+              brightness: "balanced",
+              contrast: "high",
+              saturation: "vivid",
+              selectedSource: "enhanced_vision",
+              internalBestScore: 91,
+              qualityGate: "passed",
+              analysisChannels: [
+                { source: "original_api_vision", modelId: "gpt-5.5-pro", modelName: "GPT-5.5 Pro", available: true },
+                { source: "enhanced_vision", modelId: "gemini-2.0-flash", modelName: "Gemini 2.0 Flash", available: true },
+              ],
+            },
+            promptEvaluation: {
+              rubric: [
+                { id: "visual_similarity", label: "Visual similarity", labelZh: "参考图相似度", weight: 18, guide: "Match reference.", guideZh: "匹配参考图。" },
+              ],
+              candidates: [
+                {
+                  id: "enhanced_vision-attempt-1",
+                  generatorModelId: "gpt-5.5-pro",
+                  generatorModelName: "Enhanced vision",
+                  averageScore: 91,
+                  rank: 1,
+                  scores: [{ judgeModel: "Reference Quality Gate", score: 91, reason: "Strong." }],
+                },
+              ],
+              judgeModels: ["Reference Quality Gate"],
+              selectedCandidateId: "enhanced_vision-attempt-1",
+              summary: "internal best selected",
+            },
+          },
+        ),
+      });
+    });
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "ai_prompt_user_keys",
+        JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" })
+      );
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/generate", async (route) => {
+      generateBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        headers: { "Cache-Control": "no-cache, no-transform" },
+        body: buildSSEBody(
+          "正向提示词 / Positive Prompt\nUse the uploaded reference image composition, palette, lighting, and style.\n\n负向提示词 / Negative Prompt\nbad hands, distorted face, unreadable text\n\n推荐参数 / Recommended Parameters\naspect ratio 1:1, reference image weight 0.85",
+          {
+            referenceImage: {
+              enabled: true,
+              width: 1024,
+              height: 1024,
+              aspectRatio: "1:1",
+              palette: ["#111111", "#eeeeee"],
+              averageColor: "#777777",
+              brightness: "balanced",
+              contrast: "high",
+              saturation: "vivid",
+              selectedSource: "enhanced_vision",
+              internalBestScore: 91,
+              qualityGate: "passed",
+            },
+          },
+        ),
+      });
+    });
+
+    await page.getByTestId("reference-image-input").setInputFiles({
+      name: "reference.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(ONE_PIXEL_PNG_BASE64, "base64"),
+    });
+    await expect(page.getByText("已启用参考图图生图优化")).toBeVisible();
+    await expect(page.getByText("GPT Image 2").first()).toBeVisible();
+    await page.locator("textarea").fill("做一张类似参考图的高端产品海报");
+    await page.getByRole("button", { name: /生成优化提示词|生成图生图提示词/ }).click();
+
+    await expect(page.getByText("Reference image summary")).toBeVisible({ timeout: 10_000 });
+    await page.getByText("Reference image summary").click();
+    await expect(page.getByText(/91\/100/)).toBeVisible();
+    expect(generateBody.referenceImage.dataUrl).toContain("data:image/png;base64,");
+    expect(generateBody.referenceImage.name).toBe("reference.png");
+    expect(generateBody.referenceImage.size).toBeGreaterThan(0);
   });
 });

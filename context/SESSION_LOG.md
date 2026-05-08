@@ -2001,3 +2001,19 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-08T01:51:22.511Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Implemented main-site reference image upload and image-to-image prompt workflow: optional upload/preview, auto GPT Image 2 target when unlocked, dual vision path using original API vision when available plus enhanced/free local analysis, internal candidate scoring and retry, deterministic strict-quality repair before final return, ResultPanel advanced reference summary, E2E coverage. Local validation passed: tsc, prompt-generator E2E 16/16, data:validate, build, quality 5/5, smoke:prod with generation skipped due no local secret.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M src/app/api/generate/route.ts
+ M src/components/PromptGenerator.tsx
+ M src/components/ResultPanel.tsx
+ M tests/e2e/prompt-generator.spec.ts
+?? src/lib/reference-image.ts
+```

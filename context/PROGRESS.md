@@ -3,6 +3,63 @@
 > Last updated: 2026-05-02
 > Updated by: Codex (completion pass)
 
+## 2026-05-08 — Reference Image Upload And Image-To-Image Prompt Workflow
+
+User request:
+
+- Add an optional image upload entry to the main AI prompt generator website.
+- Let users upload a good-looking reference image, add a text goal, and generate a more accurate image-to-image prompt.
+- If the selected/original AI API supports image understanding, use that vision path first.
+- Always also run a new enhanced/free-priority visual recognition path.
+- Generate candidates from both analyses, score them internally, choose the better one, and regenerate if both are weak.
+- Do not return low-quality failed candidates to normal users.
+- Keep the product experience simple: upload image + type goal + generate.
+
+Implemented:
+
+- Added optional reference image upload/preview/remove/replace UI in `src/components/PromptGenerator.tsx`.
+- Uploading a reference image automatically switches to `GPT Image 2` target when the target model is not manually locked.
+- Added `src/lib/reference-image.ts`:
+  - validates reference images and size limits;
+  - strips metadata by re-encoding through `sharp`;
+  - extracts deterministic free local image features: dimensions, aspect ratio, orientation, palette, average color, brightness, contrast, saturation, likely use;
+  - detects whether selected models likely support vision;
+  - runs original API vision when available;
+  - chooses enhanced vision fallback with free/low-cost priority when possible;
+  - falls back to local free analysis when no configured vision API is callable;
+  - scores image-to-image prompt candidates by visual similarity, user intent alignment, model fit, executable clarity, artifact control, and commercial finish.
+- Updated `/api/generate`:
+  - accepts `referenceImage`;
+  - runs dual-channel vision analysis;
+  - generates candidate prompts from original API vision and enhanced/local analysis;
+  - internally retries up to 3 times when candidates miss quality thresholds;
+  - returns a curated fallback prompt if external model candidates remain weak;
+  - hides failed candidates and raw internal errors from normal users;
+  - adds deterministic strict-quality repair before final return so obvious fail prompts are reinforced rather than returned as-is.
+- Updated `ResultPanel`:
+  - adds a collapsed `参考图优化摘要 Reference image summary`;
+  - keeps internal score/candidate details collapsed by default so ordinary users see the best prompt first.
+- Added Playwright coverage:
+  - reference image upload sends `referenceImage` in `/api/generate`;
+  - upload flow auto-enters image prompt mode;
+  - gated reference summary renders after generation;
+  - unified generator/evaluator model picker remains intact.
+
+Validation passed locally:
+
+- `npx tsc --noEmit --pretty false`
+- `npx playwright test tests/e2e/prompt-generator.spec.ts --project=chromium --reporter=line` -> 16/16 passed
+- `npm run data:validate`
+- `npm run build`
+- `npm run test:quality` -> 5/5 passed
+- `npm run smoke:prod` -> homepage/models/analytics ok; real generation skipped because no local generation secret is configured
+
+Privacy and GitHub boundary:
+
+- Raw uploaded images are not written to GitHub.
+- Reference image metadata/scores can be returned in response metadata, but only sanitized summaries should be exported.
+- AI 工作台 root remains outside this GitHub repo.
+
 ## 2026-05-08 — Memory Protocol And Unified Generation/Evaluation Model Selection
 
 User correction:

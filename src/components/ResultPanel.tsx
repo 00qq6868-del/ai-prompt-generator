@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Copy, Check, Coins, Clock, Zap, TrendingDown, TrendingUp, Minus, ArrowLeftRight, Star, MessageSquare } from "lucide-react";
+import { Copy, Check, Coins, Clock, Zap, TrendingDown, TrendingUp, Minus, ArrowLeftRight, Star, MessageSquare, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import type { PromptPreference } from "@/lib/prompt-feedback";
 
@@ -49,6 +49,27 @@ interface Meta {
   };
   strictScore?: StrictScore;
   persistenceWarning?: string;
+  referenceImage?: {
+    enabled?: boolean;
+    width?: number;
+    height?: number;
+    aspectRatio?: string;
+    palette?: string[];
+    averageColor?: string;
+    brightness?: string;
+    contrast?: string;
+    saturation?: string;
+    selectedSource?: string;
+    internalBestScore?: number;
+    qualityGate?: string;
+    analysisChannels?: Array<{
+      source: string;
+      modelId: string;
+      modelName: string;
+      available: boolean;
+      error?: string;
+    }>;
+  };
 }
 
 interface Props {
@@ -263,6 +284,44 @@ export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictSc
               <div className="mx-5 mt-4 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[11px] leading-5 text-amber-100/80">
                 {meta.persistenceWarning}
               </div>
+            )}
+            {meta.referenceImage?.enabled && (
+              <details className="mx-5 mt-4 rounded-xl border border-cyan-300/15 bg-cyan-500/10 p-3 text-xs text-cyan-50/80">
+                <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-cyan-100">
+                  <ImageIcon size={14} />
+                  参考图优化摘要 Reference image summary
+                </summary>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="rounded-lg bg-black/10 px-2.5 py-2">
+                    尺寸/画幅：{meta.referenceImage.width}x{meta.referenceImage.height} · {meta.referenceImage.aspectRatio}
+                  </div>
+                  <div className="rounded-lg bg-black/10 px-2.5 py-2">
+                    内部质量门：{Math.round(meta.referenceImage.internalBestScore ?? 0)}/100 · {meta.referenceImage.qualityGate}
+                  </div>
+                  <div className="rounded-lg bg-black/10 px-2.5 py-2">
+                    色彩：{meta.referenceImage.averageColor} · {meta.referenceImage.brightness}/{meta.referenceImage.contrast}/{meta.referenceImage.saturation}
+                  </div>
+                  <div className="rounded-lg bg-black/10 px-2.5 py-2">
+                    采用路径：{meta.referenceImage.selectedSource}
+                  </div>
+                </div>
+                {meta.referenceImage.palette?.length ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {meta.referenceImage.palette.slice(0, 6).map((color) => (
+                      <span
+                        key={color}
+                        className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/10 px-2 py-1 font-mono text-[10px]"
+                      >
+                        <span className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: color }} />
+                        {color}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="mt-2 text-[10px] leading-4 text-cyan-50/55">
+                  普通模式隐藏内部失败候选和原始错误，只展示通过内部择优后的最佳提示词。
+                </div>
+              </details>
             )}
             {meta.promptEvaluation && (
               <div className="mx-5 mt-4 rounded-xl border border-white/10 bg-white/[0.035] p-3">

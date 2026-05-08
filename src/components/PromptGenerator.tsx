@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Languages, Clock } from "lucide-react";
+import { ImagePlus, Sparkles, Languages, Clock, X } from "lucide-react";
 import { ModelSelector } from "./ModelSelector";
 import { ResultPanel } from "./ResultPanel";
 import { loadUserKeys } from "./KeysSettings";
@@ -39,6 +39,7 @@ const TARGET_LOCK_STORAGE_KEY = "ai_prompt_target_model_locked";
 const DEVICE_ID_STORAGE_KEY = "ai_prompt_device_id";
 const GENERATOR_STORAGE_KEY = "ai_prompt_last_generator_model_ids";
 const EVALUATOR_STORAGE_KEY = "ai_prompt_last_evaluator_model_ids";
+const MAX_REFERENCE_IMAGE_BYTES = 7 * 1024 * 1024;
 
 const PROVIDER_KEY_MAP: Record<string, string> = {
   custom:    "CUSTOM_API_KEY",
@@ -127,6 +128,27 @@ interface GenerateResult {
     };
     strictScore?: GenerateResult["strictScore"];
     persistenceWarning?: string;
+    referenceImage?: {
+      enabled?: boolean;
+      width?: number;
+      height?: number;
+      aspectRatio?: string;
+      palette?: string[];
+      averageColor?: string;
+      brightness?: string;
+      contrast?: string;
+      saturation?: string;
+      selectedSource?: string;
+      internalBestScore?: number;
+      qualityGate?: string;
+      analysisChannels?: Array<{
+        source: string;
+        modelId: string;
+        modelName: string;
+        available: boolean;
+        error?: string;
+      }>;
+    };
   };
   generatorModelCost: { input: number; output: number };
 }
@@ -194,8 +216,20 @@ function readStoredIds(key: string): string[] {
   }
 }
 
+interface ReferenceImageDraft {
+  dataUrl: string;
+  name: string;
+  size: number;
+  mimeType: string;
+}
+
 function mirrorEvaluatorIds(generatorIds: string[]): string[] {
   return generatorIds.filter(Boolean).slice(0, 6);
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function PromptGenerator() {
@@ -229,7 +263,9 @@ export function PromptGenerator() {
   const [previousPromptForResult, setPreviousPromptForResult] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState(() => ensureDeviceId());
   const [preferenceHydrated, setPreferenceHydrated] = useState(false);
+  const [referenceImage, setReferenceImage] = useState<ReferenceImageDraft | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const referenceInputRef = useRef<HTMLInputElement>(null);
 
   const setTargetModel = (id: string, source: "manual" | "auto" | "history" = "manual") => {
     setTargetModelId(id);
@@ -548,6 +584,38 @@ export function PromptGenerator() {
     selectBestFromProbe(availableModelIds, targetModelId);
   }, [targetModelId]);
 
+  const applyReferenceImageFile = (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("请上传图片文件 / Please upload an image file");
+      return;
+    }
+    if (file.size > MAX_REFERENCE_IMAGE_BYTES) {
+      toast.error(`参考图最大 ${formatBytes(MAX_REFERENCE_IMAGE_BYTES)} / Reference image max ${formatBytes(MAX_REFERENCE_IMAGE_BYTES)}`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === "string" ? reader.result : "";
+      if (!dataUrl.startsWith("data:image/")) {
+        toast.error("参考图读取失败 / Failed to read reference image");
+        return;
+      }
+      setReferenceImage({
+        dataUrl,
+        name: file.name || "reference-image",
+        size: file.size,
+        mimeType: file.type || "image/jpeg",
+      });
+      if (!targetManuallyLocked && targetModelId !== BEST_IMAGE_MODEL_ID) {
+        setTargetModel(BEST_IMAGE_MODEL_ID, "auto");
+      }
+      toast.success("参考图已加入，将自动启用图生图优化 / Reference image added");
+    };
+    reader.onerror = () => toast.error("参考图读取失败 / Failed to read reference image");
+    reader.readAsDataURL(file);
+  };
+
   const generate = async () => {
     if (!idea.trim()) {
       toast.error("请先输入你的想法或需求！/ Please enter your idea first!");
@@ -562,7 +630,9 @@ export function PromptGenerator() {
     setResult(null);
     setStreamingText("");
     setPreviousPromptForResult(findPreviousPrompt(idea, targetModelId));
-    const estimatedTotalSec = estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length);
+    const estimatedTotalSec = referenceImage
+      ? Math.max(90, estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length))
+      : estimateTotalSeconds(targetModelId, generatorModelIds.length, evaluatorModelIds.length);
     setElapsedSec(0);
     setGenerationProgress({
       phase: "准备生成",
@@ -570,9 +640,13 @@ export function PromptGenerator() {
       total: 1,
       etaSec: estimatedTotalSec,
       elapsedSec: 0,
-      message: "正在判断模型是否可用；可输出的慢模型会继续等待，持续失败的模型才会跳过。 Checking model health; slow responsive models will be waited for.",
+      message: referenceImage
+        ? "正在增强图片理解并生成图生图提示词；不合格候选会在内部自动重试。 Enhancing image understanding; weak candidates are retried internally."
+        : "正在判断模型是否可用；可输出的慢模型会继续等待，持续失败的模型才会跳过。 Checking model health; slow responsive models will be waited for.",
     });
-    const tid = toast.loading(`AI 正在生成优化提示词…预计 ${formatDuration(estimatedTotalSec)} 内完成`);
+    const tid = toast.loading(referenceImage
+      ? `AI 正在理解参考图并生成最佳提示词…预计 ${formatDuration(estimatedTotalSec)} 内完成`
+      : `AI 正在生成优化提示词…预计 ${formatDuration(estimatedTotalSec)} 内完成`);
     const requestStartedAt = performance.now();
     let responseStatus = 0;
     let apiCallTracked = false;
@@ -613,6 +687,14 @@ export function PromptGenerator() {
           availableModelIds,
           deviceId,
           feedbackMemory,
+          referenceImage: referenceImage
+            ? {
+                dataUrl: referenceImage.dataUrl,
+                mimeType: referenceImage.mimeType,
+                name: referenceImage.name,
+                size: referenceImage.size,
+              }
+            : null,
           stream: true,
         }),
       });
@@ -907,6 +989,85 @@ export function PromptGenerator() {
             <span className="absolute bottom-3 right-4 text-xs text-white/60">{charCount}</span>
           )}
         </div>
+
+        <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+          <input
+            ref={referenceInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="sr-only"
+            data-testid="reference-image-input"
+            aria-label="上传参考图 Upload reference image"
+            onChange={(event) => {
+              applyReferenceImageFile(event.target.files?.[0]);
+              event.currentTarget.value = "";
+            }}
+          />
+          {referenceImage ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative h-24 w-full overflow-hidden rounded-xl border border-indigo-400/25 bg-black/20 sm:w-32">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={referenceImage.dataUrl}
+                  alt="参考图预览 Reference preview"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-white/85">已启用参考图图生图优化</div>
+                <div className="mt-1 truncate text-xs text-white/50">
+                  {referenceImage.name} · {formatBytes(referenceImage.size)}
+                </div>
+                <div className="mt-1 text-xs leading-5 text-white/45">
+                  系统会先尝试原 API 识图，再使用增强视觉分析，内部评分择优后只返回最佳提示词。
+                </div>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => referenceInputRef.current?.click()}
+                  className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.1] hover:text-white"
+                >
+                  更换
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReferenceImage(null)}
+                  className="flex items-center gap-1 rounded-xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-100/80 transition hover:bg-rose-500/20"
+                  aria-label="移除参考图 Remove reference image"
+                >
+                  <X size={13} />
+                  移除
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => referenceInputRef.current?.click()}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "copy";
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                applyReferenceImageFile(event.dataTransfer.files?.[0]);
+              }}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-black/10 px-4 py-5 text-center transition hover:border-indigo-400/50 hover:bg-indigo-500/10 sm:flex-row sm:text-left"
+              aria-label="上传参考图生成图生图提示词 Upload reference image for image-to-image prompt"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-200">
+                <ImagePlus size={18} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-white/80">上传参考图（可选）</span>
+                <span className="mt-0.5 block text-xs leading-5 text-white/45">
+                  上传你喜欢的图，系统会结合图片识别和文字需求生成更精准的图生图提示词。
+                </span>
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Smart model recommendation */}
@@ -971,7 +1132,7 @@ export function PromptGenerator() {
         ) : (
           <>
             <Sparkles size={20} />
-            生成优化提示词
+            {referenceImage ? "生成图生图提示词" : "生成优化提示词"}
           </>
         )}
 

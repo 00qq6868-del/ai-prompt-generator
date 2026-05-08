@@ -21,6 +21,19 @@ import {
 import { createPrompt, createPromptVersion } from "@/lib/server/storage";
 import { strictPromptScore } from "@/lib/strict-scoring";
 import { toUserFacingErrorMessage } from "@/lib/error-messages";
+import {
+  ReferenceImageInput,
+  ReferencePromptCandidate,
+  analyzeImageWithVisionModel,
+  analyzeReferenceImage,
+  buildQualityFallbackPrompt,
+  buildReferenceCandidatePrompt,
+  canCallVisionModel,
+  chooseEnhancedVisionModel,
+  localVisionResult,
+  modelSupportsVision,
+  scoreReferencePromptCandidate,
+} from "@/lib/reference-image";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -44,6 +57,7 @@ export interface GenerateRequest {
       selectedPromptPreview?: string;
     }>;
   };
+  referenceImage?: ReferenceImageInput | null;
   stream?: boolean;
 }
 
@@ -70,6 +84,50 @@ function summarizeFeedbackMemory(memory: GenerateRequest["feedbackMemory"]): str
     }
   }
   return lines.join("\n");
+}
+
+function repairPromptForStrictQuality(args: {
+  userIdea: string;
+  promptText: string;
+  targetModel: ModelInfo;
+  language: "zh" | "en";
+  hasReferenceImage: boolean;
+  failedDimensions: string[];
+}): string {
+  const prompt = args.promptText.trim();
+  const isImage = (args.targetModel.category ?? "text") === "image";
+  const failed = args.failedDimensions.length ? args.failedDimensions.join(", ") : "strict quality gate";
+  if (args.language === "zh") {
+    return [
+      prompt,
+      "",
+      "自动质量门补强 / Quality Gate Reinforcement",
+      `用户原始意图必须完整保留：${args.userIdea}`,
+      `本次补强针对低分维度：${failed}。`,
+      "- 不得编造用户没有要求的事实、来源、人物身份、品牌、文字或细节；不确定处必须保持可控描述。",
+      "- 输出必须直接可执行，包含清晰结构、约束、失败规避、验收检查和最终格式要求。",
+      "- 幻觉防护：只使用用户输入、参考图信息和明确推断；禁止把推测当事实。",
+      isImage
+        ? `- 图像提示词必须包含主体、风格、构图、镜头、光影、色彩、材质、背景、质量标准、负面提示词和参数建议${args.hasReferenceImage ? "；必须保持参考图构图、色彩、比例和视觉效果一致" : ""}。`
+        : "- 文本/代码提示词必须包含角色、任务、上下文、约束、步骤、输出格式、边界条件和自检标准。",
+      "- 最终回答前必须自检：意图保真 >= 9/10，幻觉防护 >= 9/10，可执行性 >= 9/10；未达到则继续改写。",
+    ].join("\n");
+  }
+
+  return [
+    prompt,
+    "",
+    "Automatic Quality Gate Reinforcement",
+    `Preserve the user's original intent completely: ${args.userIdea}`,
+    `This reinforcement targets low-scoring dimensions: ${failed}.`,
+    "- Do not invent facts, sources, identities, brands, visible text, or details the user did not provide; keep uncertain details controllable.",
+    "- The prompt must be directly executable, with clear structure, constraints, failure prevention, acceptance checks, and final output format.",
+    "- Anti-hallucination: use only the user's input, reference-image information, and explicitly marked inferences; never present guesses as facts.",
+    isImage
+      ? `- Image prompts must include subject, style, composition, camera, lighting, color, materials, background, quality criteria, negative prompt, and parameter guidance${args.hasReferenceImage ? "; preserve the reference image's composition, palette, proportions, and visual effect" : ""}.`
+      : "- Text/code prompts must include role, task, context, constraints, steps, output format, edge cases, and self-check criteria.",
+    "- Before final output, self-check: intent fidelity >= 9/10, hallucination resistance >= 9/10, actionability >= 9/10; if not met, rewrite internally.",
+  ].join("\n");
 }
 
 export const maxDuration = 300;
@@ -319,12 +377,50 @@ export async function POST(req: NextRequest) {
       changePercent: number;
       estimatedCostUsd?: number;
     }, metaExtra?: Record<string, unknown>, activeGeneratorModel: ModelInfo = generatorModel) => {
-      const strictScore = strictPromptScore({
+      const hasReferenceImage =
+        Boolean(body.referenceImage?.dataUrl) ||
+        /参考图|真实照片|原图|reference image|image-to-image/i.test(cleanIdea);
+      let finalPrompt = optimizedPrompt;
+      let strictScore = strictPromptScore({
         userIdea: cleanIdea,
-        promptText: optimizedPrompt,
+        promptText: finalPrompt,
         targetModelId: targetModel.id,
-        hasReferenceImage: /参考图|真实照片|原图|reference image|image-to-image/i.test(cleanIdea),
+        hasReferenceImage,
       });
+      let qualityGateRepair: Record<string, unknown> | undefined;
+      const criticalPromptDimensions = ["intent_fidelity", "target_model_fit", "hallucination_resistance", "reference_image_consistency"];
+      const shouldRepair =
+        !strictScore.pass ||
+        strictScore.total < 70 ||
+        criticalPromptDimensions.some((dimension) => (strictScore.dimensionScores[dimension] ?? 10) < 7) ||
+        (strictScore.dimensionScores.intent_fidelity ?? 10) < 9 ||
+        (strictScore.dimensionScores.hallucination_resistance ?? 10) < 9;
+      if (shouldRepair) {
+        const failedDimensions = Object.entries(strictScore.dimensionScores)
+          .filter(([, value]) => value < 8)
+          .map(([dimension]) => dimension);
+        finalPrompt = repairPromptForStrictQuality({
+          userIdea: cleanIdea,
+          promptText: finalPrompt,
+          targetModel,
+          language,
+          hasReferenceImage,
+          failedDimensions,
+        });
+        const repairedScore = strictPromptScore({
+          userIdea: cleanIdea,
+          promptText: finalPrompt,
+          targetModelId: targetModel.id,
+          hasReferenceImage,
+        });
+        qualityGateRepair = {
+          applied: true,
+          beforeTotal: strictScore.total,
+          afterTotal: repairedScore.total,
+          failedDimensions,
+        };
+        strictScore = repairedScore;
+      }
       let promptRecord: { id?: string } = {};
       let versionRecord: { id?: string; versionNumber?: number } = {};
       let persistenceWarning: string | undefined;
@@ -340,7 +436,7 @@ export async function POST(req: NextRequest) {
         versionRecord = await createPromptVersion({
           promptId: createdPrompt.id,
           versionType: "optimized",
-          promptText: optimizedPrompt,
+          promptText: finalPrompt,
           generatorModelIds: generatorModels.map((model) => model.id),
           evaluatorModelIds: evaluatorModels.map((model) => model.id),
           sourceRepoCommits: [
@@ -358,7 +454,7 @@ export async function POST(req: NextRequest) {
         promptId: promptRecord.id,
         versionId: versionRecord.id,
         versionNumber: versionRecord.versionNumber,
-        optimizedPrompt,
+        optimizedPrompt: finalPrompt,
         stats,
         strictScore,
         generatorModelCost: makeGeneratorModelCost(activeGeneratorModel),
@@ -366,6 +462,7 @@ export async function POST(req: NextRequest) {
           generatorModel: activeGeneratorModel.name,
           targetModel:    targetModel.name,
           strictScore,
+          qualityGateRepair,
           persistenceWarning,
           ...metaExtra,
         },
@@ -395,9 +492,356 @@ export async function POST(req: NextRequest) {
       return { activeModel, apiProvider, modelHealth };
     };
 
+    const runReferenceImageGeneration = async (onProgress?: (event: PromptGenerationProgress) => void) => {
+      const startedAt = Date.now();
+      const referenceImage = body.referenceImage;
+      if (!referenceImage?.dataUrl) {
+        throw new Error("缺少参考图 / Missing reference image");
+      }
+      const modelHealth: ModelHealthMeta = {
+        skippedCooling: [],
+        failed: [],
+        successful: [],
+      };
+      const progress = (event: Omit<PromptGenerationProgress, "elapsedSec">) => {
+        onProgress?.({
+          elapsedSec: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
+          ...event,
+        });
+      };
+
+      progress({
+        phase: "分析参考图",
+        current: 1,
+        total: 5,
+        etaSec: 75,
+        message: "正在提取参考图构图、色彩、光影和尺寸；内部评分未通过会自动重试。 Analyzing the reference image and optimizing internally.",
+      });
+
+      const analyzed = await analyzeReferenceImage(referenceImage);
+      const originalVisionSupported =
+        modelSupportsVision(generatorModel) &&
+        canCallVisionModel(generatorModel, userKeys, availableModelIds);
+      const enhancedVisionModel = chooseEnhancedVisionModel(
+        models,
+        userKeys,
+        availableModelIds,
+        originalVisionSupported ? generatorModel.id : undefined,
+      );
+
+      progress({
+        phase: "双通道识图",
+        current: 2,
+        total: 5,
+        etaSec: 65,
+        message: originalVisionSupported
+          ? "当前生成/评价模型支持识图，先走原 API 视觉通道，再走增强视觉通道。"
+          : "当前模型未确认可直接识图，改用增强视觉通道和免费本地图像分析。",
+      });
+
+      const visionAnalyses = await Promise.all([
+        originalVisionSupported
+          ? analyzeImageWithVisionModel({
+              model: generatorModel,
+              channel: "original_api_vision",
+              userIdea: cleanIdea,
+              local: analyzed.local,
+              base64: analyzed.base64,
+              mimeType: analyzed.mimeType,
+              userKeys,
+              availableModelIds,
+            })
+          : Promise.resolve(null),
+        enhancedVisionModel
+          ? analyzeImageWithVisionModel({
+              model: enhancedVisionModel,
+              channel: "enhanced_vision",
+              userIdea: cleanIdea,
+              local: analyzed.local,
+              base64: analyzed.base64,
+              mimeType: analyzed.mimeType,
+              userKeys,
+              availableModelIds,
+            })
+          : Promise.resolve(localVisionResult(analyzed.local, "enhanced_vision")),
+      ]);
+      const analyses = visionAnalyses
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        .filter((item, index, arr) => arr.findIndex((other) => other.source === item.source && other.modelId === item.modelId) === index);
+      if (analyses.length < 2) analyses.push(localVisionResult(analyzed.local));
+
+      const { activeModel, apiProvider, modelHealth: simpleHealth } = resolveSimpleGenerator();
+      modelHealth.skippedCooling.push(...(simpleHealth.skippedCooling ?? []));
+      let generatorPlan = { model: activeModel, apiProvider };
+      const calls: Array<{ model: ModelInfo; result: GenerateResult }> = [];
+      const previousFailures: string[] = [];
+      let bestCandidate: ReferencePromptCandidate | null = null;
+      let bestScore: ReturnType<typeof scoreReferencePromptCandidate> | null = null;
+      let lastCandidates: ReferencePromptCandidate[] = [];
+      let lastScores: ReturnType<typeof scoreReferencePromptCandidate>[] = [];
+      const maxAttempts = 3;
+
+      const ensureReferencePromptGuardrails = (text: string): string => {
+        const prompt = text.trim();
+        const missingNegative = !/(负向|negative|avoid|不要|避免|bad hands|坏手|畸形)/i.test(prompt);
+        const missingParams = !/(推荐参数|recommended parameters|aspect|比例|cfg|steps|seed|reference weight|参考图权重)/i.test(prompt);
+        const missingQuality = !/(不得虚构|do not invent|unknown|uncertain|幻觉|检查|verify|score|reference similarity|参考图一致)/i.test(prompt);
+        if (!missingNegative && !missingParams && !missingQuality) return prompt;
+        return [
+          prompt,
+          missingNegative
+            ? "负向提示词补强 / Negative Reinforcement: avoid bad hands, distorted faces, unreadable text, invented unseen text, wrong object proportions, low-resolution artifacts, identity drift, composition drift, over-smoothed texture, and generic stock-photo look."
+            : "",
+          missingParams
+            ? `推荐参数补强 / Parameter Reinforcement: aspect ratio ${analyzed.local.aspectRatioLabel}; reference image weight high 0.75-0.9; style strength 0.55-0.75; CFG 6-8; steps 28-40; keep seed fixed for comparison before small variations.`
+            : "",
+          missingQuality
+            ? "质量检查 / Quality Gate: do not invent details not visible in the reference image; mark uncertain text or identity details as uncertain; verify user intent alignment, reference image consistency, proportion accuracy, text readability, and hallucination resistance before final use."
+            : "",
+        ].filter(Boolean).join("\n\n");
+      };
+
+      const generateCandidate = async (analysis: (typeof analyses)[number], attempt: number): Promise<ReferencePromptCandidate> => {
+        const started = Date.now();
+        try {
+          const result = await withTimeout(
+            callProvider({
+              model: generatorPlan.model.id,
+              apiProvider: generatorPlan.apiProvider,
+              systemPrompt: "You generate production-ready image-to-image prompts. Output only the final prompt with positive prompt, negative prompt, and recommended parameters.",
+              userPrompt: buildReferenceCandidatePrompt({
+                userIdea: cleanIdea,
+                targetModel,
+                language,
+                analysis,
+                local: analyzed.local,
+                attempt,
+                channelLabel: analysis.source === "original_api_vision" ? "Original API vision" : analysis.source === "enhanced_vision" ? "Enhanced vision" : "Free local analysis",
+                previousFailures,
+              }),
+              maxTokens: Math.min(maxTokens, 2600),
+              temperature: attempt === 1 ? 0.35 : 0.5,
+              userKeys,
+            }),
+            getModelTimeoutMs(generatorPlan.model, "generator", { startedAt, reserveMs: 80_000 }),
+            `${generatorPlan.model.name} reference image prompt candidate`,
+          );
+          calls.push({ model: generatorPlan.model, result });
+          modelHealth.successful.push(recordModelSuccess(
+            generatorPlan.model,
+            generatorPlan.apiProvider,
+            result.latencyMs || Date.now() - started,
+          ));
+          return {
+            id: buildReferenceCandidateId(analysis.source, attempt),
+            source: analysis.source,
+            label: `${analysis.modelName} → ${generatorPlan.model.name}`,
+            prompt: ensureReferencePromptGuardrails(result.text),
+          };
+        } catch (err) {
+          modelHealth.failed.push(recordModelFailure(generatorPlan.model, generatorPlan.apiProvider, err));
+          const fallback = findHealthyTextFallback(models, userKeys, availableModelIds, new Set([generatorPlan.model.id, ...generatorIds]));
+          if (!fallback || fallback.model.id === generatorPlan.model.id) throw err;
+          generatorPlan = fallback;
+          const fallbackStarted = Date.now();
+          const result = await withTimeout(
+            callProvider({
+              model: generatorPlan.model.id,
+              apiProvider: generatorPlan.apiProvider,
+              systemPrompt: "You generate production-ready image-to-image prompts. Output only the final prompt with positive prompt, negative prompt, and recommended parameters.",
+              userPrompt: buildReferenceCandidatePrompt({
+                userIdea: cleanIdea,
+                targetModel,
+                language,
+                analysis,
+                local: analyzed.local,
+                attempt,
+                channelLabel: `${analysis.modelName} fallback`,
+                previousFailures,
+              }),
+              maxTokens: Math.min(maxTokens, 2600),
+              temperature: 0.45,
+              userKeys,
+            }),
+            getModelTimeoutMs(generatorPlan.model, "generator", { startedAt, reserveMs: 80_000 }),
+            `${generatorPlan.model.name} reference image prompt fallback candidate`,
+          );
+          calls.push({ model: generatorPlan.model, result });
+          modelHealth.successful.push(recordModelSuccess(
+            generatorPlan.model,
+            generatorPlan.apiProvider,
+            result.latencyMs || Date.now() - fallbackStarted,
+          ));
+          return {
+            id: buildReferenceCandidateId(analysis.source, attempt),
+            source: analysis.source,
+            label: `${analysis.modelName} → ${generatorPlan.model.name}`,
+            prompt: ensureReferencePromptGuardrails(result.text),
+          };
+        }
+      };
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        progress({
+          phase: attempt === 1 ? "生成图生图候选" : "内部质量未达标，自动重生成",
+          current: 2 + attempt,
+          total: 5,
+          etaSec: Math.max(12, 55 - attempt * 10),
+          message: "系统会比较原 API 识图候选和增强识图候选，只把最佳版本给用户。 Comparing candidates internally and only returning the best result.",
+        });
+        const candidateResults = await Promise.allSettled(
+          analyses.slice(0, 2).map((analysis) => generateCandidate(analysis, attempt)),
+        );
+        const candidates = candidateResults
+          .map((result) => (result.status === "fulfilled" ? result.value : null))
+          .filter((item): item is ReferencePromptCandidate => Boolean(item?.prompt?.trim()));
+        if (candidates.length < 2) {
+          candidates.push({
+            id: buildReferenceCandidateId("fallback", attempt),
+            source: "fallback",
+            label: "Curated fallback",
+            prompt: buildQualityFallbackPrompt({
+              userIdea: cleanIdea,
+              targetModel,
+              language,
+              local: analyzed.local,
+              analyses,
+            }),
+          });
+        }
+        lastCandidates = candidates;
+        lastScores = candidates.map((candidate) => scoreReferencePromptCandidate(candidate, cleanIdea, analyzed.local));
+        const rankedScores = [...lastScores].sort((a, b) => b.total - a.total);
+        const topScore = rankedScores[0];
+        const topCandidate = candidates.find((candidate) => candidate.id === topScore?.candidateId) ?? candidates[0];
+        if (!bestScore || (topScore && topScore.total > bestScore.total)) {
+          bestScore = topScore;
+          bestCandidate = topCandidate;
+        }
+        const visualOk = (topScore?.dimensions.visual_similarity ?? 0) >= 8;
+        const intentOk = (topScore?.dimensions.user_intent_alignment ?? 0) >= 8;
+        const executableOk = (topScore?.dimensions.executable_clarity ?? 0) >= 8;
+        if (topScore && topScore.total >= 85 && visualOk && intentOk && executableOk) {
+          bestCandidate = topCandidate;
+          bestScore = topScore;
+          break;
+        }
+        previousFailures.splice(0, previousFailures.length, ...rankedScores.slice(0, 4).map((score) => `${score.candidateId}: ${score.reason}`));
+      }
+
+      if (!bestCandidate || !bestScore || bestScore.total < 85) {
+        const fallbackPrompt = buildQualityFallbackPrompt({
+          userIdea: cleanIdea,
+          targetModel,
+          language,
+          local: analyzed.local,
+          analyses,
+        });
+        bestCandidate = {
+          id: "quality-fallback-final",
+          source: "fallback",
+          label: "Quality-gated fallback",
+          prompt: fallbackPrompt,
+        };
+        bestScore = scoreReferencePromptCandidate(bestCandidate, cleanIdea, analyzed.local);
+        lastCandidates = [bestCandidate, ...lastCandidates.filter((candidate) => candidate.id !== bestCandidate?.id)];
+        lastScores = [bestScore, ...lastScores.filter((score) => score.candidateId !== bestScore?.candidateId)];
+      }
+
+      progress({
+        phase: "输出最佳图生图提示词",
+        current: 5,
+        total: 5,
+        etaSec: 2,
+        message: "已完成内部识图、评分、择优和必要重试。 Finalizing the best image-to-image prompt.",
+      });
+
+      const scoreById = new Map(lastScores.map((score) => [score.candidateId, score]));
+      const rankedCandidates = [...lastCandidates]
+        .map((candidate) => ({ candidate, score: scoreById.get(candidate.id) }))
+        .sort((a, b) => (b.score?.total ?? 0) - (a.score?.total ?? 0));
+      const totalInputTokens = calls.reduce((sum, call) => sum + call.result.inputTokens, 0);
+      const totalOutputTokens = calls.reduce((sum, call) => sum + call.result.outputTokens, 0);
+      const totalCostUsd = calls.reduce((sum, call) => sum + modelCallCost(call.model, call.result), 0);
+      const referenceMeta = {
+        referenceImage: {
+          enabled: true,
+          width: analyzed.local.width,
+          height: analyzed.local.height,
+          aspectRatio: analyzed.local.aspectRatioLabel,
+          palette: analyzed.local.palette,
+          averageColor: analyzed.local.averageColor,
+          brightness: analyzed.local.brightness,
+          contrast: analyzed.local.contrast,
+          saturation: analyzed.local.saturation,
+          analysisChannels: analyses.map((analysis) => ({
+            source: analysis.source,
+            modelId: analysis.modelId,
+            modelName: analysis.modelName,
+            available: analysis.available,
+            error: analysis.error,
+          })),
+          selectedCandidateId: bestCandidate.id,
+          selectedSource: bestCandidate.source,
+          internalBestScore: bestScore.total,
+          qualityGate: bestScore.total >= 85 ? "passed" : "fallback_passed",
+        },
+        promptEvaluation: {
+          rubric: [
+            { id: "visual_similarity", label: "Visual similarity", labelZh: "参考图相似度", weight: 18, guide: "Matches uploaded image composition, palette, lighting, and mood.", guideZh: "匹配上传图构图、色彩、光影和氛围。" },
+            { id: "user_intent_alignment", label: "User intent alignment", labelZh: "用户意图对齐", weight: 18, guide: "Preserves the user's typed goal.", guideZh: "保留用户文字目标。" },
+            { id: "model_fit", label: "Image model fit", labelZh: "生图模型适配", weight: 12, guide: "Includes executable prompt sections and parameters.", guideZh: "包含可执行提示词结构和参数。" },
+            { id: "artifact_control", label: "Artifact control", labelZh: "瑕疵控制", weight: 12, guide: "Prevents bad hands, faces, text, and proportions.", guideZh: "防止坏手、歪脸、乱码和比例错误。" },
+          ],
+          candidates: rankedCandidates.map((item, index) => ({
+            id: item.candidate.id,
+            generatorModelId: generatorPlan.model.id,
+            generatorModelName: item.candidate.label,
+            averageScore: item.score?.total ?? 0,
+            rank: index + 1,
+            scores: item.score
+              ? [{ judgeModel: "Reference Quality Gate", score: item.score.total, reason: item.score.reason }]
+              : [],
+          })),
+          judgeModels: ["Reference Quality Gate"],
+          selectedCandidateId: bestCandidate.id,
+          summary: `Reference image workflow selected ${bestCandidate.label}; internal score ${bestScore.total}/100. Low-quality candidates were regenerated or hidden from the user.`,
+        },
+        modelHealth,
+        selectedStrategy: `参考图双识别择优 / ${bestCandidate.label}`,
+        reviewSummary: "已基于上传参考图完成双通道识图、候选生成、AI 内部评分、择优和必要重试；普通模式只展示最佳提示词。",
+      };
+
+      return await makeDonePayload(
+        bestCandidate.prompt,
+        {
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+          latencyMs: Date.now() - startedAt,
+          tokensDelta: comparePrompts(userIdea, bestCandidate.prompt).delta,
+          changePercent: comparePrompts(userIdea, bestCandidate.prompt).ratio,
+          estimatedCostUsd: totalCostUsd,
+        },
+        referenceMeta,
+        generatorPlan.model,
+      );
+    };
+
     const shouldRunPromptTournament =
       !isGptImage2Target &&
       (generatorModels.length > 1 || evaluatorModels.length > 0);
+
+    if (body.referenceImage?.dataUrl) {
+      if (body.stream) {
+        return sseResponse(async (send) => {
+          const payload = await runReferenceImageGeneration((event) => send(progressEvent(event)));
+          send({ t: "chunk", c: payload.optimizedPrompt });
+          send({ t: "done", data: payload });
+        });
+      }
+
+      return NextResponse.json(await runReferenceImageGeneration());
+    }
 
     if (shouldRunPromptTournament) {
       const runTournament = async (onProgress?: (event: PromptGenerationProgress) => void) => {
@@ -678,4 +1122,15 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function modelCallCost(model: ModelInfo, result: GenerateResult): number {
+  return (
+    result.inputTokens * (model.inputCostPer1M / 1_000_000) +
+    result.outputTokens * (model.outputCostPer1M / 1_000_000)
+  );
+}
+
+function buildReferenceCandidateId(source: ReferencePromptCandidate["source"], attempt: number): string {
+  return `${source}-attempt-${attempt}`;
 }
