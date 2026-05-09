@@ -29,6 +29,7 @@ export type DatasetKind =
   | "prompt-feedback"
   | "test-runs"
   | "test-channel-runs"
+  | "optimization-backlog"
   | "score-reports"
   | "prompt-history"
   | "github-projects";
@@ -114,6 +115,36 @@ export function sanitizeDatasetRow(input: Record<string, unknown>) {
     failed_dimensions: Array.isArray(input.failedDimensions)
       ? input.failedDimensions.map((item) => cleanString(item, 120)).filter(Boolean).slice(0, 30)
       : [],
+    optimization_backlog: input.optimizationBacklog && typeof input.optimizationBacklog === "object"
+      ? {
+          status: cleanString((input.optimizationBacklog as Record<string, unknown>).status, 40),
+          item_count: Number.isFinite(Number((input.optimizationBacklog as Record<string, unknown>).itemCount))
+            ? Number((input.optimizationBacklog as Record<string, unknown>).itemCount)
+            : null,
+          summary: cleanString((input.optimizationBacklog as Record<string, unknown>).summary, 1000),
+          items: Array.isArray((input.optimizationBacklog as Record<string, unknown>).items)
+            ? ((input.optimizationBacklog as Record<string, unknown>).items as unknown[]).map((item) => {
+                const record = item && typeof item === "object" ? item as Record<string, unknown> : {};
+                return {
+                  fingerprint: cleanString(record.fingerprint, 120),
+                  source: cleanString(record.source, 80),
+                  report_id: cleanString(record.reportId, 120),
+                  type: cleanString(record.type, 80),
+                  severity: cleanString(record.severity, 40),
+                  status: cleanString(record.status, 40),
+                  title: cleanString(record.title, 240),
+                  detail: cleanString(record.detail, 1000),
+                  action: cleanString(record.action, 1000),
+                  model_id: cleanString(record.modelId, 180),
+                  provider: cleanString(record.provider, 80),
+                  dimension: cleanString(record.dimension, 120),
+                  check_id: cleanString(record.checkId, 120),
+                  occurrences: Number.isFinite(Number(record.occurrences)) ? Number(record.occurrences) : null,
+                };
+              }).filter((item) => item.fingerprint || item.title).slice(0, 50)
+            : [],
+        }
+      : null,
     source_commits: Array.isArray(input.sourceCommits)
       ? input.sourceCommits.map((item) => cleanString(item, 220)).filter(Boolean).slice(0, 40)
       : [],

@@ -995,15 +995,19 @@ test.describe("PromptGenerator E2E", () => {
     const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText("密钥状态");
-    await dialog.getByRole("button", { name: "运行真实验证" }).click();
+    await expect(dialog.getByText("一键全流程测试 / One-click full-flow test")).toBeVisible();
+    await dialog.getByRole("button", { name: "一键全流程测试 / Run full-flow test" }).click();
 
     await expect(dialog.getByText("测试通过")).toBeVisible({ timeout: 10_000 });
     await expect(dialog.getByText("密钥防泄露 / Secret handling")).toBeVisible();
     expect(testBody.userKeys.OPENAI_API_KEY).toBe(fakeRawKey);
+    expect(testBody.autoSuite).toBe(true);
+    expect(String(testBody.userIdea)).toContain("额外关注");
     await expect(page.locator("body")).not.toContainText(fakeRawKey);
   });
 
   test("16. test channel shows model diagnostics when provider returns invalid choices", async ({ page }) => {
+    let generateBody: any = null;
     const fakeRawKey = "sk-test-fake-key-for-e2e";
     await page.evaluate((key) => {
       localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: key }));
@@ -1041,25 +1045,67 @@ test.describe("PromptGenerator E2E", () => {
             "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
             "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
           ],
+          optimizationBacklog: {
+            status: "pending",
+            itemCount: 1,
+            summary: "已加入 1 个待优化项目，下一次生成会进入 feedback_memory。 / Added 1 pending optimization item; it will feed the next generation via feedback_memory.",
+            items: [
+              {
+                id: "opt-empty-choices",
+                fingerprint: "opt-empty-choices",
+                source: "test_channel",
+                reportId: "failed-test-channel-run",
+                type: "model_error",
+                severity: "yellow",
+                status: "pending",
+                title: "模型返回空 choices 或非标准响应 / Empty choices or non-standard model response",
+                detail: "gpt-5.5 returned empty choices",
+                action: "刷新中转站模型列表并移除反复失败的模型。 / Refresh relay model list and remove repeatedly failing models.",
+                modelId: "gpt-5.5",
+                provider: "openai",
+                createdAt: Date.now(),
+                lastSeenAt: Date.now(),
+                occurrences: 1,
+              },
+            ],
+          },
           secretHandling: "原始密钥不会出现在诊断或报告中。 / Raw keys are not included in diagnostics or reports.",
         }),
+      });
+    });
+    await page.route("**/api/generate", async (route) => {
+      generateBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: buildSSEBody(MOCK_OPTIMIZED),
       });
     });
 
     await page.getByRole("button", { name: "打开 AI 提示词测试通道 Open AI prompt test channel" }).click();
     const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
-    await dialog.getByRole("button", { name: "运行真实验证" }).click();
+    await dialog.getByRole("button", { name: "一键全流程测试 / Run full-flow test" }).click();
 
     await expect(dialog.getByText("测试未通过 / Test failed").first()).toBeVisible({ timeout: 10_000 });
     await expect(dialog.getByText(/Test channel failed:/).first()).toBeVisible();
     await expect(dialog.getByText("模型诊断 / Model diagnostics")).toBeVisible();
-    await expect(dialog.getByText(/空 choices/)).toBeVisible();
+    await expect(dialog.getByText(/空 choices/).first()).toBeVisible();
     await expect(dialog.getByText(/Switch model or refresh relay model availability|Test channel failed: 模型 gpt-5\.5/)).toBeVisible();
     await expect(dialog.getByText("下一步改进 / Next improvements")).toBeVisible();
     await expect(dialog.getByText(/Open the model picker/)).toBeVisible();
     await expect(dialog.getByText(/换成该中转站明确支持/)).toBeVisible();
+    await expect(dialog.getByText("已加入待优化项目 / Added to pending optimization")).toBeVisible();
+    await expect(dialog.getByText(/Empty choices or non-standard model response/)).toBeVisible();
+    const pendingItems = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_pending_optimizations") || "[]"));
+    expect(pendingItems.some((item: any) => item.fingerprint === "opt-empty-choices")).toBeTruthy();
     await dialog.getByText(/查看最佳提示词预览与脱敏同步状态/).click();
     await expect(dialog.getByText(/Raw keys are not included/)).toBeVisible();
     await expect(page.locator("body")).not.toContainText(fakeRawKey);
+    await dialog.getByRole("button", { name: "关闭测试通道 Close test channel" }).click();
+    await page.getByRole("textbox", { name: /输入你的想法或需求/ }).fill("帮我优化一个产品图生图提示词");
+    await page.getByRole("button", { name: /生成优化提示词/ }).click();
+    await expect(page.locator("text=senior poet")).toBeVisible({ timeout: 10_000 });
+    expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("Pending optimization"))).toBeTruthy();
+    expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("empty choices") || rule.includes("空 choices"))).toBeTruthy();
   });
 });

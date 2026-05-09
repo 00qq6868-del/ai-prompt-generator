@@ -1,6 +1,15 @@
+import {
+  PENDING_OPTIMIZATION_STORAGE_KEY,
+  buildOptimizationBacklogRules,
+  mergeOptimizationBacklogItems,
+  normalizeOptimizationBacklogItem,
+  type OptimizationBacklogItem,
+} from "./optimization-backlog";
+
 const FEEDBACK_STORAGE_KEY = "ai_prompt_feedback";
 const INTENT_MEMORY_STORAGE_KEY = "ai_prompt_intent_memory";
 const MAX_FEEDBACK_ITEMS = 200;
+const MAX_PENDING_OPTIMIZATION_ITEMS = 200;
 
 export type PromptPreference = "new" | "old" | "blend" | "both_bad";
 export type PromptPreferenceV2 = "new_better" | "old_better" | "blend_needed" | "both_bad";
@@ -108,6 +117,30 @@ export function saveIntentMemoryEvent(input: Omit<IntentMemoryEvent, "id" | "tim
   return item;
 }
 
+export function getPendingOptimizationItems(): OptimizationBacklogItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(PENDING_OPTIMIZATION_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed)
+      ? parsed.map((item) => normalizeOptimizationBacklogItem(item)).slice(0, MAX_PENDING_OPTIMIZATION_ITEMS)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function savePendingOptimizationItems(items: OptimizationBacklogItem[]): OptimizationBacklogItem[] {
+  if (typeof window === "undefined" || !items.length) return getPendingOptimizationItems();
+  const merged = mergeOptimizationBacklogItems(
+    getPendingOptimizationItems(),
+    items.map((item) => normalizeOptimizationBacklogItem(item)),
+    MAX_PENDING_OPTIMIZATION_ITEMS,
+  );
+  localStorage.setItem(PENDING_OPTIMIZATION_STORAGE_KEY, JSON.stringify(merged));
+  return merged;
+}
+
 export function normalizePromptPreference(preference: PromptPreference | PromptPreferenceV2): PromptPreferenceV2 {
   if (preference === "new") return "new_better";
   if (preference === "old") return "old_better";
@@ -183,6 +216,10 @@ export function buildPromptFeedbackMemory(userIdea: string, targetModel: string)
     if (item.decision === "correction_rejected") {
       rules.add("用户曾拒绝自动纠错；低置信纠错必须追问或允许保留原文，不能强行改写。");
     }
+  }
+
+  for (const rule of buildOptimizationBacklogRules(getPendingOptimizationItems()).slice(0, 12)) {
+    rules.add(rule);
   }
 
   return {

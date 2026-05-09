@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Activity, AlertTriangle, CheckCircle2, FlaskConical, KeyRound, Loader2, ShieldCheck, X, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { loadUserKeys } from "./KeysSettings";
+import { getPendingOptimizationItems, savePendingOptimizationItems } from "@/lib/prompt-feedback";
+import type { OptimizationBacklogPayload } from "@/lib/optimization-backlog";
 
 interface TestChannelPanelProps {
   open: boolean;
@@ -58,6 +60,13 @@ interface TestChannelResult {
     latencyMs?: number;
   }>;
   improvementPlan?: string[];
+  testSuite?: {
+    mode: string;
+    caseCount: number;
+    cases: Array<{ id: string; label: string }>;
+    customObjectiveIncluded?: boolean;
+  };
+  optimizationBacklog?: OptimizationBacklogPayload;
   stats: {
     latencyMs: number;
     inputTokens: number;
@@ -85,7 +94,7 @@ const DEVICE_ID_STORAGE_KEY = "ai_prompt_device_id";
 const PROBE_CACHE_KEY = "ai_prompt_probe_result";
 
 const DEFAULT_TEST_IDEA =
-  "请把这个测试目标优化成可直接复制使用的高质量 AI 提示词：为 AI 提示词生成器验证输出是否完整保留用户意图、适配目标模型、包含边界条件、幻觉防护和可验收标准。";
+  "额外关注：AI 提示词生成器要自动识别错误类型、自动保存待优化项，并在下一轮生成前主动优化。";
 
 function ensureDeviceId(): string {
   if (typeof window === "undefined") return "anonymous-device";
@@ -150,18 +159,25 @@ function normalizeTestChannelError(value: unknown): string {
   return `测试通道运行失败：${message} / Test channel failed: ${message}`;
 }
 
+function persistOptimizationBacklog(backlog?: OptimizationBacklogPayload | null): number {
+  if (!backlog?.items?.length) return getPendingOptimizationItems().length;
+  return savePendingOptimizationItems(backlog.items).filter((item) => item.status !== "resolved").length;
+}
+
 export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanelProps) {
   const [testIdea, setTestIdea] = useState(DEFAULT_TEST_IDEA);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<TestChannelResult | null>(null);
   const [error, setError] = useState("");
   const [keyCount, setKeyCount] = useState(0);
+  const [pendingOptimizationCount, setPendingOptimizationCount] = useState(0);
   const [storedTarget, setStoredTarget] = useState("gpt-5.5-pro");
   const [storedGenerators, setStoredGenerators] = useState<string[]>(["gpt-5.5-pro"]);
 
   useEffect(() => {
     if (!open) return;
     setKeyCount(countConfiguredKeys(loadUserKeys()));
+    setPendingOptimizationCount(getPendingOptimizationItems().filter((item) => item.status !== "resolved").length);
     setStoredTarget(localStorage.getItem(TARGET_STORAGE_KEY) || "gpt-5.5-pro");
     const generators = readJsonArray(GENERATOR_STORAGE_KEY);
     setStoredGenerators(generators.length ? generators : ["gpt-5.5-pro"]);
@@ -201,6 +217,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
         },
         body: JSON.stringify({
           userIdea: testIdea,
+          autoSuite: true,
           targetModelId: storedTarget,
           generatorModelId: storedGenerators[0] || "gpt-5.5-pro",
           generatorModelIds: storedGenerators,
@@ -253,13 +270,22 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
             },
             modelDiagnostics: data.modelDiagnostics || [],
             improvementPlan: data.improvementPlan || [],
+            testSuite: data.testSuite,
+            optimizationBacklog: data.optimizationBacklog,
             secretHandling: data.secretHandling || "原始密钥不会出现在诊断或报告中 / Raw keys are not included in diagnostics or reports",
           });
+          const pendingCount = persistOptimizationBacklog(data.optimizationBacklog);
+          setPendingOptimizationCount(pendingCount);
         }
         throw new Error(normalizeTestChannelError(data.error));
       }
       setResult(data);
+      const pendingCount = persistOptimizationBacklog(data.optimizationBacklog);
+      setPendingOptimizationCount(pendingCount);
       toast.success(data.status === "pass" ? "测试通过 / Test passed" : "测试完成，需要继续优化 / Test completed with warnings");
+      if (data.optimizationBacklog?.itemCount > 0) {
+        toast.success(`已加入 ${data.optimizationBacklog.itemCount} 个待优化项 / Added ${data.optimizationBacklog.itemCount} pending item(s)`);
+      }
     } catch (err: any) {
       const message = normalizeTestChannelError(err?.message);
       setError(message);
@@ -307,7 +333,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="mx-auto max-w-5xl space-y-5 px-6 py-6">
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-4">
                 <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
                     <KeyRound size={15} className="text-violet-300" />
@@ -344,35 +370,66 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                     原始密钥只随本次请求发送到测试接口；不返回前端结果、不写日志、不进入 GitHub JSONL、不进入项目记忆。 / Raw keys are sent only for this test request; they are not returned, logged, written to GitHub JSONL, or saved in memory.
                   </p>
                 </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
+                    <AlertTriangle size={15} className="text-amber-200" />
+                    待优化项 / Pending fixes
+                  </div>
+                  <div className="mt-2 text-2xl font-bold text-white">{pendingOptimizationCount}</div>
+                  <p className="mt-1 text-xs leading-5 text-white/50">
+                    测试发现的失败类型会自动进入本地 feedback_memory，下次生成前优先优化。 / Failed test patterns are saved into local feedback_memory for the next run.
+                  </p>
+                </div>
               </div>
 
               <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <label htmlFor="test-channel-idea" className="text-sm font-semibold text-white/85">
-                    测试目标 / Test objective
-                  </label>
-                  <span className="text-xs text-white/45">运行后会自动评分，不合格会内部重试一次 / Auto-scored after running; weak output is retried internally once</span>
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white/85">
+                      一键全流程测试 / One-click full-flow test
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-white/50">
+                      点击一次即可自动测试模型连通、生成/评价、质量门、错误分类、脱敏记录和待优化队列。 / One click tests connectivity, generation/evaluation, quality gates, error classification, sanitized logging, and the pending optimization queue.
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-50/75">
+                    内置 4 项测试 / 4 built-in cases
+                  </span>
                 </div>
-                <textarea
-                  id="test-channel-idea"
-                  value={testIdea}
-                  onChange={(event) => setTestIdea(event.target.value)}
-                  rows={5}
-                  className="w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm leading-6 text-white outline-none transition focus:border-cyan-400/45"
-                />
+                <div className="grid gap-2 text-xs leading-5 text-white/55 md:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">模型连通与中转站响应 / Model and relay connectivity</div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">提示词质量门与低分维度 / Prompt quality gates and low dimensions</div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">幻觉、意图、图生图一致性 / Hallucination, intent, and image-to-image consistency</div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">错误类型保存到待优化项 / Error types saved to pending fixes</div>
+                </div>
+                <details className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                  <summary className="cursor-pointer text-xs font-semibold text-white/65">
+                    高级：附加测试关注点 / Advanced: extra test focus
+                  </summary>
+                  <label htmlFor="test-channel-idea" className="sr-only">
+                    附加测试关注点 / Extra test focus
+                  </label>
+                  <textarea
+                    id="test-channel-idea"
+                    value={testIdea}
+                    onChange={(event) => setTestIdea(event.target.value)}
+                    rows={3}
+                    className="mt-3 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm leading-6 text-white outline-none transition focus:border-cyan-400/45"
+                  />
+                </details>
                 <motion.button
                   type="button"
                   onClick={runTest}
-                  disabled={running || !testIdea.trim()}
+                  disabled={running}
                   whileTap={{ scale: 0.98 }}
                   className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                    running || !testIdea.trim()
+                    running
                       ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/50"
                       : "bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-lg shadow-cyan-500/20 hover:opacity-95"
                   }`}
                 >
                   {running ? <Loader2 size={16} className="animate-spin" /> : <FlaskConical size={16} />}
-                  {running ? "正在运行真实验证 / Running real validation" : "运行真实验证 / Run real validation"}
+                  {running ? "正在运行全流程测试 / Running full-flow test" : "一键全流程测试 / Run full-flow test"}
                 </motion.button>
               </section>
 
@@ -455,6 +512,23 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                           <li key={item}>- {item}</li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {result.optimizationBacklog && (
+                    <div className="mt-4 rounded-xl border border-amber-300/15 bg-amber-500/10 p-3">
+                      <div className="text-sm font-semibold text-amber-50/90">已加入待优化项目 / Added to pending optimization</div>
+                      <div className="mt-1 text-xs leading-5 text-amber-50/70">{result.optimizationBacklog.summary}</div>
+                      {result.optimizationBacklog.items.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {result.optimizationBacklog.items.slice(0, 5).map((item) => (
+                            <div key={item.fingerprint} className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/65">
+                              <div className="font-semibold text-white/80">{item.title}</div>
+                              <div className="mt-1">{item.action}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
