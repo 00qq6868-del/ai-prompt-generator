@@ -2252,3 +2252,14 @@ Operational note:
  M src/lib/reference-image.ts
  M tests/e2e/prompt-generator.spec.ts
 ```
+
+
+## 2026-05-09T14:09:06.515Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Pushed black reference preview fix. Commit 6a52071 on GitHub main. GitHub E2E run 25603056876 succeeded with 24 passed. Production smoke passed: homepage/models/analytics ok total 277; probe/generation skipped due no local secrets. Current fix: reference image preview uses white checkerboard + object-contain, and backend flattens transparent images to white before JPEG sanitization/vision analysis.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
