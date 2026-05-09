@@ -197,6 +197,32 @@ function normalizeTestChannelError(value: unknown): string {
   return `测试通道运行失败：${message} / Test channel failed: ${message}`;
 }
 
+async function readTestChannelResponse(res: Response): Promise<any> {
+  const contentType = res.headers.get("content-type") || "";
+  const text = await res.text().catch(() => "");
+  if (contentType.includes("application/json") && text.trim()) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {
+        ok: false,
+        error: `测试通道返回了无法解析的 JSON。HTTP ${res.status} ${res.statusText}. 响应片段：${text.slice(0, 300)} / Test channel returned invalid JSON. HTTP ${res.status} ${res.statusText}. Response excerpt: ${text.slice(0, 300)}`,
+      };
+    }
+  }
+  if (text.trim()) {
+    return {
+      ok: false,
+      error: `测试通道接口返回非 JSON 响应。HTTP ${res.status} ${res.statusText}. 响应片段：${text.slice(0, 300)} / Test channel API returned a non-JSON response. HTTP ${res.status} ${res.statusText}. Response excerpt: ${text.slice(0, 300)}`,
+      rawResponseText: text.slice(0, 1000),
+    };
+  }
+  return {
+    ok: false,
+    error: `测试通道接口没有返回响应体。HTTP ${res.status} ${res.statusText} / Test channel API returned an empty response body. HTTP ${res.status} ${res.statusText}`,
+  };
+}
+
 function buildFallbackFailureResult(args: {
   data: any;
   storedTarget: string;
@@ -204,6 +230,30 @@ function buildFallbackFailureResult(args: {
   message: string;
 }): TestChannelResult {
   const firstError = Array.isArray(args.data?.errorRecords) ? args.data.errorRecords[0] : null;
+  const classifiedDetail = firstError?.detail || firstError?.summary || args.data?.rawResponseText || args.message;
+  const fallbackErrorRecord: TestErrorRecord = firstError || {
+    error_id: `frontend_fallback_${Date.now()}`,
+    project_id: "ai-prompt-generator",
+    error_type: "api",
+    severity: "high",
+    summary: "测试通道接口失败 / Test channel API failed",
+    detail: classifiedDetail,
+    reproduction_path: [
+      "打开 AI 提示词测试通道 / Open AI prompt test channel",
+      "点击一键全流程测试 / Click one-click full-flow test",
+      "接口返回非结构化失败或网关错误 / API returned an unstructured failure or gateway error",
+    ],
+    test_case_id: "test_channel_runtime",
+    discovered_at: new Date().toISOString(),
+    status: "open",
+    optimization_suggestion: "优先检查 /api/test-channel/run 生产函数、网关 502、密钥配置和模型可调用性，并保持前端显示 HTTP 状态与响应摘要。 / Check the /api/test-channel/run production function, gateway 502, key configuration, and model callability first; keep HTTP status and response excerpt visible.",
+    auto_optimized: false,
+    optimization_history: [],
+    fingerprint: "frontend_test_channel_api_failure",
+    occurrences: 1,
+    last_seen_at: new Date().toISOString(),
+    resolved_at: null,
+  };
   return {
     ok: false,
     status: "fail",
@@ -251,16 +301,17 @@ function buildFallbackFailureResult(args: {
         apiProvider: "unknown",
         status: "failed",
         attempts: 1,
-        error: firstError?.detail || firstError?.summary || args.message,
+        error: classifiedDetail,
       },
     ],
     improvementPlan: args.data?.improvementPlan || [
       "已保存本次失败详情到错误分类和待优化项目；下一次测试会优先回归该问题。 / This failure was saved to error classification and the optimization backlog; the next test will prioritize it.",
+      "如果失败详情包含 HTTP 502 或非 JSON 响应，优先检查生产函数部署、Cloudflare/Vercel 网关、密钥配置和接口运行日志。 / If the failure detail contains HTTP 502 or a non-JSON response, check the production function deployment, Cloudflare/Vercel gateway, key configuration, and API runtime logs first.",
       "如果当前测试模型是旧别名，系统会自动升级到 GPT-5.5 Pro 后再测试。 / If the current test model is an old alias, the system upgrades it to GPT-5.5 Pro before testing.",
     ],
     testSuite: args.data?.testSuite,
     optimizationBacklog: args.data?.optimizationBacklog,
-    errorRecords: args.data?.errorRecords || [],
+    errorRecords: args.data?.errorRecords || [fallbackErrorRecord],
     optimizationItems: args.data?.optimizationItems || [],
     adaptivePlan: args.data?.adaptivePlan,
     secretHandling: args.data?.secretHandling || "原始密钥不会出现在诊断或报告中 / Raw keys are not included in diagnostics or reports",
@@ -368,7 +419,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
           },
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readTestChannelResponse(res);
       if (!res.ok || !data.ok) {
         const message = normalizeTestChannelError(data.error);
         const failureResult = buildFallbackFailureResult({

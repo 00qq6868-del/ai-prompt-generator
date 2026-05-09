@@ -1288,4 +1288,35 @@ test.describe("PromptGenerator E2E", () => {
     expect(stored.generators).toEqual(["gpt-5.5-pro"]);
     expect(stored.evaluators).toEqual(["gpt-5.5-pro"]);
   });
+
+  test("18. test channel surfaces non-json gateway failures as actionable diagnostics", async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" }));
+      localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5-pro");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5-pro"]));
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/test-channel/run", async (route) => {
+      await route.fulfill({
+        status: 502,
+        contentType: "text/plain; charset=UTF-8",
+        body: "error code: 502",
+      });
+    });
+
+    await page.getByRole("button", { name: "打开 AI 提示词测试通道 Open AI prompt test channel" }).click();
+    const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
+    await dialog.getByRole("button", { name: "一键全流程测试 / Run full-flow test" }).click();
+
+    await expect(dialog.getByText("失败详情 / Failure detail")).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByText(/HTTP 502/).first()).toBeVisible();
+    await expect(dialog.getByText(/error code: 502/).first()).toBeVisible();
+    await expect(dialog.getByText("模型诊断 / Model diagnostics")).toBeVisible();
+    await expect(dialog.getByText("错误分类 / Error classification")).toBeVisible();
+    await expect(dialog.getByText(/测试通道接口失败|Test channel API failed/).first()).toBeVisible();
+    await expect(dialog.getByText(/Cloudflare\/Vercel gateway|Cloudflare\/Vercel 网关/).first()).toBeVisible();
+    const storedErrors = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_test_errors") || "[]"));
+    expect(storedErrors.some((item: any) => item.fingerprint === "frontend_test_channel_api_failure")).toBeTruthy();
+  });
 });

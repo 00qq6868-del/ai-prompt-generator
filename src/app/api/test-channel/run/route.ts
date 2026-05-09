@@ -5,7 +5,6 @@ import { callProvider } from "@/lib/providers";
 import { getModels } from "@/lib/model-cache";
 import { ModelInfo, scoreModel } from "@/lib/models-registry";
 import { mergeRelayModelIds, isRelayModelListed } from "@/lib/relay-models";
-import { resolveRuntimeApiProvider } from "@/lib/gpt-image-2-ensemble";
 import { strictPromptScore, type StrictScoreResult } from "@/lib/strict-scoring";
 import { exportDatasetRow } from "@/lib/server/github-dataset";
 import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
@@ -138,6 +137,16 @@ function hasCustomRelay(userKeys: Record<string, string>): boolean {
   return hasKey("CUSTOM_API_KEY", userKeys) && Boolean(userKeys.CUSTOM_BASE_URL?.trim() || process.env.CUSTOM_BASE_URL?.trim());
 }
 
+function resolveRuntimeApiProviderForTest(
+  model: ModelInfo,
+  userKeys: Record<string, string>,
+  availableModelIds?: string[],
+): string {
+  if (hasCustomRelay(userKeys) && isRelayModelListed(availableModelIds, model.id)) return "aihubmix";
+  if (hasCustomRelay(userKeys) && (model.apiProvider === "custom" || model.apiProvider === "aihubmix")) return "aihubmix";
+  return model.apiProvider;
+}
+
 function isProviderCallable(apiProvider: string, userKeys: Record<string, string>): boolean {
   switch (apiProvider) {
     case "custom":
@@ -167,7 +176,7 @@ function isProviderCallable(apiProvider: string, userKeys: Record<string, string
     case "baidu":
       return hasKey("BAIDU_API_KEY", userKeys) && hasKey("BAIDU_SECRET_KEY", userKeys);
     case "ollama":
-      return true;
+      return Boolean(process.env.OLLAMA_BASE_URL?.trim());
     default:
       return false;
   }
@@ -210,7 +219,7 @@ function configuredProviders(userKeys: Record<string, string>) {
 }
 
 function resolveTestProvider(model: ModelInfo, userKeys: Record<string, string>, availableModelIds?: string[]): string {
-  const runtimeProvider = resolveRuntimeApiProvider(model, userKeys, availableModelIds);
+  const runtimeProvider = resolveRuntimeApiProviderForTest(model, userKeys, availableModelIds);
   if (isProviderCallable(runtimeProvider, userKeys)) return runtimeProvider;
   if (hasCustomRelay(userKeys)) return "aihubmix";
   return runtimeProvider;

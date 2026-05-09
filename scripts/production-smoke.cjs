@@ -198,6 +198,36 @@ async function main() {
   assert(analytics.ok === true, "/api/analytics did not accept a valid metric batch");
   log(`analytics ok: sink=${analytics.sink || "unknown"}`);
 
+  const testChannel = await fetchWithTimeout(`${BASE_URL}/api/test-channel/run`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      autoSuite: true,
+      projectId: "ai-prompt-generator",
+      targetModelId: "gpt-5.5-pro",
+      generatorModelIds: ["gpt-5.5-pro"],
+      userKeys: {},
+      maxAttempts: 1,
+      maxTokens: 512,
+    }),
+  }, 45_000);
+  const testChannelText = await testChannel.text();
+  let testChannelData;
+  try {
+    testChannelData = JSON.parse(testChannelText);
+  } catch {
+    throw new Error(`/api/test-channel/run did not return JSON: status=${testChannel.status}, body=${testChannelText.slice(0, 220)}`);
+  }
+  assert(
+    typeof testChannelData.error === "string" || testChannelData.ok === true,
+    "/api/test-channel/run did not return a structured success/error payload",
+  );
+  assert(
+    !/localhost:11434|127\.0\.0\.1:11434/i.test(testChannelText),
+    "/api/test-channel/run tried local Ollama in production smoke instead of returning key/model diagnostics",
+  );
+  log(`test channel endpoint ok: status=${testChannel.status}, ok=${testChannelData.ok === true}`);
+
   const aihubKey = process.env.AIHUBMIX_API_KEY;
   if (aihubKey && process.env.SMOKE_PROBE_RELAY !== "0") {
     const probe = await readJson(`${BASE_URL}/api/probe`, {
