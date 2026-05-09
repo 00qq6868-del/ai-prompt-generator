@@ -15,6 +15,7 @@ export interface GenerateOptions {
   maxTokens?: number;
   temperature?: number;
   userKeys?: Record<string, string>;
+  timeoutMs?: number;
 }
 
 export interface GenerateResult {
@@ -127,6 +128,15 @@ function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
+function timeoutFor(opts: GenerateOptions, fallback = API_TIMEOUT): number {
+  const value = Number(opts.timeoutMs);
+  return Number.isFinite(value) && value >= 1_000 ? value : fallback;
+}
+
+function maxRetriesFor(opts: GenerateOptions): number | undefined {
+  return Number.isFinite(Number(opts.timeoutMs)) ? 0 : undefined;
+}
+
 function extractOpenAIText(response: unknown, provider: string, model: string): string {
   const data = response as {
     choices?: Array<{ message?: { content?: string | null } }>;
@@ -158,9 +168,10 @@ async function callOpenAICompatible(
   opts: GenerateOptions,
 ): Promise<GenerateResult> {
   assertKey(provider, opts.userKeys);
-  const clientOpts: { apiKey: string; baseURL?: string; timeout: number } = {
+  const clientOpts: { apiKey: string; baseURL?: string; timeout: number; maxRetries?: number } = {
     apiKey: resolveKey(provider, opts.userKeys),
-    timeout: API_TIMEOUT,
+    timeout: timeoutFor(opts),
+    maxRetries: maxRetriesFor(opts),
   };
   const baseURL = OPENAI_COMPAT_ENDPOINTS[provider];
   if (baseURL) clientOpts.baseURL = baseURL;
@@ -206,7 +217,7 @@ async function callAxiosOpenAI(
     },
     {
       headers: { Authorization: `Bearer ${resolveKey(provider, opts.userKeys)}` },
-      timeout: API_TIMEOUT,
+      timeout: timeoutFor(opts),
     }
   );
   return {
@@ -221,7 +232,11 @@ async function callAxiosOpenAI(
 
 async function callAnthropic(opts: GenerateOptions): Promise<GenerateResult> {
   assertKey("anthropic", opts.userKeys);
-  const client = new Anthropic({ apiKey: resolveKey("anthropic", opts.userKeys) });
+  const client = new Anthropic({
+    apiKey: resolveKey("anthropic", opts.userKeys),
+    timeout: timeoutFor(opts),
+    maxRetries: maxRetriesFor(opts),
+  });
   const t0 = Date.now();
   const res = await client.messages.create({
     model: opts.model,
@@ -255,7 +270,7 @@ async function callGoogle(opts: GenerateOptions): Promise<GenerateResult> {
       temperature: opts.temperature ?? 0.7,
     },
   });
-  const result = await model.generateContent(opts.userPrompt);
+  const result = await model.generateContent(opts.userPrompt, { timeout: timeoutFor(opts) });
   const text   = result.response.text();
   const usage  = result.response.usageMetadata;
   return {
@@ -284,7 +299,7 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
     },
     {
       headers: { Authorization: `Bearer ${resolveKey("qwen", opts.userKeys)}` },
-      timeout: API_TIMEOUT,
+      timeout: timeoutFor(opts),
     }
   );
   return {
@@ -297,7 +312,7 @@ async function callQwen(opts: GenerateOptions): Promise<GenerateResult> {
 
 // ── Baidu ERNIE ───────────────────────────────────────────────
 
-async function getBaiduToken(userKeys?: Record<string, string>): Promise<string> {
+async function getBaiduToken(userKeys?: Record<string, string>, timeoutMs = API_TIMEOUT): Promise<string> {
   const apiKey    = resolveKey("baidu", userKeys);
   const secretKey = resolveKey("baidu_secret", userKeys);
   if (!apiKey || !secretKey) {
@@ -314,14 +329,15 @@ async function getBaiduToken(userKeys?: Record<string, string>): Promise<string>
     }),
     {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      timeout: API_TIMEOUT,
+      timeout: timeoutMs,
     }
   );
   return res.data.access_token;
 }
 
 async function callBaidu(opts: GenerateOptions): Promise<GenerateResult> {
-  const token = await getBaiduToken(opts.userKeys);
+  const requestTimeout = timeoutFor(opts);
+  const token = await getBaiduToken(opts.userKeys, requestTimeout);
   const ENDPOINT_MAP: Record<string, string> = {
     "ernie-4.0-8k":       "completions_pro",
     "ernie-4.0-turbo-8k": "ernie-4.0-turbo-8k",
@@ -342,7 +358,7 @@ async function callBaidu(opts: GenerateOptions): Promise<GenerateResult> {
       max_output_tokens: opts.maxTokens ?? 2048,
       temperature: opts.temperature ?? 0.7,
     },
-    { timeout: API_TIMEOUT }
+    { timeout: requestTimeout }
   );
   return {
     text: res.data.result ?? "",
@@ -368,7 +384,7 @@ async function callOllama(opts: GenerateOptions): Promise<GenerateResult> {
       stream: false,
       options: { temperature: opts.temperature ?? 0.7 },
     },
-    { timeout: 120_000 }
+    { timeout: timeoutFor(opts, 120_000) }
   );
   return {
     text:         res.data.message?.content ?? "",
@@ -394,7 +410,8 @@ async function callCustom(opts: GenerateOptions): Promise<GenerateResult> {
   const client = new OpenAI({
     apiKey: resolveKey("custom", opts.userKeys),
     baseURL,
-    timeout: API_TIMEOUT,
+    timeout: timeoutFor(opts),
+    maxRetries: maxRetriesFor(opts),
   });
   const t0 = Date.now();
   try {
@@ -437,7 +454,7 @@ async function callAihubmix(opts: GenerateOptions): Promise<GenerateResult> {
     );
   }
 
-  const client = new OpenAI({ apiKey, baseURL, timeout: API_TIMEOUT });
+  const client = new OpenAI({ apiKey, baseURL, timeout: timeoutFor(opts), maxRetries: maxRetriesFor(opts) });
   const t0 = Date.now();
   try {
     const res = await client.chat.completions.create({
@@ -510,9 +527,10 @@ async function callOpenAICompatibleStream(
   onChunk: (text: string) => void,
 ): Promise<GenerateResult> {
   assertKey(provider, opts.userKeys);
-  const clientOpts: { apiKey: string; baseURL?: string; timeout: number } = {
+  const clientOpts: { apiKey: string; baseURL?: string; timeout: number; maxRetries?: number } = {
     apiKey: resolveKey(provider, opts.userKeys),
-    timeout: API_TIMEOUT,
+    timeout: timeoutFor(opts),
+    maxRetries: maxRetriesFor(opts),
   };
   const baseURL = OPENAI_COMPAT_ENDPOINTS[provider];
   if (baseURL) clientOpts.baseURL = baseURL;
@@ -525,7 +543,11 @@ async function callAnthropicStream(
   onChunk: (text: string) => void,
 ): Promise<GenerateResult> {
   assertKey("anthropic", opts.userKeys);
-  const client = new Anthropic({ apiKey: resolveKey("anthropic", opts.userKeys) });
+  const client = new Anthropic({
+    apiKey: resolveKey("anthropic", opts.userKeys),
+    timeout: timeoutFor(opts),
+    maxRetries: maxRetriesFor(opts),
+  });
   const t0 = Date.now();
 
   const stream = client.messages.stream({
@@ -566,7 +588,7 @@ async function callGoogleStream(
     },
   });
 
-  const result = await model.generateContentStream(opts.userPrompt);
+  const result = await model.generateContentStream(opts.userPrompt, { timeout: timeoutFor(opts) });
   let text = "";
 
   for await (const chunk of result.stream) {
@@ -602,7 +624,8 @@ async function callCustomStream(
   const client = new OpenAI({
     apiKey: resolveKey("custom", opts.userKeys),
     baseURL,
-    timeout: API_TIMEOUT,
+    timeout: timeoutFor(opts),
+    maxRetries: maxRetriesFor(opts),
   });
   try {
     return await streamOpenAICompatible(client, opts, onChunk);
@@ -631,7 +654,7 @@ async function callAihubmixStream(
     );
   }
 
-  const client = new OpenAI({ apiKey, baseURL, timeout: API_TIMEOUT });
+  const client = new OpenAI({ apiKey, baseURL, timeout: timeoutFor(opts), maxRetries: maxRetriesFor(opts) });
   try {
     return await streamOpenAICompatible(client, opts, onChunk);
   } catch (err: unknown) {

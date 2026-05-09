@@ -197,6 +197,54 @@ function normalizeTestChannelError(value: unknown): string {
   return `测试通道运行失败：${message} / Test channel failed: ${message}`;
 }
 
+function stripHtml(value: string): string {
+  return value
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function summarizeNonJsonResponse(text: string, status: number, statusText: string): string {
+  const title = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  const normalizedTitle = title ? stripHtml(title).slice(0, 160) : "";
+  const lower = `${text} ${normalizedTitle} ${status} ${statusText}`.toLowerCase();
+  if (
+    status === 504 ||
+    lower.includes("504") ||
+    lower.includes("gateway time-out") ||
+    lower.includes("gateway timeout") ||
+    lower.includes("cf-error-details") ||
+    lower.includes("cloudflare")
+  ) {
+    const suffix = normalizedTitle ? ` (${normalizedTitle})` : "";
+    return `测试通道接口超过网关时间限制 / Test channel exceeded gateway timeout${suffix}`;
+  }
+  if (status === 502 || lower.includes("502") || lower.includes("bad gateway")) {
+    const compact = stripHtml(text).slice(0, 120);
+    const suffix = normalizedTitle ? ` (${normalizedTitle})` : compact ? ` (${compact})` : "";
+    return `测试通道接口返回网关错误 / Test channel returned a gateway error${suffix}`;
+  }
+  return stripHtml(text).slice(0, 260) || `${status} ${statusText}`;
+}
+
+function isGatewayTimeoutMessage(value: unknown): boolean {
+  const text = typeof value === "string" ? value.toLowerCase() : "";
+  return (
+    text.includes("504") ||
+    text.includes("gateway timeout") ||
+    text.includes("gateway time-out") ||
+    text.includes("exceeded gateway timeout") ||
+    text.includes("超过网关时间限制") ||
+    text.includes("cloudflare")
+  );
+}
+
 async function readTestChannelResponse(res: Response): Promise<any> {
   const contentType = res.headers.get("content-type") || "";
   const text = await res.text().catch(() => "");
@@ -204,17 +252,20 @@ async function readTestChannelResponse(res: Response): Promise<any> {
     try {
       return JSON.parse(text);
     } catch {
+      const summary = summarizeNonJsonResponse(text, res.status, res.statusText);
       return {
         ok: false,
-        error: `测试通道返回了无法解析的 JSON。HTTP ${res.status} ${res.statusText}. 响应片段：${text.slice(0, 300)} / Test channel returned invalid JSON. HTTP ${res.status} ${res.statusText}. Response excerpt: ${text.slice(0, 300)}`,
+        error: `测试通道返回了无法解析的 JSON。HTTP ${res.status} ${res.statusText}. 响应摘要：${summary} / Test channel returned invalid JSON. HTTP ${res.status} ${res.statusText}. Response summary: ${summary}`,
+        rawResponseText: summary,
       };
     }
   }
   if (text.trim()) {
+    const summary = summarizeNonJsonResponse(text, res.status, res.statusText);
     return {
       ok: false,
-      error: `测试通道接口返回非 JSON 响应。HTTP ${res.status} ${res.statusText}. 响应片段：${text.slice(0, 300)} / Test channel API returned a non-JSON response. HTTP ${res.status} ${res.statusText}. Response excerpt: ${text.slice(0, 300)}`,
-      rawResponseText: text.slice(0, 1000),
+      error: `测试通道接口返回非 JSON 响应。HTTP ${res.status} ${res.statusText}. 响应摘要：${summary} / Test channel API returned a non-JSON response. HTTP ${res.status} ${res.statusText}. Response summary: ${summary}`,
+      rawResponseText: summary,
     };
   }
   return {
@@ -231,12 +282,15 @@ function buildFallbackFailureResult(args: {
 }): TestChannelResult {
   const firstError = Array.isArray(args.data?.errorRecords) ? args.data.errorRecords[0] : null;
   const classifiedDetail = firstError?.detail || firstError?.summary || args.data?.rawResponseText || args.message;
+  const gatewayTimeout = isGatewayTimeoutMessage(classifiedDetail) || isGatewayTimeoutMessage(args.message);
   const fallbackErrorRecord: TestErrorRecord = firstError || {
     error_id: `frontend_fallback_${Date.now()}`,
     project_id: "ai-prompt-generator",
     error_type: "api",
     severity: "high",
-    summary: "测试通道接口失败 / Test channel API failed",
+    summary: gatewayTimeout
+      ? "测试通道网关超时 / Test channel gateway timeout"
+      : "测试通道接口失败 / Test channel API failed",
     detail: classifiedDetail,
     reproduction_path: [
       "打开 AI 提示词测试通道 / Open AI prompt test channel",
@@ -246,10 +300,12 @@ function buildFallbackFailureResult(args: {
     test_case_id: "test_channel_runtime",
     discovered_at: new Date().toISOString(),
     status: "open",
-    optimization_suggestion: "优先检查 /api/test-channel/run 生产函数、网关 502、密钥配置和模型可调用性，并保持前端显示 HTTP 状态与响应摘要。 / Check the /api/test-channel/run production function, gateway 502, key configuration, and model callability first; keep HTTP status and response excerpt visible.",
+    optimization_suggestion: gatewayTimeout
+      ? "缩短测试通道模型调用、减少候选模型、检查中转站响应时间、换用健康模型，并优先回归 gateway-timeout 问题。 / Shorten test-channel model calls, reduce candidate models, check relay response time, switch to a healthy model, and prioritize gateway-timeout regression."
+      : "优先检查 /api/test-channel/run 生产函数、网关 502/504、密钥配置和模型可调用性，并保持前端显示 HTTP 状态与响应摘要。 / Check the /api/test-channel/run production function, gateway 502/504, key configuration, and model callability first; keep HTTP status and response summary visible.",
     auto_optimized: false,
     optimization_history: [],
-    fingerprint: "frontend_test_channel_api_failure",
+    fingerprint: gatewayTimeout ? "frontend_test_channel_gateway_timeout" : "frontend_test_channel_api_failure",
     occurrences: 1,
     last_seen_at: new Date().toISOString(),
     resolved_at: null,
@@ -306,7 +362,8 @@ function buildFallbackFailureResult(args: {
     ],
     improvementPlan: args.data?.improvementPlan || [
       "已保存本次失败详情到错误分类和待优化项目；下一次测试会优先回归该问题。 / This failure was saved to error classification and the optimization backlog; the next test will prioritize it.",
-      "如果失败详情包含 HTTP 502 或非 JSON 响应，优先检查生产函数部署、Cloudflare/Vercel 网关、密钥配置和接口运行日志。 / If the failure detail contains HTTP 502 or a non-JSON response, check the production function deployment, Cloudflare/Vercel gateway, key configuration, and API runtime logs first.",
+      "如果失败详情包含 HTTP 502/504 或非 JSON 响应，优先检查生产函数部署、Cloudflare/Vercel 网关、密钥配置和接口运行日志。 / If the failure detail contains HTTP 502/504 or a non-JSON response, check the production function deployment, Cloudflare/Vercel gateway, key configuration, and API runtime logs first.",
+      "如果是 504 网关超时，下一次会优先回归 gateway-timeout，并检查是否已缩短模型调用和减少候选模型。 / If this is a 504 gateway timeout, the next run prioritizes gateway-timeout regression and verifies shorter model calls with fewer candidates.",
       "如果当前测试模型是旧别名，系统会自动升级到 GPT-5.5 Pro 后再测试。 / If the current test model is an old alias, the system upgrades it to GPT-5.5 Pro before testing.",
     ],
     testSuite: args.data?.testSuite,
@@ -405,8 +462,8 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
           generatorModelId: normalizedModels.generatorModelIds[0] || BEST_TARGET_MODEL_ID,
           generatorModelIds: normalizedModels.generatorModelIds,
           language: "zh",
-          maxTokens: 1800,
-          maxAttempts: 2,
+          maxTokens: 900,
+          maxAttempts: 1,
           userKeys,
           availableModelIds: readProbeModels(),
           deviceId: ensureDeviceId(),

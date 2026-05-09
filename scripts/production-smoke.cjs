@@ -198,6 +198,7 @@ async function main() {
   assert(analytics.ok === true, "/api/analytics did not accept a valid metric batch");
   log(`analytics ok: sink=${analytics.sink || "unknown"}`);
 
+  const testChannelStartedAt = Date.now();
   const testChannel = await fetchWithTimeout(`${BASE_URL}/api/test-channel/run`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -211,6 +212,11 @@ async function main() {
       maxTokens: 512,
     }),
   }, 45_000);
+  const testChannelElapsedMs = Date.now() - testChannelStartedAt;
+  assert(
+    testChannelElapsedMs < 55_000,
+    `/api/test-channel/run exceeded smoke time budget: ${testChannelElapsedMs}ms`,
+  );
   const testChannelText = await testChannel.text();
   let testChannelData;
   try {
@@ -226,7 +232,7 @@ async function main() {
     !/localhost:11434|127\.0\.0\.1:11434/i.test(testChannelText),
     "/api/test-channel/run tried local Ollama in production smoke instead of returning key/model diagnostics",
   );
-  log(`test channel endpoint ok: status=${testChannel.status}, ok=${testChannelData.ok === true}`);
+  log(`test channel endpoint ok: status=${testChannel.status}, ok=${testChannelData.ok === true}, elapsedMs=${testChannelElapsedMs}`);
 
   const aihubKey = process.env.AIHUBMIX_API_KEY;
   if (aihubKey && process.env.SMOKE_PROBE_RELAY !== "0") {

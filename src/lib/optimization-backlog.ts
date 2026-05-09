@@ -195,6 +195,7 @@ export function mapLegacySeverity(severity: OptimizationBacklogSeverity, title =
 
 export function inferErrorTypeFromLegacy(item: Partial<OptimizationBacklogItem>): TestErrorType {
   const haystack = `${item.type || ""} ${item.title || ""} ${item.detail || ""} ${item.checkId || ""} ${item.dimension || ""}`.toLowerCase();
+  if (item.type === "model_error") return "api";
   if (haystack.includes("api") || haystack.includes("key") || haystack.includes("choices") || haystack.includes("provider") || haystack.includes("模型返回")) {
     return "api";
   }
@@ -213,7 +214,6 @@ export function inferErrorTypeFromLegacy(item: Partial<OptimizationBacklogItem>)
   if (item.type === "quality_gate" || item.type === "low_dimension") {
     return item.dimension === "hallucination_resistance" ? "security" : "logic";
   }
-  if (item.type === "model_error") return "api";
   return "functional";
 }
 

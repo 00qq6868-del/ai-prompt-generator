@@ -1005,6 +1005,8 @@ test.describe("PromptGenerator E2E", () => {
     await expect(dialog.getByText("密钥防泄露 / Secret handling")).toBeVisible();
     expect(testBody.userKeys.OPENAI_API_KEY).toBe(fakeRawKey);
     expect(testBody.autoSuite).toBe(true);
+    expect(testBody.maxTokens).toBe(900);
+    expect(testBody.maxAttempts).toBe(1);
     expect(String(testBody.userIdea)).toContain("额外关注");
     await expect(page.locator("body")).not.toContainText(fakeRawKey);
   });
@@ -1318,5 +1320,46 @@ test.describe("PromptGenerator E2E", () => {
     await expect(dialog.getByText(/Cloudflare\/Vercel gateway|Cloudflare\/Vercel 网关/).first()).toBeVisible();
     const storedErrors = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_test_errors") || "[]"));
     expect(storedErrors.some((item: any) => item.fingerprint === "frontend_test_channel_api_failure")).toBeTruthy();
+  });
+
+  test("19. test channel summarizes Cloudflare 504 HTML without dumping raw markup", async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" }));
+      localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5-pro");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5-pro"]));
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/test-channel/run", async (route) => {
+      await route.fulfill({
+        status: 504,
+        contentType: "text/html; charset=UTF-8",
+        body: `<!DOCTYPE html>
+          <html>
+            <head><title>myprompt.asia | 504: Gateway time-out</title></head>
+            <body>
+              <div id="cf-error-details" class="p-0">Cloudflare Ray ID: e2e</div>
+              <!--[if lt IE 7]> legacy browser markup <![endif]-->
+              <h1>Gateway time-out</h1>
+            </body>
+          </html>`,
+      });
+    });
+
+    await page.getByRole("button", { name: "打开 AI 提示词测试通道 Open AI prompt test channel" }).click();
+    const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
+    await dialog.getByRole("button", { name: "一键全流程测试 / Run full-flow test" }).click();
+
+    await expect(dialog.getByText("失败详情 / Failure detail")).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByText(/HTTP 504/).first()).toBeVisible();
+    await expect(dialog.getByText(/测试通道接口超过网关时间限制|Test channel exceeded gateway timeout/).first()).toBeVisible();
+    await expect(dialog.getByText(/测试通道网关超时|Test channel gateway timeout/).first()).toBeVisible();
+    await expect(dialog.getByText("模型诊断 / Model diagnostics")).toBeVisible();
+    await expect(dialog.getByText("错误分类 / Error classification")).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("<!DOCTYPE html>");
+    await expect(page.locator("body")).not.toContainText("<!--[if lt IE 7]>");
+    await expect(page.locator("body")).not.toContainText("cf-error-details");
+    const storedErrors = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_test_errors") || "[]"));
+    expect(storedErrors.some((item: any) => item.fingerprint === "frontend_test_channel_gateway_timeout" && item.error_type === "api" && item.severity === "high")).toBeTruthy();
   });
 });

@@ -27,7 +27,14 @@ import {
 } from "@/lib/optimization-backlog";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60;
+
+const TEST_CHANNEL_TOTAL_BUDGET_MS = 45_000;
+const TEST_CHANNEL_MODEL_TIMEOUT_MS = 22_000;
+const TEST_CHANNEL_MIN_REMAINING_MS = 4_000;
+const TEST_CHANNEL_AUTO_MAX_TOKENS = 900;
+const TEST_CHANNEL_AUTO_MAX_ATTEMPTS = 1;
+const TEST_CHANNEL_AUTO_MAX_MODELS = 2;
 
 interface TestChannelRequest {
   projectId?: string;
@@ -230,6 +237,7 @@ function buildGeneratorPlan(
   requestedIds: string[],
   userKeys: Record<string, string>,
   availableModelIds?: string[],
+  limit = 8,
 ): TestModelPlan[] {
   const requested = requestedIds
     .map((id) => models.find((model) => model.id.toLowerCase() === id.toLowerCase()))
@@ -259,7 +267,7 @@ function buildGeneratorPlan(
     }
   }
 
-  return plan.slice(0, 8);
+  return plan.slice(0, Math.max(1, limit));
 }
 
 function buildChecks(args: {
@@ -407,6 +415,19 @@ function backlogToStructuredErrors(
 
 function classifyErrorType(message: string): { title: string; severity: "red" | "yellow"; action: string } {
   const lower = message.toLowerCase();
+  if (
+    lower.includes("504") ||
+    lower.includes("524") ||
+    lower.includes("gateway timeout") ||
+    lower.includes("gateway time-out") ||
+    lower.includes("cloudflare")
+  ) {
+    return {
+      title: "测试通道网关超时 / Test channel gateway timeout",
+      severity: "red",
+      action: "缩短测试通道模型调用、减少候选模型、检查中转站响应时间，并换用最近可稳定返回的健康模型。 / Shorten test-channel model calls, reduce candidate models, check relay latency, and switch to a recently healthy model.",
+    };
+  }
   if (lower.includes("api key") || lower.includes("unauthorized") || lower.includes("未授权") || lower.includes("无效")) {
     return {
       title: "API Key 或权限失败 / API key or permission failure",
@@ -575,6 +596,7 @@ function normalizeTestError(error: unknown, modelId?: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const requestStartedAt = Date.now();
   try {
     const rate = checkRateLimit(req, {
       keyPrefix: "test-channel",
@@ -625,7 +647,13 @@ export async function POST(req: NextRequest) {
       ...(Array.isArray(body.generatorModelIds) ? body.generatorModelIds : []),
       body.generatorModelId,
     ].map((id) => cleanString(id, 180)).filter(Boolean))).slice(0, 6);
-    const generatorPlan = buildGeneratorPlan(models, requestedGeneratorIds, userKeys, availableModelIds);
+    const generatorPlan = buildGeneratorPlan(
+      models,
+      requestedGeneratorIds,
+      userKeys,
+      availableModelIds,
+      autoSuite ? TEST_CHANNEL_AUTO_MAX_MODELS : TEST_CHANNEL_AUTO_MAX_MODELS,
+    );
     if (!generatorPlan.length) {
       const noModelError = normalizeTestErrorRecord({
         project_id: projectId,
@@ -669,14 +697,19 @@ export async function POST(req: NextRequest) {
           adaptivePlan,
           secretHandling: "原始密钥未保存；这里只检查了供应商是否已配置。 / Raw keys were not stored; only provider presence was inspected.",
         },
-        { status: 400 },
+        { status: 200 },
       );
     }
 
     const language = body.language === "en" ? "en" : "zh";
     const targetCategory = targetModel.category ?? "text";
-    const maxTokens = Math.min(Math.max(Number(body.maxTokens) || 1600, 512), 3000);
-    const maxAttempts = Math.min(Math.max(Number(body.maxAttempts) || 2, 1), 3);
+    const requestedMaxTokens = Math.min(Math.max(Number(body.maxTokens) || 1600, 512), 3000);
+    const maxTokens = autoSuite
+      ? Math.min(requestedMaxTokens, TEST_CHANNEL_AUTO_MAX_TOKENS)
+      : Math.min(requestedMaxTokens, 1200);
+    const maxAttempts = autoSuite
+      ? TEST_CHANNEL_AUTO_MAX_ATTEMPTS
+      : Math.min(Math.max(Number(body.maxAttempts) || 1, 1), 2);
     const passTotal = Math.min(Math.max(Number(body.qualityTargets?.passTotal) || 85, 70), 95);
     const coreDimensionMin = Math.min(Math.max(Number(body.qualityTargets?.coreDimensionMin) || 9, 7), 10);
     const hasReferenceImage = Boolean(body.referenceImage?.dataUrl);
@@ -741,7 +774,7 @@ export async function POST(req: NextRequest) {
     let bestLatencyMs = 0;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
-    const startedAt = Date.now();
+    const startedAt = requestStartedAt;
     const reportId = `test_channel_${startedAt}_${createHash("sha1").update(`${userIdea}:${generatorPlan[0]?.model.id || "unknown"}`).digest("hex").slice(0, 8)}`;
     const testSuite = {
       mode: autoSuite ? "auto_full_flow" : "manual",
@@ -750,15 +783,39 @@ export async function POST(req: NextRequest) {
       customObjectiveIncluded: Boolean(autoSuite && manualUserIdea),
     };
     let successfulModelSeen = false;
+    let budgetExhausted = false;
+    const remainingBudgetMs = () => TEST_CHANNEL_TOTAL_BUDGET_MS - (Date.now() - startedAt);
 
     for (const plan of generatorPlan) {
       selected = plan;
+      const modelRemainingMs = remainingBudgetMs();
+      if (modelRemainingMs <= TEST_CHANNEL_MIN_REMAINING_MS) {
+        budgetExhausted = true;
+        modelDiagnostics.push({
+          modelId: plan.model.id,
+          modelName: plan.model.name,
+          apiProvider: plan.apiProvider,
+          status: "failed",
+          attempts: 0,
+          error: "测试通道时间预算用尽，已主动停止，避免被 Cloudflare/网关截断成 HTML 504。 / Test channel time budget was exhausted, so the run stopped before Cloudflare/gateway could cut it off as an HTML 504.",
+        });
+        break;
+      }
       let repairGuidance = "";
       let modelBestScore = 0;
       let modelLatencyMs = 0;
       let modelAttempts = 0;
       try {
         for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+          const attemptRemainingMs = remainingBudgetMs();
+          if (attemptRemainingMs <= TEST_CHANNEL_MIN_REMAINING_MS) {
+            budgetExhausted = true;
+            throw new Error("测试通道时间预算用尽，已主动停止。 / Test channel time budget exhausted; stopped proactively.");
+          }
+          const callTimeoutMs = Math.min(
+            TEST_CHANNEL_MODEL_TIMEOUT_MS,
+            Math.max(1_000, attemptRemainingMs - TEST_CHANNEL_MIN_REMAINING_MS),
+          );
           modelAttempts = attempt;
           const result = await callProvider({
             model: plan.model.id,
@@ -774,6 +831,7 @@ export async function POST(req: NextRequest) {
             maxTokens,
             temperature: attempt === 1 ? 0.35 : 0.45,
             userKeys,
+            timeoutMs: callTimeoutMs,
           });
           if (!result.text.trim()) {
             throw new Error(`Empty response from ${plan.apiProvider}/${plan.model.id}. 上游模型返回了空文本。`);
@@ -828,13 +886,15 @@ export async function POST(req: NextRequest) {
         });
         if (bestScore && bestScore.total >= passTotal) break;
       } catch (error) {
+        const normalizedError = normalizeTestError(error, plan.model.id);
+        if (remainingBudgetMs() <= TEST_CHANNEL_MIN_REMAINING_MS) budgetExhausted = true;
         modelDiagnostics.push({
           modelId: plan.model.id,
           modelName: plan.model.name,
           apiProvider: plan.apiProvider,
           status: "failed",
           attempts: Math.max(modelAttempts, 1),
-          error: normalizeTestError(error, plan.model.id),
+          error: normalizedError,
         });
         continue;
       }
@@ -849,6 +909,15 @@ export async function POST(req: NextRequest) {
           threshold: 10,
           status: "fail" as const,
         },
+        ...(budgetExhausted
+          ? [{
+              id: "test_channel_time_budget",
+              label: "测试通道时间预算 / Test channel time budget",
+              value: Math.max(0, remainingBudgetMs()),
+              threshold: TEST_CHANNEL_MIN_REMAINING_MS,
+              status: "fail" as const,
+            }]
+          : []),
       ];
       const optimizationBacklog = buildOptimizationBacklog({
         reportId,
@@ -961,7 +1030,9 @@ export async function POST(req: NextRequest) {
           ok: false,
           status: "fail",
           reportId,
-          error: "测试通道没有收到任何可评分的模型输出。已尝试可用模型，但都失败或返回空内容。请先换一个生成/评价模型，或打开密钥设置刷新中转站模型列表。 / No scorable output was received. Switch model or refresh relay model availability.",
+          error: budgetExhausted
+            ? "测试通道已在 45 秒预算内主动停止；慢模型或中转站无响应已被分类保存，不再等待到 Cloudflare/网关 504。 / Test channel stopped within the 45s budget; slow or unresponsive upstream calls were classified and saved instead of waiting for Cloudflare/gateway 504."
+            : "测试通道没有收到任何可评分的模型输出。已尝试可用模型，但都失败或返回空内容。请先换一个生成/评价模型，或打开密钥设置刷新中转站模型列表。 / No scorable output was received. Switch model or refresh relay model availability.",
           providerStatus: {
             configured: providerStatus.configured,
             keys: providerStatus.keyFingerprints.map((item) => ({
@@ -979,6 +1050,7 @@ export async function POST(req: NextRequest) {
           optimizationItems,
           adaptivePlan,
           improvementPlan: [
+            "测试通道现在有 45 秒硬预算和 22 秒单模型超时；慢模型会被主动中断并进入待优化项，不再等待到网关 504。 / The test channel now has a 45s hard budget and a 22s per-model timeout; slow models are interrupted and saved to the optimization backlog instead of waiting for gateway 504.",
             "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
             "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
             "如果使用的是 gpt-5.5 这类别名，确认中转站是否真实支持该别名；不支持就换成列表里存在的模型。 / If you are using an alias such as gpt-5.5, confirm the relay really supports it; otherwise choose a listed model.",
@@ -987,7 +1059,7 @@ export async function POST(req: NextRequest) {
           secretHandling: "原始密钥不会出现在诊断或报告中。 / Raw keys are not included in diagnostics or reports.",
           github,
         },
-        { status: 502 },
+        { status: 200 },
       );
     }
     selected = bestPlan;
@@ -1202,7 +1274,7 @@ export async function POST(req: NextRequest) {
         error: toUserFacingErrorMessage(error),
         secretHandling: "原始密钥不会出现在错误或报告中。 / Raw keys are not included in errors or reports.",
       },
-      { status: 500 },
+      { status: 200 },
     );
   }
 }
