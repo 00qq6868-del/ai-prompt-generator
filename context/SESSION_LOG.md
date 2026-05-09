@@ -2288,3 +2288,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T15:25:54.567Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Completed second screenshot fix for AI Prompt Test Channel still showing generic failure. Root cause reproduced: production /api/test-channel/run returned Cloudflare/plain-text 502, while local production showed no-key path was incorrectly trying local Ollama models. Fixed route to avoid importing GPT Image 2 ensemble resolver, use local lightweight provider resolver, and treat Ollama callable only when OLLAMA_BASE_URL is configured. Frontend now parses non-JSON/invalid JSON/empty test-channel responses and converts HTTP 502 text/html/text/plain into actionable failure detail, model diagnostics, error classification, and local test error record. Added E2E for non-JSON gateway failures and production smoke probe for /api/test-channel/run. Pushed 8aa2a4a with merge 3f1b8de to main. GitHub E2E run 25604508375 passed. Production smoke passed: test channel endpoint now returns structured JSON status=400 ok=false instead of Cloudflare 502.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
