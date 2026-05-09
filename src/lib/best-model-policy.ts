@@ -69,20 +69,27 @@ function lower(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function canonicalModelId(modelId: string | null | undefined): string {
+  return lower(modelId ?? "")
+    .replace(/\((?:low|medium|high|xhigh|reasoning|thinking)\)$/i, "")
+    .replace(/:(?:low|medium|high|xhigh|reasoning|thinking)$/i, "")
+    .trim();
+}
+
 function isImageModelId(modelId: string | null | undefined): boolean {
-  return lower(modelId ?? "") === BEST_IMAGE_MODEL_ID;
+  return canonicalModelId(modelId) === BEST_IMAGE_MODEL_ID;
 }
 
 export function isLegacyAutoModelId(modelId: string | null | undefined): boolean {
   if (!modelId) return true;
   if (isImageModelId(modelId)) return false;
-  return LEGACY_AUTO_MODEL_IDS.has(lower(modelId));
+  return LEGACY_AUTO_MODEL_IDS.has(canonicalModelId(modelId));
 }
 
 function shouldAutoUpgradeGeneratorIds(modelIds: string[]): boolean {
   if (modelIds.length === 0) return true;
-  if (modelIds.some((id) => lower(id) === BEST_TARGET_MODEL_ID)) return false;
-  return modelIds.every((id) => isLegacyAutoModelId(id) || AUTO_UPGRADE_TO_PRO_GENERATOR_IDS.has(lower(id)));
+  if (modelIds.some((id) => canonicalModelId(id) === BEST_TARGET_MODEL_ID)) return false;
+  return modelIds.every((id) => isLegacyAutoModelId(id) || AUTO_UPGRADE_TO_PRO_GENERATOR_IDS.has(canonicalModelId(id)));
 }
 
 export function priorityIndex(modelId: string, priority: string[]): number {

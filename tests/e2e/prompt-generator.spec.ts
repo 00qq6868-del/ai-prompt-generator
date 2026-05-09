@@ -1223,4 +1223,69 @@ test.describe("PromptGenerator E2E", () => {
     expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("Historical test error"))).toBeTruthy();
     expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("empty choices") || rule.includes("空 choices"))).toBeTruthy();
   });
+
+  test("17. test channel upgrades old model aliases and still shows diagnostics on minimal failure", async ({ page }) => {
+    let testBody: any = null;
+    await page.evaluate(() => {
+      localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: "sk-test-fake-key-for-e2e" }));
+      localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5(xhigh)");
+      localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5"]));
+      localStorage.setItem("ai_prompt_last_evaluator_model_ids", JSON.stringify(["gpt-5.5"]));
+    });
+    await page.reload();
+    await mockAPIs(page);
+    await page.route("**/api/test-channel/run", async (route) => {
+      testBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: false,
+          status: "fail",
+          error: "Upstream returned 500",
+          errorRecords: [
+            {
+              error_id: "runtime-minimal-failure",
+              project_id: "ai-prompt-generator",
+              error_type: "api",
+              severity: "high",
+              summary: "上游模型调用失败 / Upstream model call failed",
+              detail: "Upstream returned 500",
+              reproduction_path: ["Open test channel", "Click one-click test"],
+              test_case_id: "provider_connectivity",
+              discovered_at: "2026-05-09T02:00:00.000Z",
+              status: "open",
+              optimization_suggestion: "Switch to a healthy model and retry.",
+              auto_optimized: false,
+              optimization_history: [],
+              fingerprint: "opt-upstream-500",
+              occurrences: 1,
+              last_seen_at: "2026-05-09T02:00:00.000Z",
+              resolved_at: null,
+            },
+          ],
+        }),
+      });
+    });
+
+    await page.getByRole("button", { name: "打开 AI 提示词测试通道 Open AI prompt test channel" }).click();
+    const dialog = page.getByRole("dialog", { name: "AI 提示词测试通道" });
+    await expect(dialog.getByText("gpt-5.5-pro").first()).toBeVisible();
+    await dialog.getByRole("button", { name: "一键全流程测试 / Run full-flow test" }).click();
+
+    await expect(dialog.getByText("失败详情 / Failure detail")).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByText(/Upstream returned 500/).first()).toBeVisible();
+    await expect(dialog.getByText("模型诊断 / Model diagnostics")).toBeVisible();
+    await expect(dialog.getByText("错误分类 / Error classification")).toBeVisible();
+    expect(testBody.targetModelId).toBe("gpt-5.5-pro");
+    expect(testBody.generatorModelIds).toEqual(["gpt-5.5-pro"]);
+    const stored = await page.evaluate(() => ({
+      target: localStorage.getItem("ai_prompt_target_model_id"),
+      generators: JSON.parse(localStorage.getItem("ai_prompt_last_generator_model_ids") || "[]"),
+      evaluators: JSON.parse(localStorage.getItem("ai_prompt_last_evaluator_model_ids") || "[]"),
+    }));
+    expect(stored.target).toBe("gpt-5.5-pro");
+    expect(stored.generators).toEqual(["gpt-5.5-pro"]);
+    expect(stored.evaluators).toEqual(["gpt-5.5-pro"]);
+  });
 });

@@ -2263,3 +2263,17 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T14:43:33.941Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed user screenshot issue in AI Prompt Test Channel: old model aliases like gpt-5.5(xhigh) are now canonicalized/upgraded to gpt-5.5-pro before testing, and failed test-channel responses with only minimal error/errorRecords now still render failure detail, fallback model diagnostics, improvement plan, error classification, and optimization persistence instead of only generic Test channel failed. Added E2E regression. Validation passed: tsc, data:validate, diff check, targeted test-channel E2E 3/3, build, full prompt-generator E2E 20/20, quality 5/5; secret scan only fake E2E keys.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M src/components/TestChannelPanel.tsx
+ M src/lib/best-model-policy.ts
+ M tests/e2e/prompt-generator.spec.ts
+```

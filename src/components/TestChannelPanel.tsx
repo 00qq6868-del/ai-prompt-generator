@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Activity, AlertTriangle, CheckCircle2, FlaskConical, KeyRound, Loader2, ShieldCheck, X, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { loadUserKeys } from "./KeysSettings";
+import { BEST_TARGET_MODEL_ID, normalizeBestModelPreference } from "@/lib/best-model-policy";
 import {
   getOptimizationProjectItems,
   getPendingOptimizationItems,
@@ -133,6 +134,28 @@ function readJsonArray(key: string): string[] {
   }
 }
 
+function readStoredTestModels(): { targetModelId: string; generatorModelIds: string[]; upgraded: boolean } {
+  if (typeof window === "undefined") {
+    return { targetModelId: BEST_TARGET_MODEL_ID, generatorModelIds: [BEST_TARGET_MODEL_ID], upgraded: false };
+  }
+  const normalized = normalizeBestModelPreference({
+    targetModelId: localStorage.getItem(TARGET_STORAGE_KEY) || BEST_TARGET_MODEL_ID,
+    generatorModelIds: readJsonArray(GENERATOR_STORAGE_KEY),
+    evaluatorModelIds: readJsonArray("ai_prompt_last_evaluator_model_ids"),
+    source: "auto",
+  });
+  if (normalized.upgraded) {
+    localStorage.setItem(TARGET_STORAGE_KEY, normalized.targetModelId);
+    localStorage.setItem(GENERATOR_STORAGE_KEY, JSON.stringify(normalized.generatorModelIds));
+    localStorage.setItem("ai_prompt_last_evaluator_model_ids", JSON.stringify(normalized.evaluatorModelIds));
+  }
+  return {
+    targetModelId: normalized.targetModelId,
+    generatorModelIds: normalized.generatorModelIds.length ? normalized.generatorModelIds : [BEST_TARGET_MODEL_ID],
+    upgraded: normalized.upgraded,
+  };
+}
+
 function readProbeModels(): string[] | undefined {
   if (typeof window === "undefined") return undefined;
   try {
@@ -174,6 +197,76 @@ function normalizeTestChannelError(value: unknown): string {
   return `测试通道运行失败：${message} / Test channel failed: ${message}`;
 }
 
+function buildFallbackFailureResult(args: {
+  data: any;
+  storedTarget: string;
+  storedGenerator: string;
+  message: string;
+}): TestChannelResult {
+  const firstError = Array.isArray(args.data?.errorRecords) ? args.data.errorRecords[0] : null;
+  return {
+    ok: false,
+    status: "fail",
+    reportId: args.data?.reportId || "failed-test-channel-run",
+    model: args.data?.model || {
+      id: args.storedGenerator || "unknown",
+      name: args.storedGenerator || "unknown",
+      provider: "unknown",
+      apiProvider: "unknown",
+      targetModelId: args.storedTarget || "unknown",
+      targetModelName: args.storedTarget || "unknown",
+    },
+    strictScore: args.data?.strictScore || {
+      total: 0,
+      pass: false,
+      dimensionScores: {},
+      deductions: [],
+    },
+    checks: args.data?.checks || [
+      {
+        id: "test_channel_runtime",
+        label: "测试通道运行失败 / Test channel runtime failed",
+        value: 0,
+        threshold: 10,
+        status: "fail",
+      },
+    ],
+    attempts: args.data?.attempts || [],
+    stats: args.data?.stats || {
+      latencyMs: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    },
+    providerStatus: args.data?.providerStatus || { configured: [], keys: [] },
+    bestPromptPreview: args.data?.bestPromptPreview || "",
+    github: args.data?.github || {
+      synced: false,
+      target: "local",
+      filePath: "not-written",
+    },
+    modelDiagnostics: args.data?.modelDiagnostics || [
+      {
+        modelId: args.storedGenerator || "unknown",
+        modelName: args.storedGenerator || "unknown",
+        apiProvider: "unknown",
+        status: "failed",
+        attempts: 1,
+        error: firstError?.detail || firstError?.summary || args.message,
+      },
+    ],
+    improvementPlan: args.data?.improvementPlan || [
+      "已保存本次失败详情到错误分类和待优化项目；下一次测试会优先回归该问题。 / This failure was saved to error classification and the optimization backlog; the next test will prioritize it.",
+      "如果当前测试模型是旧别名，系统会自动升级到 GPT-5.5 Pro 后再测试。 / If the current test model is an old alias, the system upgrades it to GPT-5.5 Pro before testing.",
+    ],
+    testSuite: args.data?.testSuite,
+    optimizationBacklog: args.data?.optimizationBacklog,
+    errorRecords: args.data?.errorRecords || [],
+    optimizationItems: args.data?.optimizationItems || [],
+    adaptivePlan: args.data?.adaptivePlan,
+    secretHandling: args.data?.secretHandling || "原始密钥不会出现在诊断或报告中 / Raw keys are not included in diagnostics or reports",
+  };
+}
+
 function persistOptimizationBacklog(backlog?: OptimizationBacklogPayload | null): number {
   if (!backlog?.items?.length) return getPendingOptimizationItems().length;
   return savePendingOptimizationItems(backlog.items).filter((item) => item.status !== "resolved").length;
@@ -211,9 +304,12 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
     if (!open) return;
     setKeyCount(countConfiguredKeys(loadUserKeys()));
     setPendingOptimizationCount(countPendingOptimizations());
-    setStoredTarget(localStorage.getItem(TARGET_STORAGE_KEY) || "gpt-5.5-pro");
-    const generators = readJsonArray(GENERATOR_STORAGE_KEY);
-    setStoredGenerators(generators.length ? generators : ["gpt-5.5-pro"]);
+    const normalized = readStoredTestModels();
+    setStoredTarget(normalized.targetModelId);
+    setStoredGenerators(normalized.generatorModelIds);
+    if (normalized.upgraded) {
+      toast.success("测试模型已自动升级到最新版 / Test model upgraded to the latest version");
+    }
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -240,6 +336,9 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
     setRunning(true);
     setError("");
     setResult(null);
+    const normalizedModels = readStoredTestModels();
+    setStoredTarget(normalizedModels.targetModelId);
+    setStoredGenerators(normalizedModels.generatorModelIds);
     const tid = toast.loading("测试通道正在真实调用模型并检查质量… / Calling the model and checking quality...");
     try {
       const res = await fetch("/api/test-channel/run", {
@@ -251,9 +350,9 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
         body: JSON.stringify({
           userIdea: testIdea,
           autoSuite: true,
-          targetModelId: storedTarget,
-          generatorModelId: storedGenerators[0] || "gpt-5.5-pro",
-          generatorModelIds: storedGenerators,
+          targetModelId: normalizedModels.targetModelId,
+          generatorModelId: normalizedModels.generatorModelIds[0] || BEST_TARGET_MODEL_ID,
+          generatorModelIds: normalizedModels.generatorModelIds,
           language: "zh",
           maxTokens: 1800,
           maxAttempts: 2,
@@ -271,52 +370,17 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        if (data && (Array.isArray(data.modelDiagnostics) || Array.isArray(data.checks) || Array.isArray(data.improvementPlan))) {
-          setResult({
-            ok: false,
-            status: "fail",
-            reportId: data.reportId || "failed-test-channel-run",
-            model: data.model || {
-              id: storedGenerators[0] || "unknown",
-              name: storedGenerators[0] || "unknown",
-              provider: "unknown",
-              apiProvider: "unknown",
-              targetModelId: storedTarget,
-              targetModelName: storedTarget,
-            },
-            strictScore: data.strictScore || {
-              total: 0,
-              pass: false,
-              dimensionScores: {},
-              deductions: [],
-            },
-            checks: data.checks || [],
-            attempts: data.attempts || [],
-            stats: data.stats || {
-              latencyMs: 0,
-              inputTokens: 0,
-              outputTokens: 0,
-            },
-            providerStatus: data.providerStatus || { configured: [], keys: [] },
-            bestPromptPreview: data.bestPromptPreview || "",
-            github: data.github || {
-              synced: false,
-              target: "local",
-              filePath: "not-written",
-            },
-            modelDiagnostics: data.modelDiagnostics || [],
-            improvementPlan: data.improvementPlan || [],
-            testSuite: data.testSuite,
-            optimizationBacklog: data.optimizationBacklog,
-            errorRecords: data.errorRecords || [],
-            optimizationItems: data.optimizationItems || [],
-            adaptivePlan: data.adaptivePlan,
-            secretHandling: data.secretHandling || "原始密钥不会出现在诊断或报告中 / Raw keys are not included in diagnostics or reports",
-          });
-          const pendingCount = persistStructuredTestData(data);
-          setPendingOptimizationCount(pendingCount);
-        }
-        throw new Error(normalizeTestChannelError(data.error));
+        const message = normalizeTestChannelError(data.error);
+        const failureResult = buildFallbackFailureResult({
+          data,
+          storedTarget: normalizedModels.targetModelId,
+          storedGenerator: normalizedModels.generatorModelIds[0] || BEST_TARGET_MODEL_ID,
+          message,
+        });
+        setResult(failureResult);
+        const pendingCount = persistStructuredTestData(failureResult);
+        setPendingOptimizationCount(pendingCount);
+        throw new Error(message);
       }
       setResult(data);
       const pendingCount = persistStructuredTestData(data);
@@ -496,6 +560,13 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                       <div className="text-[11px] text-white/50">严格质量分 / Strict quality score</div>
                     </div>
                   </div>
+
+                  {error && (
+                    <div className="mt-4 rounded-xl border border-rose-300/25 bg-rose-500/10 p-3 text-sm leading-6 text-rose-50/85">
+                      <div className="font-semibold">失败详情 / Failure detail</div>
+                      <div className="mt-1">{error}</div>
+                    </div>
+                  )}
 
                   <div className="mt-4 grid gap-2 md:grid-cols-2">
                     {result.checks.map((check) => {
