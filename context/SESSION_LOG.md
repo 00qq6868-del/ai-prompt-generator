@@ -2227,3 +2227,14 @@ Operational note:
  M src/lib/server/github-dataset.ts
  M tests/e2e/prompt-generator.spec.ts
 ```
+
+
+## 2026-05-09T09:29:16.233Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Completed and pushed adaptive one-click test backlog upgrade. Commit 208d7b1 is on GitHub main. GitHub E2E run 25597651070 succeeded with annotation 24 passed. Production smoke passed: homepage/models/analytics ok, total models 277; probe and real generation skipped because no local secrets. Feature now supports one-click full-flow testing with schema-compliant errorRecords, optimizationItems, adaptive regression plan from historical unresolved defects, localStorage persistence, feedback_memory injection, sanitized dataset export, and bilingual UI for historical regression/error classification/structured backlog.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
