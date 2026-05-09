@@ -2299,3 +2299,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T16:19:32.273Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Completed test channel 504 timeout fix: /api/test-channel/run now has 45s hard budget, 22s per-model timeout, maxAttempts=1/maxTokens<=900 for auto suite, max 2 candidate models, provider timeoutMs support with SDK retries disabled for short timeout, controlled failures return HTTP 200 JSON, frontend summarizes Cloudflare 504 HTML and saves gateway-timeout as api/high/open. Validation passed: tsc, data:validate, diff-check, build, targeted test-channel E2E 5/5, full prompt-generator E2E 22/22, quality 5/5, local production no-key route JSON 93ms, GitHub E2E run 25605713616 success 27 passed, production smoke passed test channel status=200 ok=false elapsedMs=1006 no HTML/no localhost.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
