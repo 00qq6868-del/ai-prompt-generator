@@ -2277,3 +2277,14 @@ Operational note:
  M src/lib/best-model-policy.ts
  M tests/e2e/prompt-generator.spec.ts
 ```
+
+
+## 2026-05-09T14:53:29.434Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Completed and pushed screenshot fix for AI Prompt Test Channel old model aliases and minimal failure diagnostics. Commit 941f7ec is on GitHub main. GitHub E2E run 25603960742 passed with 25 tests. Production smoke passed on https://www.myprompt.asia: homepage/models/analytics ok, total models 277; probe/generation skipped due no local secrets. Fix ensures gpt-5.5(xhigh)/gpt-5.5 upgrade to gpt-5.5-pro before one-click testing, evaluator remains unified with generator, and minimal backend failures still render failure detail/model diagnostics/error classification/optimization backlog without exposing raw keys.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
