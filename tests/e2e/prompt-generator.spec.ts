@@ -818,6 +818,9 @@ test.describe("PromptGenerator E2E", () => {
       buffer: Buffer.from(ONE_PIXEL_PNG_BASE64, "base64"),
     });
     await expect(page.getByText("已启用参考图图生图优化")).toBeVisible();
+    const referencePreview = page.getByAltText("参考图预览 Reference preview");
+    await expect(referencePreview).toHaveCSS("object-fit", "contain");
+    await expect(referencePreview.locator("..")).toHaveCSS("background-color", "rgb(255, 255, 255)");
     await expect(page.getByText("GPT Image 2").first()).toBeVisible();
     await page.locator("textarea").fill("做一张类似参考图的高端产品海报");
     await page.getByRole("button", { name: /生成优化提示词|生成图生图提示词/ }).click();

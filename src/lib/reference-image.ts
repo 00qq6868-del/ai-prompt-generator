@@ -187,6 +187,7 @@ export async function analyzeReferenceImage(input: ReferenceImageInput): Promise
   }
   const sanitized = await image
     .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+    .flatten({ background: "#ffffff" })
     .jpeg({ quality: 88, mozjpeg: true })
     .toBuffer();
   const sample = await sharp(sanitized)

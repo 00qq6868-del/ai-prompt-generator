@@ -1149,12 +1149,20 @@ export function PromptGenerator() {
           />
           {referenceImage ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative h-24 w-full overflow-hidden rounded-xl border border-indigo-400/25 bg-black/20 sm:w-32">
+              <div
+                className="relative h-24 w-full overflow-hidden rounded-xl border border-indigo-400/25 bg-white sm:w-32"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(45deg, rgba(15,23,42,0.12) 25%, transparent 25%), linear-gradient(-45deg, rgba(15,23,42,0.12) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(15,23,42,0.12) 75%), linear-gradient(-45deg, transparent 75%, rgba(15,23,42,0.12) 75%)",
+                  backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+                  backgroundSize: "16px 16px",
+                }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={referenceImage.dataUrl}
                   alt="参考图预览 Reference preview"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               </div>
               <div className="min-w-0 flex-1">

@@ -2238,3 +2238,17 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T14:04:37.336Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed likely black-block reference image issue from user screenshot: production page/test channel were not black-screening; root likely transparent/small reference image preview on black background. Updated reference image preview to white checkerboard background with object-contain, and backend sharp pipeline now flattens transparency to white before JPEG sanitization/vision analysis. Added E2E assertion for reference preview background/object-fit. Validation passed: tsc, reference image E2E, data:validate, diff check, build, quality 5/5, full prompt-generator E2E 19/19; secret scan only fake E2E keys.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M src/components/PromptGenerator.tsx
+ M src/lib/reference-image.ts
+ M tests/e2e/prompt-generator.spec.ts
+```
