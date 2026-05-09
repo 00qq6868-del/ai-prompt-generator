@@ -44,7 +44,13 @@ const TEST_CHANNEL_MODEL_TIMEOUT_MS = 22_000;
 const TEST_CHANNEL_MIN_REMAINING_MS = 4_000;
 const TEST_CHANNEL_AUTO_MAX_TOKENS = 900;
 const TEST_CHANNEL_AUTO_MAX_ATTEMPTS = 1;
-const TEST_CHANNEL_AUTO_MAX_MODELS = 3;
+const TEST_CHANNEL_AUTO_MAX_MODELS = 6;
+const TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS = 8_000;
+const TEST_CHANNEL_HEALTH_PROBE_MAX_TOKENS = 32;
+const TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS = 6;
+const TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY = 2;
+const TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS = 2;
+const TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS = 14_000;
 
 interface TestChannelRequest {
   projectId?: string;
@@ -89,6 +95,38 @@ type TestCheckResult = {
   value: number;
   threshold: number;
   status: "pass" | "warn" | "fail";
+};
+
+type TestModelDiagnostic = {
+  modelId: string;
+  modelName: string;
+  apiProvider: string;
+  status: "success" | "failed" | "skipped";
+  stage?: "history_avoidance" | "health_probe" | "generation";
+  error?: string;
+  attempts: number;
+  bestScore?: number;
+  latencyMs?: number;
+};
+
+type HistoricalModelHealthSignal = {
+  modelId: string;
+  occurrences: number;
+  severity: "critical" | "high" | "medium" | "low";
+  lastSeenAt?: string;
+  blocked: boolean;
+  reason: string;
+};
+
+type HealthProbeReport = {
+  enabled: boolean;
+  timeoutMs: number;
+  maxModels: number;
+  concurrency: number;
+  healthyModelIds: string[];
+  failedModelIds: string[];
+  skippedByHistoryModelIds: string[];
+  policy: string;
 };
 
 const AUTO_TEST_CASES = [
@@ -289,10 +327,11 @@ function buildGeneratorPlan(
   requestedIds: string[],
   userKeys: Record<string, string>,
   availableModelIds?: string[],
+  historicalModelHealth?: Map<string, HistoricalModelHealthSignal>,
   limit = 8,
 ): TestModelRoutingPlan {
   const relayListKnown = hasCustomRelay(userKeys) && Boolean(availableModelIds?.length);
-  const sorted = sortModelsForStrongRouting(
+  const sortedByStrength = sortModelsForStrongRouting(
     models.filter((model) => (model.category ?? "text") === "text"),
     {
       requestedIds,
@@ -301,6 +340,14 @@ function buildGeneratorPlan(
       mode: "generator",
     },
   );
+  const sorted = [...sortedByStrength].sort((a, b) => {
+    const aSignal = historicalModelHealth?.get(a.id.toLowerCase());
+    const bSignal = historicalModelHealth?.get(b.id.toLowerCase());
+    const aPenalty = aSignal?.blocked ? 10_000 : aSignal ? 900 : 0;
+    const bPenalty = bSignal?.blocked ? 10_000 : bSignal ? 900 : 0;
+    if (aPenalty !== bPenalty) return aPenalty - bPenalty;
+    return sortedByStrength.indexOf(a) - sortedByStrength.indexOf(b);
+  });
 
   const plan: TestModelPlan[] = [];
   const standby: ReturnType<typeof toStrongModelCandidate>[] = [];
@@ -320,6 +367,20 @@ function buildGeneratorPlan(
       preferRelayListed: relayListKnown,
       mode: "generator",
     });
+    const historicalSignal = historicalModelHealth?.get(model.id.toLowerCase());
+    const candidateWithHistory = historicalSignal
+      ? {
+          ...candidate,
+          riskFlags: Array.from(new Set([
+            ...candidate.riskFlags,
+            historicalSignal.blocked ? "historical-regression" : "historical-warning",
+          ])),
+          reasons: Array.from(new Set([
+            historicalSignal.reason,
+            ...candidate.reasons,
+          ])).slice(0, 5),
+        }
+      : candidate;
     const relayFallbackWouldUseUnlistedAlias =
       relayListKnown &&
       apiProvider === "aihubmix" &&
@@ -333,15 +394,15 @@ function buildGeneratorPlan(
       (candidate.riskFlags.includes("small-fast-model") && plan.length > 0) ||
       (candidate.riskFlags.includes("flash-first") && plan.length > 0);
 
-    if (!callable || relayFallbackWouldUseUnlistedAlias || !strongEnough || riskyFirstChoice) {
-      skipped.push(candidate);
+    if (!callable || relayFallbackWouldUseUnlistedAlias || !strongEnough || riskyFirstChoice || historicalSignal?.blocked) {
+      skipped.push(candidateWithHistory);
       continue;
     }
 
     if (plan.length < Math.max(1, limit)) {
       plan.push({ model, apiProvider });
     } else {
-      standby.push(candidate);
+      standby.push(candidateWithHistory);
     }
   }
 
@@ -354,6 +415,7 @@ function buildGeneratorPlan(
   }));
   const unusedStrong = sorted
     .filter((model) => !plan.some((item) => item.model.id.toLowerCase() === model.id.toLowerCase()))
+    .filter((model) => !historicalModelHealth?.get(model.id.toLowerCase())?.blocked)
     .map((model) => toStrongModelCandidate(model, {
       apiProvider: resolveTestProvider(model, userKeys, availableModelIds),
       requestedIds,
@@ -380,6 +442,7 @@ function buildGeneratorPlan(
 function buildChecks(args: {
   score: StrictScoreResult;
   latencyMs: number;
+  elapsedMs: number;
   outputText: string;
   githubTarget: string;
   hasReferenceImage: boolean;
@@ -421,8 +484,15 @@ function buildChecks(args: {
       id: "latency",
       label: "响应耗时 / Latency",
       value: args.latencyMs,
-      threshold: 120000,
-      status: args.latencyMs <= 120000 ? "pass" as const : "warn" as const,
+      threshold: TEST_CHANNEL_MODEL_TIMEOUT_MS,
+      status: args.latencyMs <= TEST_CHANNEL_MODEL_TIMEOUT_MS ? "pass" as const : "warn" as const,
+    },
+    {
+      id: "test_channel_time_budget",
+      label: "测试通道时间预算 / Test channel time budget",
+      value: args.elapsedMs,
+      threshold: TEST_CHANNEL_TOTAL_BUDGET_MS,
+      status: args.elapsedMs <= TEST_CHANNEL_TOTAL_BUDGET_MS ? "pass" as const : "fail" as const,
     },
     {
       id: "secret_handling",
@@ -511,6 +581,90 @@ function normalizeHistoricalOptimizations(input: unknown, projectId: string): Op
     .slice(0, 200);
 }
 
+function severityWeight(severity: TestErrorRecord["severity"]): number {
+  return severity === "critical" ? 4 : severity === "high" ? 3 : severity === "medium" ? 2 : 1;
+}
+
+function isConnectivityLikeHistoricalError(error: TestErrorRecord): boolean {
+  const text = [
+    error.summary,
+    error.detail,
+    error.optimization_suggestion,
+    error.test_case_id,
+    ...error.reproduction_path,
+  ].join(" ").toLowerCase();
+  return (
+    error.error_type === "api" ||
+    error.error_type === "performance" ||
+    text.includes("timeout") ||
+    text.includes("timed out") ||
+    text.includes("超时") ||
+    text.includes("gateway") ||
+    text.includes("504") ||
+    text.includes("524") ||
+    text.includes("502") ||
+    text.includes("empty choices") ||
+    text.includes("空 choices") ||
+    text.includes("non-standard") ||
+    text.includes("非标准")
+  );
+}
+
+function modelMentionedByHistoricalError(model: ModelInfo, error: TestErrorRecord): boolean {
+  const text = [
+    error.summary,
+    error.detail,
+    error.optimization_suggestion,
+    error.test_case_id,
+    ...error.reproduction_path,
+  ].join(" ").toLowerCase();
+  const ids = [
+    model.id,
+    model.name,
+    model.id.replace(/^ac[-_/]/i, ""),
+    model.name.replace(/^ac[-_/]/i, ""),
+  ]
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item.length >= 4);
+  return ids.some((id) => text.includes(id));
+}
+
+function buildHistoricalModelHealthSignals(
+  models: ModelInfo[],
+  historicalErrors: TestErrorRecord[],
+): Map<string, HistoricalModelHealthSignal> {
+  const signals = new Map<string, HistoricalModelHealthSignal>();
+  const unresolved = historicalErrors
+    .filter((item) => item.status !== "resolved")
+    .filter(isConnectivityLikeHistoricalError);
+  for (const model of models) {
+    const matches = unresolved.filter((error) => modelMentionedByHistoricalError(model, error));
+    if (!matches.length) continue;
+    const occurrences = matches.reduce((sum, item) => sum + Math.max(1, item.occurrences || 1), 0);
+    const worst = matches
+      .map((item) => item.severity)
+      .sort((a, b) => severityWeight(b) - severityWeight(a))[0] || "medium";
+    const latest = matches
+      .map((item) => item.last_seen_at || item.discovered_at)
+      .filter(Boolean)
+      .sort()
+      .slice(-1)[0];
+    const hasRegression = matches.some((item) => item.status === "regression");
+    const blocked = hasRegression || occurrences >= 2 || worst === "critical" || worst === "high";
+    signals.set(model.id.toLowerCase(), {
+      modelId: model.id,
+      occurrences,
+      severity: worst,
+      lastSeenAt: latest,
+      blocked,
+      reason: blocked
+        ? `历史测试中 ${occurrences} 次出现模型连通/超时类问题，已从本轮主路径避让。 / ${occurrences} historical connectivity or timeout issue(s); avoided on the primary route for this run.`
+        : `历史测试中出现过模型连通问题，本轮降低优先级。 / Historical connectivity issue found; priority lowered for this run.`,
+    });
+  }
+  return signals;
+}
+
 function backlogToStructuredErrors(
   items: OptimizationBacklogItem[],
   projectId: string,
@@ -586,6 +740,7 @@ function buildOptimizationBacklog(args: {
     modelName: string;
     apiProvider: string;
     status: "success" | "failed" | "skipped";
+    stage?: "history_avoidance" | "health_probe" | "generation";
     error?: string;
     attempts: number;
     bestScore?: number;
@@ -617,7 +772,7 @@ function buildOptimizationBacklog(args: {
       type: "model_error",
       severity: classified.severity,
       title: classified.title,
-      detail: `${item.modelName || item.modelId} / ${item.apiProvider}: ${error}`,
+      detail: `${item.stage || "generation"}: ${item.modelName || item.modelId} / ${item.apiProvider}: ${error}`,
       action: classified.action,
       modelId: item.modelId,
       provider: item.apiProvider,
@@ -702,6 +857,114 @@ function normalizeTestError(error: unknown, modelId?: string): string {
   return message;
 }
 
+function buildHealthProbeReport(args: {
+  healthy: TestModelPlan[];
+  diagnostics: TestModelDiagnostic[];
+  skippedByHistory: string[];
+}): HealthProbeReport {
+  return {
+    enabled: true,
+    timeoutMs: TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS,
+    maxModels: TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS,
+    concurrency: TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY,
+    healthyModelIds: args.healthy.map((item) => item.model.id),
+    failedModelIds: args.diagnostics
+      .filter((item) => item.stage === "health_probe" && item.status === "failed")
+      .map((item) => item.modelId),
+    skippedByHistoryModelIds: args.skippedByHistory,
+    policy:
+      "一键测试先用极短健康探测筛掉慢模型，再只用最近可响应的健康模型跑质量门；强但持续超时的模型会进入待优化项，不再拖垮整条测试链路。 / One-click testing first uses short health probes to filter slow models, then runs quality gates only on recently responsive healthy models; strong but repeatedly slow models go to the optimization backlog instead of dragging down the whole pipeline.",
+  };
+}
+
+async function probeModelHealth(args: {
+  plan: TestModelPlan[];
+  userKeys: Record<string, string>;
+  remainingBudgetMs: () => number;
+}): Promise<{
+  healthyPlan: TestModelPlan[];
+  diagnostics: TestModelDiagnostic[];
+  budgetExhausted: boolean;
+}> {
+  const candidates = args.plan.slice(0, TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS);
+  const healthyPlan: TestModelPlan[] = [];
+  const diagnostics: TestModelDiagnostic[] = [];
+  let budgetExhausted = false;
+
+  for (let index = 0; index < candidates.length; index += TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY) {
+    if (healthyPlan.length >= TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS) break;
+    if (args.remainingBudgetMs() <= TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS) {
+      budgetExhausted = true;
+      break;
+    }
+
+    const batch = candidates.slice(index, index + TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY);
+    const settled = await Promise.all(batch.map(async (plan) => {
+      const started = Date.now();
+      const callTimeoutMs = Math.min(
+        TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS,
+        Math.max(1_000, args.remainingBudgetMs() - TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS),
+      );
+      try {
+        const result = await callProvider({
+          model: plan.model.id,
+          apiProvider: plan.apiProvider,
+          systemPrompt:
+            "You are running a production health probe. Reply with exactly: OK. Do not add explanations.",
+          userPrompt:
+            "Health probe for one-click test routing. If the model is reachable, reply exactly OK.",
+          maxTokens: TEST_CHANNEL_HEALTH_PROBE_MAX_TOKENS,
+          temperature: 0,
+          userKeys: args.userKeys,
+          timeoutMs: callTimeoutMs,
+        });
+        if (!result.text.trim()) {
+          throw new Error("健康探测返回空文本 / Health probe returned empty text");
+        }
+        return {
+          plan,
+          diagnostic: {
+            modelId: plan.model.id,
+            modelName: plan.model.name,
+            apiProvider: plan.apiProvider,
+            status: "success" as const,
+            stage: "health_probe" as const,
+            attempts: 1,
+            latencyMs: result.latencyMs || Date.now() - started,
+          },
+        };
+      } catch (error) {
+        return {
+          plan,
+          diagnostic: {
+            modelId: plan.model.id,
+            modelName: plan.model.name,
+            apiProvider: plan.apiProvider,
+            status: "failed" as const,
+            stage: "health_probe" as const,
+            attempts: 1,
+            latencyMs: Date.now() - started,
+            error: [
+              "健康探测未通过，已跳过完整质量调用，避免再次耗尽 45 秒预算。",
+              "/ Health probe failed, so the full quality call was skipped to avoid exhausting the 45s budget again.",
+              `Detail: ${normalizeTestError(error, plan.model.id)}`,
+            ].join(" "),
+          },
+        };
+      }
+    }));
+
+    for (const item of settled) {
+      diagnostics.push(item.diagnostic);
+      if (item.diagnostic.status === "success" && healthyPlan.length < TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS) {
+        healthyPlan.push(item.plan);
+      }
+    }
+  }
+
+  return { healthyPlan, diagnostics, budgetExhausted };
+}
+
 export async function POST(req: NextRequest) {
   const requestStartedAt = Date.now();
   try {
@@ -756,11 +1019,17 @@ export async function POST(req: NextRequest) {
       ...(Array.isArray(body.generatorModelIds) ? body.generatorModelIds : []),
       body.generatorModelId,
     ].map((id) => cleanString(id, 180)).filter(Boolean))).slice(0, 6);
+    const historicalModelHealth = buildHistoricalModelHealthSignals(models, historicalErrors);
+    const skippedByHistoryModelIds = [...historicalModelHealth.values()]
+      .filter((item) => item.blocked)
+      .map((item) => item.modelId)
+      .slice(0, 12);
     const routingPlan = buildGeneratorPlan(
       models,
       requestedGeneratorIds,
       userKeys,
       availableModelIds,
+      historicalModelHealth,
       autoSuite ? TEST_CHANNEL_AUTO_MAX_MODELS : TEST_CHANNEL_AUTO_MAX_MODELS,
     );
     const generatorPlan = routingPlan.plan;
@@ -884,16 +1153,7 @@ export async function POST(req: NextRequest) {
       modelId?: string;
       apiProvider?: string;
     }> = [];
-    const modelDiagnostics: Array<{
-      modelId: string;
-      modelName: string;
-      apiProvider: string;
-      status: "success" | "failed" | "skipped";
-      error?: string;
-      attempts: number;
-      bestScore?: number;
-      latencyMs?: number;
-    }> = [];
+    const modelDiagnostics: TestModelDiagnostic[] = [];
     let bestText = "";
     let bestScore: StrictScoreResult | null = null;
     let bestLatencyMs = 0;
@@ -910,19 +1170,35 @@ export async function POST(req: NextRequest) {
     let successfulModelSeen = false;
     let budgetExhausted = false;
     const remainingBudgetMs = () => TEST_CHANNEL_TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    const healthProbe = await probeModelHealth({
+      plan: generatorPlan,
+      userKeys,
+      remainingBudgetMs,
+    });
+    modelDiagnostics.push(...healthProbe.diagnostics);
+    budgetExhausted = budgetExhausted || healthProbe.budgetExhausted;
+    const healthProbeReport = buildHealthProbeReport({
+      healthy: healthProbe.healthyPlan,
+      diagnostics: healthProbe.diagnostics,
+      skippedByHistory: skippedByHistoryModelIds,
+    });
+    const executionPlan = healthProbe.healthyPlan.length
+      ? healthProbe.healthyPlan
+      : [];
 
-    for (const plan of generatorPlan) {
+    for (const plan of executionPlan) {
       selected = plan;
       const modelRemainingMs = remainingBudgetMs();
-      if (modelRemainingMs <= TEST_CHANNEL_MIN_REMAINING_MS) {
+      if (modelRemainingMs <= TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS) {
         budgetExhausted = true;
         modelDiagnostics.push({
           modelId: plan.model.id,
           modelName: plan.model.name,
           apiProvider: plan.apiProvider,
           status: "failed",
+          stage: "generation",
           attempts: 0,
-          error: "测试通道时间预算用尽，已主动停止，避免被 Cloudflare/网关截断成 HTML 504。 / Test channel time budget was exhausted, so the run stopped before Cloudflare/gateway could cut it off as an HTML 504.",
+          error: "测试通道剩余预算不足以安全执行完整质量调用，已主动停止。 / Remaining test-channel budget is too low for a safe full quality call; stopped proactively.",
         });
         break;
       }
@@ -1005,11 +1281,22 @@ export async function POST(req: NextRequest) {
           modelName: plan.model.name,
           apiProvider: plan.apiProvider,
           status: "success",
+          stage: "generation",
           attempts: modelAttempts,
           bestScore: modelBestScore,
           latencyMs: modelLatencyMs,
         });
-        if (bestScore && bestScore.total >= passTotal) break;
+        const bestLowDimensions = bestScore
+          ? Object.entries(bestScore.dimensionScores)
+              .filter(([dimension]) => [
+                "intent_fidelity",
+                "target_model_fit",
+                "hallucination_resistance",
+                hasReferenceImage ? "reference_image_consistency" : "",
+              ].includes(dimension))
+              .filter(([, value]) => value < coreDimensionMin)
+          : [];
+        if (bestScore && bestScore.total >= passTotal && bestLowDimensions.length === 0) break;
       } catch (error) {
         const normalizedError = normalizeTestError(error, plan.model.id);
         if (remainingBudgetMs() <= TEST_CHANNEL_MIN_REMAINING_MS) budgetExhausted = true;
@@ -1018,6 +1305,7 @@ export async function POST(req: NextRequest) {
           modelName: plan.model.name,
           apiProvider: plan.apiProvider,
           status: "failed",
+          stage: "generation",
           attempts: Math.max(modelAttempts, 1),
           error: normalizedError,
         });
@@ -1026,6 +1314,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!bestScore) {
+      const elapsedMs = Date.now() - startedAt;
       const failedChecks = [
         {
           id: "provider_connectivity",
@@ -1034,15 +1323,28 @@ export async function POST(req: NextRequest) {
           threshold: 10,
           status: "fail" as const,
         },
+        {
+          id: "model_health_probe",
+          label: "模型健康探测 / Model health probe",
+          value: healthProbe.healthyPlan.length ? 10 : 0,
+          threshold: 10,
+          status: healthProbe.healthyPlan.length ? "pass" as const : "fail" as const,
+        },
         ...(budgetExhausted
           ? [{
               id: "test_channel_time_budget",
               label: "测试通道时间预算 / Test channel time budget",
-              value: Math.max(0, remainingBudgetMs()),
-              threshold: TEST_CHANNEL_MIN_REMAINING_MS,
+              value: elapsedMs,
+              threshold: TEST_CHANNEL_TOTAL_BUDGET_MS,
               status: "fail" as const,
             }]
-          : []),
+          : [{
+              id: "test_channel_time_budget",
+              label: "测试通道时间预算 / Test channel time budget",
+              value: elapsedMs,
+              threshold: TEST_CHANNEL_TOTAL_BUDGET_MS,
+              status: elapsedMs <= TEST_CHANNEL_TOTAL_BUDGET_MS ? "pass" as const : "fail" as const,
+            }])
       ];
       const optimizationBacklog = buildOptimizationBacklog({
         reportId,
@@ -1087,6 +1389,7 @@ export async function POST(req: NextRequest) {
           successfulModelSeen,
           modelDiagnostics,
           modelPreflight,
+          healthProbe: healthProbeReport,
           promptLanguage: promptLanguagePolicy.promptLanguage,
           promptLanguageReason: promptLanguagePolicy.reasonZh,
           passTotal,
@@ -1101,6 +1404,7 @@ export async function POST(req: NextRequest) {
           model_name: selected.model.name,
           target_model_id: targetModel.id,
           model_preflight: modelPreflight,
+          health_probe: healthProbeReport,
           prompt_language: promptLanguagePolicy.promptLanguage,
           latency_ms: Date.now() - startedAt,
           attempts: attempts.length,
@@ -1108,6 +1412,7 @@ export async function POST(req: NextRequest) {
             model_id: item.modelId,
             provider: item.apiProvider,
             status: item.status,
+            stage: item.stage || "generation",
             error: item.error ? safePreview(item.error, 280) : "",
             best_score: item.bestScore ?? null,
           })),
@@ -1131,6 +1436,7 @@ export async function POST(req: NextRequest) {
           userIdea: safePreview(userIdea, 600),
           targetModel: targetModel.id,
           modelPreflight,
+          healthProbe: healthProbeReport,
           failedDimensions: failedChecks.map((item) => item.id),
           testChannel: {
             status: "fail",
@@ -1139,12 +1445,14 @@ export async function POST(req: NextRequest) {
             model_name: selected.model.name,
             target_model_id: targetModel.id,
             model_preflight: modelPreflight,
+            health_probe: healthProbeReport,
             latency_ms: Date.now() - startedAt,
             attempts: attempts.length,
             model_diagnostics: modelDiagnostics.map((item) => ({
               model_id: item.modelId,
               provider: item.apiProvider,
               status: item.status,
+              stage: item.stage || "generation",
               error: item.error ? safePreview(item.error, 280) : "",
               best_score: item.bestScore ?? null,
             })),
@@ -1164,7 +1472,7 @@ export async function POST(req: NextRequest) {
           reportId,
           error: budgetExhausted
             ? "测试通道已在 45 秒预算内主动停止；慢模型或中转站无响应已被分类保存，不再等待到 Cloudflare/网关 504。 / Test channel stopped within the 45s budget; slow or unresponsive upstream calls were classified and saved instead of waiting for Cloudflare/gateway 504."
-            : "测试通道没有收到任何可评分的模型输出。已尝试可用模型，但都失败或返回空内容。请先换一个生成/评价模型，或打开密钥设置刷新中转站模型列表。 / No scorable output was received. Switch model or refresh relay model availability.",
+            : "测试通道没有找到可健康响应的模型输出。强模型已先做短健康探测，失败模型已跳过并保存到待优化项；请刷新中转站模型列表或换用最近可稳定返回的模型。 / No healthy scorable model output was found. Strong models were short-probed first; failing models were skipped and saved to the optimization backlog. Refresh relay models or use a recently stable model.",
           providerStatus: {
             configured: providerStatus.configured,
             keys: providerStatus.keyFingerprints.map((item) => ({
@@ -1175,6 +1483,7 @@ export async function POST(req: NextRequest) {
             })),
           },
           modelPreflight,
+          healthProbe: healthProbeReport,
           promptLanguage: promptLanguagePolicy.promptLanguage,
           promptLanguageReason: promptLanguagePolicy.reasonZh,
           modelDiagnostics,
@@ -1186,6 +1495,7 @@ export async function POST(req: NextRequest) {
           adaptivePlan,
           improvementPlan: [
             "测试通道现在有 45 秒硬预算和 22 秒单模型超时；慢模型会被主动中断并进入待优化项，不再等待到网关 504。 / The test channel now has a 45s hard budget and a 22s per-model timeout; slow models are interrupted and saved to the optimization backlog instead of waiting for gateway 504.",
+            "新增 8 秒健康探测：强模型必须先证明能快速响应，才进入完整质量测试；历史回归中反复超时的模型会被自动避让。 / New 8s health probe: strong models must prove they can respond quickly before full quality testing; models with repeated historical timeout regressions are avoided automatically.",
             "测试前已按当前密钥/中转站模型列表做强模型预检；未列入中转站的旧别名、cli 包装模型和弱小快模型会降级或跳过。 / Strong-model preflight runs before testing; unlisted old aliases, cli wrappers, and weak small-fast models are downgraded or skipped.",
             "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
             "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
@@ -1203,6 +1513,7 @@ export async function POST(req: NextRequest) {
     const checks = buildChecks({
       score: bestScore,
       latencyMs: bestLatencyMs,
+      elapsedMs: Date.now() - startedAt,
       outputText: bestText,
       githubTarget: "pending",
       hasReferenceImage,
@@ -1258,6 +1569,7 @@ export async function POST(req: NextRequest) {
         successfulModelSeen,
         modelDiagnostics,
         modelPreflight,
+        healthProbe: healthProbeReport,
         promptLanguage: promptLanguagePolicy.promptLanguage,
         promptLanguageReason: promptLanguagePolicy.reasonZh,
         passTotal,
@@ -1272,6 +1584,7 @@ export async function POST(req: NextRequest) {
         model_name: selected.model.name,
         target_model_id: targetModel.id,
         model_preflight: modelPreflight,
+        health_probe: healthProbeReport,
         prompt_language: promptLanguagePolicy.promptLanguage,
         latency_ms: Date.now() - startedAt,
         attempts: attempts.length,
@@ -1279,6 +1592,7 @@ export async function POST(req: NextRequest) {
           model_id: item.modelId,
           provider: item.apiProvider,
           status: item.status,
+          stage: item.stage || "generation",
           error: item.error ? safePreview(item.error, 280) : "",
           best_score: item.bestScore ?? null,
         })),
@@ -1310,6 +1624,7 @@ export async function POST(req: NextRequest) {
           successfulModelSeen,
           modelDiagnostics,
           modelPreflight,
+          healthProbe: healthProbeReport,
           promptLanguage: promptLanguagePolicy.promptLanguage,
           promptLanguageReason: promptLanguagePolicy.reasonZh,
           passTotal,
@@ -1324,12 +1639,14 @@ export async function POST(req: NextRequest) {
           model_name: selected.model.name,
           target_model_id: targetModel.id,
           model_preflight: modelPreflight,
+          health_probe: healthProbeReport,
           latency_ms: Date.now() - startedAt,
           attempts: attempts.length,
           model_diagnostics: modelDiagnostics.map((item) => ({
             model_id: item.modelId,
             provider: item.apiProvider,
             status: item.status,
+            stage: item.stage || "generation",
             error: item.error ? safePreview(item.error, 280) : "",
             best_score: item.bestScore ?? null,
           })),
@@ -1346,6 +1663,7 @@ export async function POST(req: NextRequest) {
     const finalChecks = buildChecks({
       score: bestScore,
       latencyMs: bestLatencyMs,
+      elapsedMs: Date.now() - startedAt,
       outputText: bestText,
       githubTarget: github.target,
       hasReferenceImage,
@@ -1370,6 +1688,7 @@ export async function POST(req: NextRequest) {
       checks: finalChecks,
       attempts,
       modelPreflight,
+      healthProbe: healthProbeReport,
       promptLanguage: promptLanguagePolicy.promptLanguage,
       promptLanguageReason: promptLanguagePolicy.reasonZh,
       modelDiagnostics,
@@ -1382,6 +1701,7 @@ export async function POST(req: NextRequest) {
         status === "pass"
           ? "本次测试已通过，可把最佳提示词预览作为质量样例进入后续优化。 / This test passed; the best prompt preview can be used as a quality sample for future optimization."
           : "优先查看未通过/警告检查项，对应补强测试目标或提示词模板。 / First inspect failed or warning checks, then strengthen the test objective or prompt template accordingly.",
+        "已启用 8 秒健康探测和历史失败避让：强模型只有在当前中转站能快速响应时才进入完整质量门，反复超时模型会自动降级到待优化项。 / 8s health probing and historical failure avoidance are enabled: strong models enter full quality gates only when they respond quickly on the current relay; repeated timeouts are downgraded into the optimization backlog.",
         "测试前已按当前密钥/中转站模型列表做强模型预检；强模型会优先尝试，弱/旧/不可见别名会被降级或跳过。 / Strong-model preflight runs before testing; strong models are prioritized while weak, old, or unlisted aliases are downgraded or skipped.",
         `真正提示词语言：${promptLanguagePolicy.truePromptLanguageLabel}。${promptLanguagePolicy.reasonZh}`,
         "如果模型诊断中有 failed，优先换掉失败模型或刷新中转站模型列表。 / If model diagnostics contains failed items, replace the failed model or refresh the relay model list first.",

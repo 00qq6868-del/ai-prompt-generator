@@ -67,11 +67,22 @@ interface TestChannelResult {
     modelName: string;
     apiProvider: string;
     status: "success" | "failed" | "skipped";
+    stage?: "history_avoidance" | "health_probe" | "generation";
     error?: string;
     attempts: number;
     bestScore?: number;
     latencyMs?: number;
   }>;
+  healthProbe?: {
+    enabled: boolean;
+    timeoutMs: number;
+    maxModels: number;
+    concurrency: number;
+    healthyModelIds: string[];
+    failedModelIds: string[];
+    skippedByHistoryModelIds: string[];
+    policy: string;
+  };
   modelPreflight?: {
     requestedModelIds?: string[];
     relayAvailableCount?: number;
@@ -404,6 +415,7 @@ function buildFallbackFailureResult(args: {
       },
     ],
     modelPreflight: args.data?.modelPreflight,
+    healthProbe: args.data?.healthProbe,
     promptLanguage: args.data?.promptLanguage,
     promptLanguageReason: args.data?.promptLanguageReason,
     improvementPlan: args.data?.improvementPlan || [
@@ -787,6 +799,29 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                     </div>
                   )}
 
+                  {result.healthProbe?.enabled && (
+                    <div className="mt-4 rounded-xl border border-cyan-300/15 bg-cyan-500/10 p-3">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm font-semibold text-cyan-50/90">健康探测 / Health probe</div>
+                        <div className="text-xs text-cyan-50/65">
+                          {formatDuration(result.healthProbe.timeoutMs)} · 并发 / Concurrency {result.healthProbe.concurrency}
+                        </div>
+                      </div>
+                      <div className="mt-2 grid gap-2 text-xs leading-5 text-cyan-50/75 md:grid-cols-3">
+                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                          健康模型 / Healthy：{result.healthProbe.healthyModelIds.length ? result.healthProbe.healthyModelIds.join(", ") : "无 / none"}
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                          探测失败 / Failed：{result.healthProbe.failedModelIds.length ? result.healthProbe.failedModelIds.join(", ") : "无 / none"}
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                          历史避让 / Avoided：{result.healthProbe.skippedByHistoryModelIds.length ? result.healthProbe.skippedByHistoryModelIds.join(", ") : "无 / none"}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-[11px] leading-5 text-cyan-50/55">{result.healthProbe.policy}</p>
+                    </div>
+                  )}
+
                   {Array.isArray(result.modelDiagnostics) && result.modelDiagnostics.length > 0 && (
                     <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
                       <div className="text-sm font-semibold text-white/80">模型诊断 / Model diagnostics</div>
@@ -803,6 +838,11 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                                   {item.status === "success" ? "可用 / Available" : "失败 / Failed"}
                                 </div>
                               </div>
+                              {item.stage && (
+                                <div className="mt-1 text-[11px] text-white/45">
+                                  阶段 / Stage：{item.stage === "health_probe" ? "健康探测 / Health probe" : item.stage === "history_avoidance" ? "历史避让 / Historical avoidance" : "完整质量调用 / Full quality call"}
+                                </div>
+                              )}
                               {typeof item.bestScore === "number" && (
                                 <div className="mt-1 text-xs text-white/50">最佳分 / Best score：{Math.round(item.bestScore)}</div>
                               )}

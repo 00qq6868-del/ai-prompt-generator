@@ -986,6 +986,16 @@ test.describe("PromptGenerator E2E", () => {
             ],
             routingPolicy: "先读取当前密钥/中转站可见模型，再按旗舰优先级排序。 / The router ranks visible relay models first.",
           },
+          healthProbe: {
+            enabled: true,
+            timeoutMs: 8000,
+            maxModels: 6,
+            concurrency: 2,
+            healthyModelIds: ["claude-opus-4-7"],
+            failedModelIds: ["gpt-5.5"],
+            skippedByHistoryModelIds: [],
+            policy: "一键测试先用极短健康探测筛掉慢模型，再只用最近可响应的健康模型跑质量门。 / One-click testing first uses short health probes to filter slow models.",
+          },
           promptLanguage: "en",
           promptLanguageReason: "目标模型属于海外通用/旗舰模型，默认英语提示词表现最稳；中文只用于向用户解释设计思路。",
           bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
@@ -1082,6 +1092,16 @@ test.describe("PromptGenerator E2E", () => {
             ],
             routingPolicy: "先读取当前密钥/中转站可见模型，再按旗舰优先级排序。 / The router ranks visible relay models first.",
           },
+          healthProbe: {
+            enabled: true,
+            timeoutMs: 8000,
+            maxModels: 6,
+            concurrency: 2,
+            healthyModelIds: ["claude-opus-4-7"],
+            failedModelIds: ["gpt-5.5"],
+            skippedByHistoryModelIds: [],
+            policy: "一键测试先用极短健康探测筛掉慢模型，再只用最近可响应的健康模型跑质量门。 / One-click testing first uses short health probes to filter slow models.",
+          },
           promptLanguage: "en",
           promptLanguageReason: "目标模型属于海外通用/旗舰模型，默认英语提示词表现最稳；中文只用于向用户解释设计思路。",
           bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
@@ -1101,6 +1121,8 @@ test.describe("PromptGenerator E2E", () => {
     await expect(dialog.getByText("测试通过")).toBeVisible({ timeout: 10_000 });
     await expect(dialog.getByText("密钥防泄露 / Secret handling")).toBeVisible();
     await expect(dialog.getByText("强模型预检 / Strong model preflight")).toBeVisible();
+    await expect(dialog.getByText("健康探测 / Health probe")).toBeVisible();
+    await expect(dialog.getByText(/Healthy：claude-opus-4-7/)).toBeVisible();
     await expect(dialog.getByText("Claude Opus 4.7")).toBeVisible();
     await dialog.getByText(/已降级或跳过的弱\/风险模型/).click();
     await expect(dialog.getByText(/cli-gemini-3-flash-preview/)).toBeVisible();
