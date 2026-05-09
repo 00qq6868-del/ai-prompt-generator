@@ -3,12 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildSystemPrompt, buildUserPrompt, comparePrompts } from "@/lib/prompt-optimizer";
 import { callProvider } from "@/lib/providers";
 import { getModels } from "@/lib/model-cache";
-import { ModelInfo, scoreModel } from "@/lib/models-registry";
+import { ModelInfo } from "@/lib/models-registry";
 import { mergeRelayModelIds, isRelayModelListed } from "@/lib/relay-models";
+import {
+  buildStrongModelPreflightReport,
+  isStrongEnoughForPrimaryRoute,
+  sortModelsForStrongRouting,
+  toStrongModelCandidate,
+  type StrongModelPreflightReport,
+} from "@/lib/model-routing";
+import { promptLanguageInstruction, resolvePromptLanguagePolicy } from "@/lib/prompt-language-policy";
+import { buildTranslationStrategyMemory } from "@/lib/translation-projects";
 import { strictPromptScore, type StrictScoreResult } from "@/lib/strict-scoring";
 import { exportDatasetRow } from "@/lib/server/github-dataset";
 import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
 import { toUserFacingErrorMessage } from "@/lib/error-messages";
+import { normalizeOpenAIBaseUrl } from "@/lib/safe-url";
 import {
   buildOptimizationFingerprint,
   buildAdaptiveTestPlan,
@@ -34,7 +44,7 @@ const TEST_CHANNEL_MODEL_TIMEOUT_MS = 22_000;
 const TEST_CHANNEL_MIN_REMAINING_MS = 4_000;
 const TEST_CHANNEL_AUTO_MAX_TOKENS = 900;
 const TEST_CHANNEL_AUTO_MAX_ATTEMPTS = 1;
-const TEST_CHANNEL_AUTO_MAX_MODELS = 2;
+const TEST_CHANNEL_AUTO_MAX_MODELS = 3;
 
 interface TestChannelRequest {
   projectId?: string;
@@ -66,6 +76,11 @@ interface TestChannelRequest {
 interface TestModelPlan {
   model: ModelInfo;
   apiProvider: string;
+}
+
+interface TestModelRoutingPlan {
+  plan: TestModelPlan[];
+  preflight: StrongModelPreflightReport;
 }
 
 type TestCheckResult = {
@@ -142,6 +157,43 @@ function hasKey(name: string, userKeys: Record<string, string>): boolean {
 
 function hasCustomRelay(userKeys: Record<string, string>): boolean {
   return hasKey("CUSTOM_API_KEY", userKeys) && Boolean(userKeys.CUSTOM_BASE_URL?.trim() || process.env.CUSTOM_BASE_URL?.trim());
+}
+
+async function probeRelayModelIdsForTest(
+  userKeys: Record<string, string>,
+  currentModelIds: string[] | undefined,
+): Promise<{ modelIds: string[] | undefined; error?: string }> {
+  if (currentModelIds?.length) return { modelIds: currentModelIds };
+  const apiKey = userKeys.CUSTOM_API_KEY?.trim() || process.env.CUSTOM_API_KEY?.trim() || "";
+  const baseUrl = userKeys.CUSTOM_BASE_URL?.trim() || process.env.CUSTOM_BASE_URL?.trim() || "";
+  if (!apiKey || !baseUrl) return { modelIds: currentModelIds };
+
+  try {
+    const url = normalizeOpenAIBaseUrl(baseUrl);
+    const res = await fetch(`${url}/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(4_500),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return {
+        modelIds: currentModelIds,
+        error: `中转站模型预检失败 HTTP ${res.status}。${safePreview(text, 180)} / Relay model preflight failed with HTTP ${res.status}.`,
+      };
+    }
+    const data = await res.json().catch(() => null);
+    const ids: string[] = [];
+    const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+    for (const row of rows) {
+      if (typeof row?.id === "string" && row.id.trim()) ids.push(row.id.trim());
+    }
+    return { modelIds: ids.length ? Array.from(new Set(ids)).sort() : currentModelIds };
+  } catch (error) {
+    return {
+      modelIds: currentModelIds,
+      error: `中转站模型预检未完成：${safePreview(toUserFacingErrorMessage(error), 220)} / Relay model preflight could not complete.`,
+    };
+  }
 }
 
 function resolveRuntimeApiProviderForTest(
@@ -238,36 +290,91 @@ function buildGeneratorPlan(
   userKeys: Record<string, string>,
   availableModelIds?: string[],
   limit = 8,
-): TestModelPlan[] {
-  const requested = requestedIds
-    .map((id) => models.find((model) => model.id.toLowerCase() === id.toLowerCase()))
-    .filter((model): model is ModelInfo => Boolean(model))
-    .filter((model) => (model.category ?? "text") === "text");
+): TestModelRoutingPlan {
+  const relayListKnown = hasCustomRelay(userKeys) && Boolean(availableModelIds?.length);
+  const sorted = sortModelsForStrongRouting(
+    models.filter((model) => (model.category ?? "text") === "text"),
+    {
+      requestedIds,
+      availableModelIds,
+      preferRelayListed: relayListKnown,
+      mode: "generator",
+    },
+  );
 
-  const fallbackCandidates = [...models]
-    .filter((model) => (model.category ?? "text") === "text")
-    .sort((a, b) => scoreModel(b, "accurate") - scoreModel(a, "accurate"));
-  const seen = new Set<string>();
-  const candidates = [...requested, ...fallbackCandidates].filter((model) => {
-    const key = model.id.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
   const plan: TestModelPlan[] = [];
+  const standby: ReturnType<typeof toStrongModelCandidate>[] = [];
+  const skipped: ReturnType<typeof toStrongModelCandidate>[] = [];
+  const seen = new Set<string>();
 
-  for (const model of candidates) {
+  for (const model of sorted) {
+    const key = model.id.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
     const apiProvider = resolveTestProvider(model, userKeys, availableModelIds);
-    if (isProviderCallable(apiProvider, userKeys)) {
-      plan.push({ model, apiProvider });
+    const listedByRelay = isRelayModelListed(availableModelIds, model.id);
+    const candidate = toStrongModelCandidate(model, {
+      apiProvider,
+      requestedIds,
+      availableModelIds,
+      preferRelayListed: relayListKnown,
+      mode: "generator",
+    });
+    const relayFallbackWouldUseUnlistedAlias =
+      relayListKnown &&
+      apiProvider === "aihubmix" &&
+      !listedByRelay;
+    const callable =
+      isProviderCallable(apiProvider, userKeys) ||
+      (hasCustomRelay(userKeys) && (!availableModelIds?.length || listedByRelay));
+    const strongEnough = isStrongEnoughForPrimaryRoute(model, candidate.score);
+    const riskyFirstChoice =
+      candidate.riskFlags.includes("cli-wrapper") ||
+      (candidate.riskFlags.includes("small-fast-model") && plan.length > 0) ||
+      (candidate.riskFlags.includes("flash-first") && plan.length > 0);
+
+    if (!callable || relayFallbackWouldUseUnlistedAlias || !strongEnough || riskyFirstChoice) {
+      skipped.push(candidate);
       continue;
     }
-    if (hasCustomRelay(userKeys) && (!availableModelIds?.length || isRelayModelListed(availableModelIds, model.id))) {
-      plan.push({ model, apiProvider: "aihubmix" });
+
+    if (plan.length < Math.max(1, limit)) {
+      plan.push({ model, apiProvider });
+    } else {
+      standby.push(candidate);
     }
   }
 
-  return plan.slice(0, Math.max(1, limit));
+  const selected = plan.map((item) => toStrongModelCandidate(item.model, {
+    apiProvider: item.apiProvider,
+    requestedIds,
+    availableModelIds,
+    preferRelayListed: relayListKnown,
+    mode: "generator",
+  }));
+  const unusedStrong = sorted
+    .filter((model) => !plan.some((item) => item.model.id.toLowerCase() === model.id.toLowerCase()))
+    .map((model) => toStrongModelCandidate(model, {
+      apiProvider: resolveTestProvider(model, userKeys, availableModelIds),
+      requestedIds,
+      availableModelIds,
+      preferRelayListed: relayListKnown,
+      mode: "generator",
+    }))
+    .filter((item) => item.strength === "flagship" || item.strength === "strong")
+    .filter((item) => !standby.some((existing) => existing.id.toLowerCase() === item.id.toLowerCase()))
+    .slice(0, 8);
+
+  return {
+    plan,
+    preflight: buildStrongModelPreflightReport({
+      requestedModelIds: requestedIds,
+      relayAvailableCount: availableModelIds?.length ?? 0,
+      selectedStrongModels: selected,
+      standbyStrongModels: [...standby, ...unusedStrong],
+      skippedWeakOrRiskyModels: skipped,
+    }),
+  };
 }
 
 function buildChecks(args: {
@@ -631,9 +738,11 @@ export async function POST(req: NextRequest) {
     }
 
     const userKeys = body.userKeys && typeof body.userKeys === "object" ? body.userKeys : {};
-    const availableModelIds = Array.isArray(body.availableModelIds)
+    let availableModelIds = Array.isArray(body.availableModelIds)
       ? body.availableModelIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0)
       : undefined;
+    const relayProbe = await probeRelayModelIdsForTest(userKeys, availableModelIds);
+    availableModelIds = relayProbe.modelIds;
     const models = mergeRelayModelIds(await getModels(), availableModelIds);
     const targetModel =
       models.find((model) => model.id.toLowerCase() === cleanString(body.targetModelId, 180).toLowerCase()) ||
@@ -647,13 +756,15 @@ export async function POST(req: NextRequest) {
       ...(Array.isArray(body.generatorModelIds) ? body.generatorModelIds : []),
       body.generatorModelId,
     ].map((id) => cleanString(id, 180)).filter(Boolean))).slice(0, 6);
-    const generatorPlan = buildGeneratorPlan(
+    const routingPlan = buildGeneratorPlan(
       models,
       requestedGeneratorIds,
       userKeys,
       availableModelIds,
       autoSuite ? TEST_CHANNEL_AUTO_MAX_MODELS : TEST_CHANNEL_AUTO_MAX_MODELS,
     );
+    const generatorPlan = routingPlan.plan;
+    const modelPreflight = routingPlan.preflight;
     if (!generatorPlan.length) {
       const noModelError = normalizeTestErrorRecord({
         project_id: projectId,
@@ -692,6 +803,7 @@ export async function POST(req: NextRequest) {
           status: "fail",
           error: "测试通道没有可调用的生成/评价模型。请先在右上角钥匙设置中保存 API Key，或配置服务器环境变量。 / No callable generation/evaluation model is available for the test channel.",
           providerStatus: configuredProviders(userKeys),
+          modelPreflight,
           errorRecords,
           optimizationItems,
           adaptivePlan,
@@ -701,7 +813,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const language = body.language === "en" ? "en" : "zh";
+    const uiLanguage = body.language === "en" ? "en" : "zh";
+    const promptLanguagePolicy = resolvePromptLanguagePolicy(targetModel);
+    const promptLanguage = promptLanguagePolicy.promptLanguage;
     const targetCategory = targetModel.category ?? "text";
     const requestedMaxTokens = Math.min(Math.max(Number(body.maxTokens) || 1600, 512), 3000);
     const maxTokens = autoSuite
@@ -726,6 +840,11 @@ export async function POST(req: NextRequest) {
       initialAdaptivePlan.summary,
       ...initialAdaptivePlan.mutation_hints.slice(0, 4),
       ...buildStructuredOptimizationRules(historicalErrors, historicalOptimizations, initialAdaptivePlan).slice(0, 6),
+      `Prompt language policy: ${promptLanguagePolicy.reasonEn}`,
+      promptLanguageInstruction(promptLanguagePolicy),
+      buildTranslationStrategyMemory(),
+      `Strong model preflight: selected=${modelPreflight.selectedStrongModels.map((item) => `${item.id}:${item.strength}`).join(", ") || "none"}; standby=${modelPreflight.standbyStrongModels.slice(0, 4).map((item) => item.id).join(", ") || "none"}.`,
+      relayProbe.error ? `Relay model preflight warning: ${relayProbe.error}` : "",
       hasReferenceImage
         ? "- Reference image mode: preserve visual style, composition, palette, lighting, subject relation, and user text goal."
         : "",
@@ -736,7 +855,10 @@ export async function POST(req: NextRequest) {
       targetModel: targetModel.name,
       targetProvider: targetModel.provider,
       targetCategory,
-      language,
+      language: promptLanguage,
+      explanationLanguage: "zh",
+      includeExplanation: true,
+      languagePolicyReason: `${promptLanguagePolicy.reasonZh} / ${promptLanguagePolicy.reasonEn}`,
       feedbackMemory,
     });
 
@@ -745,7 +867,10 @@ export async function POST(req: NextRequest) {
       targetModel: targetModel.name,
       targetProvider: targetModel.provider,
       targetCategory,
-      language,
+      language: promptLanguage,
+      explanationLanguage: "zh",
+      includeExplanation: true,
+      languagePolicyReason: `${promptLanguagePolicy.reasonZh} / ${promptLanguagePolicy.reasonEn}`,
       feedbackMemory,
     });
 
@@ -961,6 +1086,9 @@ export async function POST(req: NextRequest) {
           attempts: attempts.length,
           successfulModelSeen,
           modelDiagnostics,
+          modelPreflight,
+          promptLanguage: promptLanguagePolicy.promptLanguage,
+          promptLanguageReason: promptLanguagePolicy.reasonZh,
           passTotal,
           coreDimensionMin,
           testSuite,
@@ -972,6 +1100,8 @@ export async function POST(req: NextRequest) {
           model_id: selected.model.id,
           model_name: selected.model.name,
           target_model_id: targetModel.id,
+          model_preflight: modelPreflight,
+          prompt_language: promptLanguagePolicy.promptLanguage,
           latency_ms: Date.now() - startedAt,
           attempts: attempts.length,
           model_diagnostics: modelDiagnostics.map((item) => ({
@@ -1000,6 +1130,7 @@ export async function POST(req: NextRequest) {
           deviceId: cleanDeviceId(req, body),
           userIdea: safePreview(userIdea, 600),
           targetModel: targetModel.id,
+          modelPreflight,
           failedDimensions: failedChecks.map((item) => item.id),
           testChannel: {
             status: "fail",
@@ -1007,6 +1138,7 @@ export async function POST(req: NextRequest) {
             model_id: selected.model.id,
             model_name: selected.model.name,
             target_model_id: targetModel.id,
+            model_preflight: modelPreflight,
             latency_ms: Date.now() - startedAt,
             attempts: attempts.length,
             model_diagnostics: modelDiagnostics.map((item) => ({
@@ -1042,6 +1174,9 @@ export async function POST(req: NextRequest) {
               hash: item.hash,
             })),
           },
+          modelPreflight,
+          promptLanguage: promptLanguagePolicy.promptLanguage,
+          promptLanguageReason: promptLanguagePolicy.reasonZh,
           modelDiagnostics,
           checks: failedChecks,
           testSuite,
@@ -1051,6 +1186,7 @@ export async function POST(req: NextRequest) {
           adaptivePlan,
           improvementPlan: [
             "测试通道现在有 45 秒硬预算和 22 秒单模型超时；慢模型会被主动中断并进入待优化项，不再等待到网关 504。 / The test channel now has a 45s hard budget and a 22s per-model timeout; slow models are interrupted and saved to the optimization backlog instead of waiting for gateway 504.",
+            "测试前已按当前密钥/中转站模型列表做强模型预检；未列入中转站的旧别名、cli 包装模型和弱小快模型会降级或跳过。 / Strong-model preflight runs before testing; unlisted old aliases, cli wrappers, and weak small-fast models are downgraded or skipped.",
             "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
             "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
             "如果使用的是 gpt-5.5 这类别名，确认中转站是否真实支持该别名；不支持就换成列表里存在的模型。 / If you are using an alias such as gpt-5.5, confirm the relay really supports it; otherwise choose a listed model.",
@@ -1121,6 +1257,9 @@ export async function POST(req: NextRequest) {
         attempts: attempts.length,
         successfulModelSeen,
         modelDiagnostics,
+        modelPreflight,
+        promptLanguage: promptLanguagePolicy.promptLanguage,
+        promptLanguageReason: promptLanguagePolicy.reasonZh,
         passTotal,
         coreDimensionMin,
         testSuite,
@@ -1132,6 +1271,8 @@ export async function POST(req: NextRequest) {
         model_id: selected.model.id,
         model_name: selected.model.name,
         target_model_id: targetModel.id,
+        model_preflight: modelPreflight,
+        prompt_language: promptLanguagePolicy.promptLanguage,
         latency_ms: Date.now() - startedAt,
         attempts: attempts.length,
         model_diagnostics: modelDiagnostics.map((item) => ({
@@ -1168,6 +1309,9 @@ export async function POST(req: NextRequest) {
           attempts: attempts.length,
           successfulModelSeen,
           modelDiagnostics,
+          modelPreflight,
+          promptLanguage: promptLanguagePolicy.promptLanguage,
+          promptLanguageReason: promptLanguagePolicy.reasonZh,
           passTotal,
           coreDimensionMin,
           testSuite,
@@ -1179,6 +1323,7 @@ export async function POST(req: NextRequest) {
           model_id: selected.model.id,
           model_name: selected.model.name,
           target_model_id: targetModel.id,
+          model_preflight: modelPreflight,
           latency_ms: Date.now() - startedAt,
           attempts: attempts.length,
           model_diagnostics: modelDiagnostics.map((item) => ({
@@ -1224,6 +1369,9 @@ export async function POST(req: NextRequest) {
       strictScore: bestScore,
       checks: finalChecks,
       attempts,
+      modelPreflight,
+      promptLanguage: promptLanguagePolicy.promptLanguage,
+      promptLanguageReason: promptLanguagePolicy.reasonZh,
       modelDiagnostics,
       testSuite,
       optimizationBacklog,
@@ -1234,6 +1382,8 @@ export async function POST(req: NextRequest) {
         status === "pass"
           ? "本次测试已通过，可把最佳提示词预览作为质量样例进入后续优化。 / This test passed; the best prompt preview can be used as a quality sample for future optimization."
           : "优先查看未通过/警告检查项，对应补强测试目标或提示词模板。 / First inspect failed or warning checks, then strengthen the test objective or prompt template accordingly.",
+        "测试前已按当前密钥/中转站模型列表做强模型预检；强模型会优先尝试，弱/旧/不可见别名会被降级或跳过。 / Strong-model preflight runs before testing; strong models are prioritized while weak, old, or unlisted aliases are downgraded or skipped.",
+        `真正提示词语言：${promptLanguagePolicy.truePromptLanguageLabel}。${promptLanguagePolicy.reasonZh}`,
         "如果模型诊断中有 failed，优先换掉失败模型或刷新中转站模型列表。 / If model diagnostics contains failed items, replace the failed model or refresh the relay model list first.",
         "如果 strict total 未到 85，优先补强意图保真、目标模型适配、幻觉防护三个维度。 / If strict total is below 85, strengthen intent fidelity, target model fit, and hallucination resistance first.",
         "如果生成/评价模型显示的是旧别名，重新打开模型选择器选择当前可用的高质量文本模型。 / If the generation/evaluation model is an old alias, reopen the model picker and choose a currently callable high-quality text model.",

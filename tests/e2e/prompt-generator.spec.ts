@@ -927,6 +927,67 @@ test.describe("PromptGenerator E2E", () => {
             configured: ["openai"],
             keys: [{ keyName: "OPENAI_API_KEY", source: "browser", masked: "sk-...-e2e", hash: "hash-e2e" }],
           },
+          modelPreflight: {
+            requestedModelIds: ["gpt-5.5-pro"],
+            relayAvailableCount: 6,
+            selectedStrongModels: [
+              {
+                id: "claude-opus-4-7",
+                name: "Claude Opus 4.7",
+                provider: "Anthropic",
+                apiProvider: "aihubmix",
+                score: 4100,
+                strength: "flagship",
+                listedByRelay: true,
+                requested: false,
+                reasons: ["中转站模型列表确认可见 / Listed by relay probe"],
+                riskFlags: [],
+              },
+              {
+                id: "gemini-3.1-pro-high",
+                name: "gemini-3.1-pro-high",
+                provider: "Google",
+                apiProvider: "aihubmix",
+                score: 3900,
+                strength: "flagship",
+                listedByRelay: true,
+                requested: false,
+                reasons: ["命中旗舰/强模型命名规则 / Matches flagship naming policy"],
+                riskFlags: [],
+              },
+            ],
+            standbyStrongModels: [
+              {
+                id: "claude-sonnet-4-6-think",
+                name: "claude-sonnet-4-6-think",
+                provider: "Anthropic",
+                apiProvider: "aihubmix",
+                score: 3600,
+                strength: "strong",
+                listedByRelay: true,
+                requested: false,
+                reasons: ["包含高质量或推理信号 / Has quality or reasoning signal"],
+                riskFlags: [],
+              },
+            ],
+            skippedWeakOrRiskyModels: [
+              {
+                id: "cli-gemini-3-flash-preview",
+                name: "cli-gemini-3-flash-preview",
+                provider: "Google",
+                apiProvider: "aihubmix",
+                score: 800,
+                strength: "risky",
+                listedByRelay: true,
+                requested: false,
+                reasons: ["综合评分 800 / Composite score 800"],
+                riskFlags: ["cli-wrapper", "flash-first", "preview"],
+              },
+            ],
+            routingPolicy: "先读取当前密钥/中转站可见模型，再按旗舰优先级排序。 / The router ranks visible relay models first.",
+          },
+          promptLanguage: "en",
+          promptLanguageReason: "目标模型属于海外通用/旗舰模型，默认英语提示词表现最稳；中文只用于向用户解释设计思路。",
           bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
           github: { synced: false, target: "local", filePath: "data/test-channel-runs/2026-05.jsonl" },
           secretHandling: "raw keys are never returned, logged, or written to GitHub datasets",
@@ -987,6 +1048,42 @@ test.describe("PromptGenerator E2E", () => {
             configured: ["openai"],
             keys: [{ keyName: "OPENAI_API_KEY", source: "browser", masked: "sk-...-e2e", hash: "hash-e2e" }],
           },
+          modelPreflight: {
+            requestedModelIds: ["gpt-5.5-pro"],
+            relayAvailableCount: 6,
+            selectedStrongModels: [
+              {
+                id: "claude-opus-4-7",
+                name: "Claude Opus 4.7",
+                provider: "Anthropic",
+                apiProvider: "aihubmix",
+                score: 4100,
+                strength: "flagship",
+                listedByRelay: true,
+                requested: false,
+                reasons: ["中转站模型列表确认可见 / Listed by relay probe"],
+                riskFlags: [],
+              },
+            ],
+            standbyStrongModels: [],
+            skippedWeakOrRiskyModels: [
+              {
+                id: "cli-gemini-3-flash-preview",
+                name: "cli-gemini-3-flash-preview",
+                provider: "Google",
+                apiProvider: "aihubmix",
+                score: 800,
+                strength: "risky",
+                listedByRelay: true,
+                requested: false,
+                reasons: ["综合评分 800 / Composite score 800"],
+                riskFlags: ["cli-wrapper", "flash-first", "preview"],
+              },
+            ],
+            routingPolicy: "先读取当前密钥/中转站可见模型，再按旗舰优先级排序。 / The router ranks visible relay models first.",
+          },
+          promptLanguage: "en",
+          promptLanguageReason: "目标模型属于海外通用/旗舰模型，默认英语提示词表现最稳；中文只用于向用户解释设计思路。",
           bestPromptPreview: "最佳提示词预览，不包含任何原始密钥。",
           github: { synced: false, target: "local", filePath: "data/test-channel-runs/2026-05.jsonl" },
           secretHandling: "raw keys are never returned, logged, or written to GitHub datasets",
@@ -1003,6 +1100,11 @@ test.describe("PromptGenerator E2E", () => {
 
     await expect(dialog.getByText("测试通过")).toBeVisible({ timeout: 10_000 });
     await expect(dialog.getByText("密钥防泄露 / Secret handling")).toBeVisible();
+    await expect(dialog.getByText("强模型预检 / Strong model preflight")).toBeVisible();
+    await expect(dialog.getByText("Claude Opus 4.7")).toBeVisible();
+    await dialog.getByText(/已降级或跳过的弱\/风险模型/).click();
+    await expect(dialog.getByText(/cli-gemini-3-flash-preview/)).toBeVisible();
+    await expect(dialog.getByText(/真正提示词语言|True prompt language/)).toBeVisible();
     expect(testBody.userKeys.OPENAI_API_KEY).toBe(fakeRawKey);
     expect(testBody.autoSuite).toBe(true);
     expect(testBody.maxTokens).toBe(900);

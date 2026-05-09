@@ -2310,3 +2310,24 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T17:27:38.678Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: 实现强模型预检与目标模型语言策略：测试通道会先探测中转站模型列表，按 GPT-5.5/Claude Opus/Sonnet/Gemini Pro/DeepSeek/Qwen 等强模型优先排序，降级或跳过旧别名、cli/弱小快模型；主生成接口真正 AI 提示词按目标模型最强语言生成，国外模型默认英文、中国模型中文，并附中文说明；加入翻译项目矩阵和 pairwise 评判规则记忆。验证通过：tsc、data:validate、build、test-channel E2E 5/5、prompt-generator E2E 22/22、quality 5/5、diff check、gitleaks no leaks.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M src/app/api/generate/route.ts
+ M src/app/api/test-channel/run/route.ts
+ M src/components/ResultPanel.tsx
+ M src/components/TestChannelPanel.tsx
+ M src/lib/best-model-policy.ts
+ M src/lib/prompt-optimizer.ts
+ M tests/e2e/prompt-generator.spec.ts
+?? src/lib/model-routing.ts
+?? src/lib/prompt-language-policy.ts
+?? src/lib/translation-projects.ts
+```

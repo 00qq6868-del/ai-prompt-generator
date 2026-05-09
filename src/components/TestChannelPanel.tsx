@@ -72,6 +72,49 @@ interface TestChannelResult {
     bestScore?: number;
     latencyMs?: number;
   }>;
+  modelPreflight?: {
+    requestedModelIds?: string[];
+    relayAvailableCount?: number;
+    selectedStrongModels?: Array<{
+      id: string;
+      name: string;
+      provider: string;
+      apiProvider: string;
+      score: number;
+      strength: "flagship" | "strong" | "usable" | "risky";
+      listedByRelay: boolean;
+      requested: boolean;
+      reasons: string[];
+      riskFlags: string[];
+    }>;
+    standbyStrongModels?: Array<{
+      id: string;
+      name: string;
+      provider: string;
+      apiProvider: string;
+      score: number;
+      strength: "flagship" | "strong" | "usable" | "risky";
+      listedByRelay: boolean;
+      requested: boolean;
+      reasons: string[];
+      riskFlags: string[];
+    }>;
+    skippedWeakOrRiskyModels?: Array<{
+      id: string;
+      name: string;
+      provider: string;
+      apiProvider: string;
+      score: number;
+      strength: "flagship" | "strong" | "usable" | "risky";
+      listedByRelay: boolean;
+      requested: boolean;
+      reasons: string[];
+      riskFlags: string[];
+    }>;
+    routingPolicy?: string;
+  };
+  promptLanguage?: "en" | "zh";
+  promptLanguageReason?: string;
   improvementPlan?: string[];
   testSuite?: {
     mode: string;
@@ -360,6 +403,9 @@ function buildFallbackFailureResult(args: {
         error: classifiedDetail,
       },
     ],
+    modelPreflight: args.data?.modelPreflight,
+    promptLanguage: args.data?.promptLanguage,
+    promptLanguageReason: args.data?.promptLanguageReason,
     improvementPlan: args.data?.improvementPlan || [
       "已保存本次失败详情到错误分类和待优化项目；下一次测试会优先回归该问题。 / This failure was saved to error classification and the optimization backlog; the next test will prioritize it.",
       "如果失败详情包含 HTTP 502/504 或非 JSON 响应，优先检查生产函数部署、Cloudflare/Vercel 网关、密钥配置和接口运行日志。 / If the failure detail contains HTTP 502/504 or a non-JSON response, check the production function deployment, Cloudflare/Vercel gateway, key configuration, and API runtime logs first.",
@@ -692,6 +738,54 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                       );
                     })}
                   </div>
+
+                  {result.modelPreflight && (
+                    <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-500/10 p-3">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm font-semibold text-violet-50/90">强模型预检 / Strong model preflight</div>
+                        <div className="text-xs text-violet-50/65">
+                          中转站可见 / Relay visible：{result.modelPreflight.relayAvailableCount ?? 0}
+                        </div>
+                      </div>
+                      {result.promptLanguageReason && (
+                        <div className="mt-2 rounded-xl border border-white/10 bg-black/20 p-2 text-xs leading-5 text-violet-50/75">
+                          真正提示词语言 / True prompt language：{result.promptLanguage === "zh" ? "中文" : "English"} · {result.promptLanguageReason}
+                        </div>
+                      )}
+                      <div className="mt-2 grid gap-2 md:grid-cols-2">
+                        {(result.modelPreflight.selectedStrongModels || []).slice(0, 4).map((item) => (
+                          <div key={`selected-${item.id}`} className="rounded-xl border border-emerald-300/15 bg-emerald-500/10 p-3 text-xs leading-5 text-emerald-50/75">
+                            <div className="font-semibold text-emerald-50">{item.name || item.id}</div>
+                            <div>{item.apiProvider} · {item.strength} · score {item.score}</div>
+                            {item.reasons?.[0] && <div className="mt-1 text-emerald-50/60">{item.reasons[0]}</div>}
+                          </div>
+                        ))}
+                        {(result.modelPreflight.standbyStrongModels || []).slice(0, 2).map((item) => (
+                          <div key={`standby-${item.id}`} className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/60">
+                            <div className="font-semibold text-white/80">备用 / Standby：{item.name || item.id}</div>
+                            <div>{item.apiProvider} · {item.strength} · score {item.score}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {(result.modelPreflight.skippedWeakOrRiskyModels || []).length > 0 && (
+                        <details className="mt-2 rounded-xl border border-white/10 bg-black/20 p-2">
+                          <summary className="cursor-pointer text-xs font-semibold text-white/65">
+                            已降级或跳过的弱/风险模型 / Downgraded or skipped weak/risky models
+                          </summary>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-white/55">
+                            {(result.modelPreflight.skippedWeakOrRiskyModels || []).slice(0, 8).map((item) => (
+                              <span key={`skipped-${item.id}`} className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-1">
+                                {item.id} · {item.riskFlags.join(", ") || item.strength}
+                              </span>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                      {result.modelPreflight.routingPolicy && (
+                        <div className="mt-2 text-[11px] leading-5 text-violet-50/55">{result.modelPreflight.routingPolicy}</div>
+                      )}
+                    </div>
+                  )}
 
                   {Array.isArray(result.modelDiagnostics) && result.modelDiagnostics.length > 0 && (
                     <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">

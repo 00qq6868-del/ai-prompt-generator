@@ -10,6 +10,9 @@ interface PromptBuilderOptions {
   targetProvider: string;
   targetCategory?: string;
   language: "zh" | "en";
+  explanationLanguage?: "zh" | "en";
+  includeExplanation?: boolean;
+  languagePolicyReason?: string;
   feedbackMemory?: string;
 }
 
@@ -810,6 +813,21 @@ const AUDIO_MODULE = extractPromptSection("# AUDIO MODULE", "# ADAPTIVE MODULE")
 const ADAPTIVE_MODULE = extractPromptSection("# ADAPTIVE MODULE", "# OUTPUT RULES");
 const OUTPUT_RULES = extractPromptSection("# OUTPUT RULES");
 
+const STRUCTURED_OUTPUT_RULES = `# OUTPUT RULES (CRITICAL)
+1. Output exactly two sections, in this order:
+   ## AI Prompt
+   [the true copyable prompt body in the target model's strongest language]
+
+   ## 中文说明
+   [a short Chinese explanation for the user]
+2. The "AI Prompt" section must be directly copy-pasteable into the target model.
+3. The "中文说明" section explains why the prompt is structured this way; it is not part of the target-model prompt.
+4. Do not reveal hidden chain-of-thought, internal scoring, provider errors, API keys, or private memory.
+5. Preserve EVERY user detail — non-negotiable.
+6. For image/video: include all technical parameters inline in the "AI Prompt" section.
+7. If the target model is foreign/global, write the AI Prompt section in English by default; if it is China-native/Chinese-first, write it in Chinese.
+8. If the user specifically asks the target model to produce Chinese output, keep that output-language requirement inside the AI Prompt even when the prompt instructions are written in English.`;
+
 function getCategoryModule(targetCategory?: string): string {
   switch ((targetCategory ?? "text").toLowerCase()) {
     case "image":
@@ -829,25 +847,34 @@ function getCategoryModule(targetCategory?: string): string {
 export function buildSystemPrompt(opts: PromptBuilderOptions): string {
   const langNote =
     opts.language === "zh"
-      ? "\n\n# LANGUAGE\nWrite the optimized prompt in Chinese (中文). Exception: keep code, technical terms, model parameters (--ar, --v, etc.), and proper nouns in their original language."
-      : "\n\n# LANGUAGE\nWrite the optimized prompt in English.";
+      ? "\n\n# LANGUAGE\nWrite the true AI prompt body in Chinese (中文). Exception: keep code, technical terms, model parameters (--ar, --v, etc.), and proper nouns in their original language."
+      : "\n\n# LANGUAGE\nWrite the true AI prompt body in English. If the desired final answer language is Chinese, specify that as an output requirement inside the English prompt rather than translating all instructions into Chinese.";
+  const explanationNote = opts.includeExplanation
+    ? `\n\n# USER-FACING EXPLANATION\nAfter the true AI prompt body, include a concise ${opts.explanationLanguage === "en" ? "English" : "Chinese"} explanation section. The explanation helps the user understand the design, but the true AI prompt remains in the target model's strongest language.`
+    : "";
+  const policyNote = opts.languagePolicyReason
+    ? `\n\n# MODEL LANGUAGE POLICY\n${opts.languagePolicyReason}`
+    : "";
 
   const categoryModule = getCategoryModule(opts.targetCategory);
   const categoryNote = opts.targetCategory && opts.targetCategory !== "text"
     ? `\n\n# TARGET CATEGORY\nThis is a ${opts.targetCategory.toUpperCase()} generation model. Use the ${opts.targetCategory.toUpperCase()} MODULE for optimization.`
     : "";
+  const outputRules = opts.includeExplanation ? STRUCTURED_OUTPUT_RULES : OUTPUT_RULES;
   const scopedPrompt = [
     SHARED_PROMPT,
     categoryModule,
     ADAPTIVE_MODULE,
-    OUTPUT_RULES,
+    outputRules,
   ].filter(Boolean).join("\n\n---\n\n");
 
   return (
     scopedPrompt +
     `\n\n# TARGET MODEL\n${opts.targetModel} (${opts.targetProvider})` +
     categoryNote +
-    langNote
+    langNote +
+    explanationNote +
+    policyNote
   );
 }
 
@@ -900,6 +927,17 @@ export function buildUserPrompt(opts: PromptBuilderOptions): string {
     }
   }
 
+  const outputInstruction = opts.includeExplanation
+    ? [
+        "Output exactly this structure:",
+        "## AI Prompt",
+        "[Write the copyable target-model prompt in the target model's strongest language.]",
+        "",
+        "## 中文说明",
+        "[Briefly explain in Chinese how the prompt preserves intent, improves model fit, and prevents common failures.]",
+      ].join("\n")
+    : "Output ONLY the final prompt. Nothing else.";
+
   return (
     `<user_idea>\n${opts.userIdea}\n</user_idea>\n\n` +
     (opts.feedbackMemory ? `<feedback_memory>\n${opts.feedbackMemory}\n</feedback_memory>\n\n` : "") +
@@ -910,8 +948,9 @@ export function buildUserPrompt(opts: PromptBuilderOptions): string {
     `- Use feedback_memory to avoid previous failures and calibrate quality more strictly\n` +
     `- Add structure, constraints, and format specs the user implied but didn't state\n` +
     `- Make implicit requirements explicit\n` +
-    `- Match prompt complexity to task complexity\n\n` +
-    `Output ONLY the final prompt. Nothing else.`
+    `- Match prompt complexity to task complexity\n` +
+    `- The true AI prompt body must use the target model's strongest language; Chinese explanation is separate and user-facing only\n\n` +
+    outputInstruction
   );
 }
 

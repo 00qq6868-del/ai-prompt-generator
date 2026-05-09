@@ -20,6 +20,8 @@ interface Meta {
   reviewSummary?: string;
   judgeModels?: string[];
   selectedStrategy?: string;
+  promptLanguage?: "en" | "zh";
+  promptLanguageReason?: string;
   modelHealth?: {
     skippedCooling?: Array<{ modelId: string; modelName?: string; cooldownUntil: number; lastError: string }>;
     failed?: Array<{ modelId: string; modelName?: string; lastError: string }>;
@@ -113,6 +115,15 @@ const STRICT_DIMENSION_LABELS: Record<string, string> = {
   reference_image_consistency: "参考图一致 Reference",
 };
 
+function splitStructuredPrompt(prompt: string): { aiPrompt: string; explanation: string } | null {
+  const aiMatch = prompt.match(/##\s*AI Prompt\s*\n([\s\S]*?)(?=\n##\s*(?:中文说明|Chinese Explanation)\s*\n|$)/i);
+  const explanationMatch = prompt.match(/##\s*(?:中文说明|Chinese Explanation)\s*\n([\s\S]*)$/i);
+  const aiPrompt = aiMatch?.[1]?.trim() || "";
+  const explanation = explanationMatch?.[1]?.trim() || "";
+  if (!aiPrompt || !explanation) return null;
+  return { aiPrompt, explanation };
+}
+
 export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictScore, generatorModelCost, originalPrompt, previousPrompt, onSubmitFeedback }: Props) {
   const [copied, setCopied] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
@@ -122,9 +133,11 @@ export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictSc
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [feedbackSaved, setFeedbackSaved] = useState(false);
   const activeStrictScore = strictScore ?? meta.strictScore;
+  const structuredPrompt = splitStructuredPrompt(prompt);
+  const copyablePrompt = structuredPrompt?.aiPrompt || prompt;
 
   const copy = async () => {
-    await navigator.clipboard.writeText(prompt);
+    await navigator.clipboard.writeText(copyablePrompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -234,10 +247,10 @@ export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictSc
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   : "bg-white/10 text-white/60 hover:bg-white/20 hover:text-white border border-white/10"
                 }`}
-              aria-label={copied ? "已复制 Copied" : "复制提示词 Copy prompt"}
+              aria-label={copied ? "已复制 Copied" : "复制真正 AI 提示词 Copy true AI prompt"}
             >
               {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? "已复制 Copied!" : "复制提示词 Copy"}
+              {copied ? "已复制 Copied!" : "复制真正提示词 Copy"}
             </motion.button>
           </div>
         </div>
@@ -283,6 +296,11 @@ export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictSc
             {meta.persistenceWarning && (
               <div className="mx-5 mt-4 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[11px] leading-5 text-amber-100/80">
                 {meta.persistenceWarning}
+              </div>
+            )}
+            {meta.promptLanguageReason && (
+              <div className="mx-5 mt-4 rounded-xl border border-violet-300/15 bg-violet-500/10 px-3 py-2 text-[11px] leading-5 text-violet-50/75">
+                真正 AI 提示词语言 / True AI prompt language：{meta.promptLanguage === "zh" ? "中文 Chinese" : "English 英语"} · {meta.promptLanguageReason}
               </div>
             )}
             {meta.referenceImage?.enabled && (
@@ -431,9 +449,22 @@ export function ResultPanel({ prompt, promptId, versionId, stats, meta, strictSc
                 )}
               </div>
             )}
-            <pre className="whitespace-pre-wrap font-sans text-sm text-white/85 leading-relaxed p-5 max-h-80 overflow-y-auto">
-              {prompt}
-            </pre>
+            {structuredPrompt ? (
+              <div className="p-5">
+                <div className="text-[10px] font-semibold uppercase text-indigo-200/70">AI Prompt</div>
+                <pre className="mt-2 max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/20 p-4 font-sans text-sm leading-relaxed text-white/85">
+                  {structuredPrompt.aiPrompt}
+                </pre>
+                <details className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                  <summary className="cursor-pointer text-xs font-semibold text-white/70">中文说明 / Chinese explanation</summary>
+                  <div className="mt-2 whitespace-pre-wrap text-xs leading-5 text-white/60">{structuredPrompt.explanation}</div>
+                </details>
+              </div>
+            ) : (
+              <pre className="max-h-80 overflow-y-auto whitespace-pre-wrap p-5 font-sans text-sm leading-relaxed text-white/85">
+                {prompt}
+              </pre>
+            )}
           </>
         )}
       </div>

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { callProvider, callProviderStream, type GenerateResult } from "@/lib/providers";
 import { buildSystemPrompt, buildUserPrompt, comparePrompts } from "@/lib/prompt-optimizer";
 import { getModels } from "@/lib/model-cache";
-import { ModelInfo, scoreModel } from "@/lib/models-registry";
+import { ModelInfo } from "@/lib/models-registry";
 import { isRelayModelListed, mergeRelayModelIds } from "@/lib/relay-models";
 import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rate-limit";
 import { resolveRuntimeApiProvider, runGptImage2Ensemble } from "@/lib/gpt-image-2-ensemble";
@@ -37,6 +37,9 @@ import {
 } from "@/lib/reference-image";
 import { analyzeUserIntent, type IntentAnalysis } from "@/lib/intent-router";
 import { GITHUB_PROJECT_TRACKER_RULES } from "@/lib/github-project-tracker-status";
+import { resolvePromptLanguagePolicy, promptLanguageInstruction } from "@/lib/prompt-language-policy";
+import { buildTranslationStrategyMemory } from "@/lib/translation-projects";
+import { sortModelsForStrongRouting } from "@/lib/model-routing";
 
 export interface GenerateRequest {
   userIdea: string;
@@ -206,10 +209,14 @@ function findHealthyTextFallback(
   const candidates = models
     .filter((model) => (model.category ?? "text") === "text")
     .filter((model) => !excludeIds.has(model.id))
-    .filter((model) => !availableModelIds?.length || isRelayModelListed(availableModelIds, model.id) || model.apiProvider !== "aihubmix")
-    .sort((a, b) => scoreModel(b, "fast") + scoreModel(b, "accurate") - (scoreModel(a, "fast") + scoreModel(a, "accurate")));
+    .filter((model) => !availableModelIds?.length || isRelayModelListed(availableModelIds, model.id) || model.apiProvider !== "aihubmix");
+  const sortedCandidates = sortModelsForStrongRouting(candidates, {
+    availableModelIds,
+    preferRelayListed: Boolean(availableModelIds?.length),
+    mode: "generator",
+  });
 
-  for (const model of candidates) {
+  for (const model of sortedCandidates) {
     const apiProvider = resolveRuntimeApiProvider(model, userKeys, availableModelIds);
     if (!isProviderCallable(apiProvider, userKeys)) continue;
     if (getModelCooldown(model, apiProvider)) continue;
@@ -338,7 +345,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const feedbackMemoryText = [
+    const baseFeedbackMemoryText = [
       summarizeFeedbackMemory(body.feedbackMemory),
       summarizeIntentAnalysis(body.intentAnalysis || serverIntentAnalysis),
       GITHUB_PROJECT_TRACKER_RULES.length
@@ -374,13 +381,26 @@ export async function POST(req: NextRequest) {
 
     const targetCategory = targetModel.category ?? "text";
     const runtimeGeneratorProvider = resolveRuntimeApiProvider(generatorModel, userKeys, availableModelIds);
+    const promptLanguagePolicy = resolvePromptLanguagePolicy(targetModel);
+    const promptLanguage = promptLanguagePolicy.promptLanguage;
+    const languagePolicyMemory = [
+      promptLanguageInstruction(promptLanguagePolicy),
+      buildTranslationStrategyMemory(),
+    ].join("\n\n");
+    const feedbackMemoryText = [
+      baseFeedbackMemoryText,
+      languagePolicyMemory,
+    ].filter(Boolean).join("\n\n");
 
     const systemPrompt = buildSystemPrompt({
       userIdea: cleanIdea,
       targetModel:    targetModel.name,
       targetProvider: targetModel.provider,
       targetCategory,
-      language,
+      language: promptLanguage,
+      explanationLanguage: "zh",
+      includeExplanation: true,
+      languagePolicyReason: `${promptLanguagePolicy.reasonZh} / ${promptLanguagePolicy.reasonEn}`,
       feedbackMemory: feedbackMemoryText,
     });
 
@@ -389,7 +409,10 @@ export async function POST(req: NextRequest) {
       targetModel:    targetModel.name,
       targetProvider: targetModel.provider,
       targetCategory,
-      language,
+      language: promptLanguage,
+      explanationLanguage: "zh",
+      includeExplanation: true,
+      languagePolicyReason: `${promptLanguagePolicy.reasonZh} / ${promptLanguagePolicy.reasonEn}`,
       feedbackMemory: feedbackMemoryText,
     });
 
@@ -447,7 +470,7 @@ export async function POST(req: NextRequest) {
           userIdea: cleanIdea,
           promptText: finalPrompt,
           targetModel,
-          language,
+          language: promptLanguage,
           hasReferenceImage,
           failedDimensions,
         });
@@ -476,7 +499,7 @@ export async function POST(req: NextRequest) {
           userIdea: cleanIdea,
           targetModelId: targetModel.id,
           targetModelCategory: targetCategory,
-          language,
+          language: promptLanguage,
         });
         promptRecord = createdPrompt;
         versionRecord = await createPromptVersion({
@@ -503,7 +526,9 @@ export async function POST(req: NextRequest) {
           targetModel: targetModel.id,
           generatorModels: generatorModels.map((model) => model.id),
           evaluatorModels: evaluatorModels.map((model) => model.id),
-          language,
+          language: promptLanguage,
+          userInterfaceLanguage: language,
+          promptLanguageReason: promptLanguagePolicy.reasonZh,
           aiPromptScore: strictScore.total,
           strictScore,
           sourceCommits: [
@@ -529,6 +554,8 @@ export async function POST(req: NextRequest) {
         meta: {
           generatorModel: activeGeneratorModel.name,
           targetModel:    targetModel.name,
+          promptLanguage: promptLanguagePolicy.promptLanguage,
+          promptLanguageReason: promptLanguagePolicy.reasonZh,
           strictScore,
           qualityGateRepair,
           persistenceWarning,
@@ -682,7 +709,7 @@ export async function POST(req: NextRequest) {
               userPrompt: buildReferenceCandidatePrompt({
                 userIdea: cleanIdea,
                 targetModel,
-                language,
+                language: promptLanguage,
                 analysis,
                 local: analyzed.local,
                 attempt,
@@ -722,7 +749,7 @@ export async function POST(req: NextRequest) {
               userPrompt: buildReferenceCandidatePrompt({
                 userIdea: cleanIdea,
                 targetModel,
-                language,
+                language: promptLanguage,
                 analysis,
                 local: analyzed.local,
                 attempt,
@@ -773,7 +800,7 @@ export async function POST(req: NextRequest) {
             prompt: buildQualityFallbackPrompt({
               userIdea: cleanIdea,
               targetModel,
-              language,
+              language: promptLanguage,
               local: analyzed.local,
               analyses,
             }),
@@ -803,7 +830,7 @@ export async function POST(req: NextRequest) {
         const fallbackPrompt = buildQualityFallbackPrompt({
           userIdea: cleanIdea,
           targetModel,
-          language,
+          language: promptLanguage,
           local: analyzed.local,
           analyses,
         });
@@ -917,7 +944,7 @@ export async function POST(req: NextRequest) {
       const runTournament = async (onProgress?: (event: PromptGenerationProgress) => void) => {
         const tournament = await runPromptTournament({
           userIdea: cleanIdea,
-          language,
+          language: promptLanguage,
           targetModel,
           generatorModels,
           evaluatorModels,
@@ -969,7 +996,7 @@ export async function POST(req: NextRequest) {
       const runEnsemble = async (onProgress?: (event: PromptGenerationProgress) => void) => {
         const ensemble = await runGptImage2Ensemble({
           userIdea: cleanIdea,
-          language,
+          language: promptLanguage,
           targetModel,
           generatorModel,
           generatorModels,
