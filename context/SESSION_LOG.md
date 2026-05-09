@@ -2353,3 +2353,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T19:24:29.573Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed repeatedly failing one-click test channel after screenshot RCA. Root cause: strong-model routing selected the strongest visible relay models, but did not prove current health first, so GPT-5.5/Claude/DeepSeek could each wait until model timeout and exhaust the 45s budget. Implemented health-aware routing: historical unresolved connectivity/model-timeout regressions now penalize or avoid affected models; test channel probes up to 6 strong candidates in batches of 2 with an 8s health probe and 32 max tokens; only healthy models enter full quality gates, max 2 healthy models execute, full run keeps 45s budget and 22s per-model timeout. UI now shows Health probe with healthy/failed/history-avoided models and diagnostic stage. Time budget quality gate now uses total elapsedMs vs 45s instead of remaining guard ms. Validation after merge passed: tsc, data:validate, build, test-channel E2E 5/5, full prompt-generator E2E 22/22, quality E2E 5/5, diff-check, gitleaks no leaks.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main [ahead 2]
+```
