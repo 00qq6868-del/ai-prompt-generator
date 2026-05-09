@@ -1008,15 +1008,52 @@ test.describe("PromptGenerator E2E", () => {
 
   test("16. test channel shows model diagnostics when provider returns invalid choices", async ({ page }) => {
     let generateBody: any = null;
+    let testBody: any = null;
     const fakeRawKey = "sk-test-fake-key-for-e2e";
     await page.evaluate((key) => {
       localStorage.setItem("ai_prompt_user_keys", JSON.stringify({ OPENAI_API_KEY: key }));
       localStorage.setItem("ai_prompt_target_model_id", "gpt-5.5-pro");
       localStorage.setItem("ai_prompt_last_generator_model_ids", JSON.stringify(["gpt-5.5"]));
+      localStorage.setItem("ai_prompt_test_errors", JSON.stringify([
+        {
+          error_id: "historical-empty-choices",
+          project_id: "ai-prompt-generator",
+          error_type: "api",
+          severity: "medium",
+          summary: "模型返回空 choices 或非标准响应 / Empty choices or non-standard model response",
+          detail: "Historical invalid choices failure",
+          reproduction_path: ["Open test channel", "Click one-click test", "Call gpt-5.5"],
+          test_case_id: "provider_connectivity",
+          discovered_at: "2026-05-09T00:00:00.000Z",
+          status: "open",
+          optimization_suggestion: "Refresh relay model list and remove repeatedly failing models.",
+          auto_optimized: false,
+          optimization_history: [],
+          fingerprint: "opt-empty-choices",
+          occurrences: 1,
+          last_seen_at: "2026-05-09T00:00:00.000Z",
+          resolved_at: null,
+        },
+      ]));
+      localStorage.setItem("ai_prompt_optimization_items", JSON.stringify([
+        {
+          optimization_id: "historical-opt-empty-choices",
+          project_id: "ai-prompt-generator",
+          linked_error_ids: ["historical-empty-choices"],
+          priority: "P2",
+          description: "Fix historical empty choices",
+          suggested_actions: ["Refresh relay model list"],
+          created_at: "2026-05-09T00:00:00.000Z",
+          resolved_at: null,
+          auto_applied: false,
+          fingerprint: "opt-empty-choices",
+        },
+      ]));
     }, fakeRawKey);
     await page.reload();
     await mockAPIs(page);
     await page.route("**/api/test-channel/run", async (route) => {
+      testBody = route.request().postDataJSON();
       await route.fulfill({
         status: 502,
         contentType: "application/json",
@@ -1069,6 +1106,70 @@ test.describe("PromptGenerator E2E", () => {
               },
             ],
           },
+          errorRecords: [
+            {
+              error_id: "historical-empty-choices",
+              project_id: "ai-prompt-generator",
+              error_type: "api",
+              severity: "medium",
+              summary: "模型返回空 choices 或非标准响应 / Empty choices or non-standard model response",
+              detail: "gpt-5.5 returned empty choices",
+              reproduction_path: ["Open test channel", "Click one-click test", "Call gpt-5.5"],
+              test_case_id: "provider_connectivity",
+              discovered_at: "2026-05-09T00:00:00.000Z",
+              status: "regression",
+              optimization_suggestion: "刷新中转站模型列表并移除反复失败的模型。 / Refresh relay model list and remove repeatedly failing models.",
+              auto_optimized: false,
+              optimization_history: [
+                {
+                  timestamp: "2026-05-09T01:00:00.000Z",
+                  action: "历史缺陷再次出现，自动标记为 regression / Historical defect recurred and was marked as regression",
+                  result: "status=regression",
+                  run_id: "failed-test-channel-run",
+                },
+              ],
+              fingerprint: "opt-empty-choices",
+              occurrences: 2,
+              last_seen_at: "2026-05-09T01:00:00.000Z",
+              resolved_at: null,
+            },
+          ],
+          optimizationItems: [
+            {
+              optimization_id: "historical-opt-empty-choices",
+              project_id: "ai-prompt-generator",
+              linked_error_ids: ["historical-empty-choices"],
+              priority: "P1",
+              description: "回归缺陷：模型返回空 choices 或非标准响应 / Regression defect: Empty choices or non-standard model response",
+              suggested_actions: ["刷新中转站模型列表并移除反复失败的模型。 / Refresh relay model list and remove repeatedly failing models."],
+              created_at: "2026-05-09T00:00:00.000Z",
+              resolved_at: null,
+              auto_applied: false,
+              fingerprint: "opt-empty-choices",
+            },
+          ],
+          adaptivePlan: {
+            project_id: "ai-prompt-generator",
+            unresolved_error_count: 1,
+            regression_case_count: 1,
+            historical_type_distribution: { api: 1 },
+            focus_error_types: ["api"],
+            strategy_weights: { api: 3 },
+            regression_cases: [
+              {
+                id: "regression_empty_choices",
+                label: "历史缺陷回归：模型返回空 choices 或非标准响应 / Historical regression: Empty choices or non-standard model response",
+                objective: "Verify the historical empty choices error is fixed.",
+                source_error_id: "historical-empty-choices",
+                error_type: "api",
+                severity: "medium",
+                reproduction_path: ["Open test channel", "Click one-click test", "Call gpt-5.5"],
+              },
+            ],
+            mutation_hints: ["Generate mutated cases from historical empty choices path."],
+            resolved_candidate_error_ids: ["historical-empty-choices"],
+            summary: "已读取 1 个历史未解决错误；本次一键测试会优先回归 api。 / Loaded 1 unresolved historical error; this run prioritizes api regression.",
+          },
           secretHandling: "原始密钥不会出现在诊断或报告中。 / Raw keys are not included in diagnostics or reports.",
         }),
       });
@@ -1095,9 +1196,19 @@ test.describe("PromptGenerator E2E", () => {
     await expect(dialog.getByText(/Open the model picker/)).toBeVisible();
     await expect(dialog.getByText(/换成该中转站明确支持/)).toBeVisible();
     await expect(dialog.getByText("已加入待优化项目 / Added to pending optimization")).toBeVisible();
-    await expect(dialog.getByText(/Empty choices or non-standard model response/)).toBeVisible();
+    await expect(dialog.getByText("历史缺陷回归 / Historical regression")).toBeVisible();
+    await expect(dialog.getByText("错误分类 / Error classification")).toBeVisible();
+    await expect(dialog.getByText("结构化待优化项目 / Structured optimization backlog")).toBeVisible();
+    await expect(dialog.getByText(/Empty choices or non-standard model response/).first()).toBeVisible();
+    expect(testBody.projectId).toBe("ai-prompt-generator");
+    expect(testBody.historicalErrors.some((item: any) => item.error_id === "historical-empty-choices")).toBeTruthy();
+    expect(testBody.historicalOptimizations.some((item: any) => item.optimization_id === "historical-opt-empty-choices")).toBeTruthy();
     const pendingItems = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_pending_optimizations") || "[]"));
     expect(pendingItems.some((item: any) => item.fingerprint === "opt-empty-choices")).toBeTruthy();
+    const storedErrors = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_test_errors") || "[]"));
+    expect(storedErrors.some((item: any) => item.status === "regression" && item.fingerprint === "opt-empty-choices")).toBeTruthy();
+    const storedOptimizationItems = await page.evaluate(() => JSON.parse(localStorage.getItem("ai_prompt_optimization_items") || "[]"));
+    expect(storedOptimizationItems.some((item: any) => item.priority === "P1" && item.fingerprint === "opt-empty-choices")).toBeTruthy();
     await dialog.getByText(/查看最佳提示词预览与脱敏同步状态/).click();
     await expect(dialog.getByText(/Raw keys are not included/)).toBeVisible();
     await expect(page.locator("body")).not.toContainText(fakeRawKey);
@@ -1106,6 +1217,7 @@ test.describe("PromptGenerator E2E", () => {
     await page.getByRole("button", { name: /生成优化提示词/ }).click();
     await expect(page.locator("text=senior poet")).toBeVisible({ timeout: 10_000 });
     expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("Pending optimization"))).toBeTruthy();
+    expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("Historical test error"))).toBeTruthy();
     expect(generateBody.feedbackMemory.rules.some((rule: string) => rule.includes("empty choices") || rule.includes("空 choices"))).toBeTruthy();
   });
 });

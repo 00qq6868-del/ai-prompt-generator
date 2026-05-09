@@ -12,15 +12,26 @@ import { checkRateLimit, rateLimitResponse, readPositiveIntEnv } from "@/lib/rat
 import { toUserFacingErrorMessage } from "@/lib/error-messages";
 import {
   buildOptimizationFingerprint,
+  buildAdaptiveTestPlan,
+  buildStructuredOptimizationRules,
+  legacyBacklogItemToErrorRecord,
+  reconcileTestErrorRecords,
+  reconcileOptimizationItems,
+  normalizeOptimizationProjectItem,
+  normalizeTestErrorRecord,
   normalizeOptimizationBacklogItem,
+  type AdaptiveTestPlan,
+  type OptimizationProjectItem,
   type OptimizationBacklogItem,
   type OptimizationBacklogPayload,
+  type TestErrorRecord,
 } from "@/lib/optimization-backlog";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 interface TestChannelRequest {
+  projectId?: string;
   userIdea?: string;
   targetModelId?: string;
   generatorModelId?: string;
@@ -41,6 +52,8 @@ interface TestChannelRequest {
     name?: string;
     size?: number;
   } | null;
+  historicalErrors?: TestErrorRecord[];
+  historicalOptimizations?: OptimizationProjectItem[];
   autoSuite?: boolean;
 }
 
@@ -350,6 +363,39 @@ function buildAutoSuiteIdea(extraObjective: string): string {
   return lines.join("\n");
 }
 
+function normalizeHistoricalErrors(input: unknown, projectId: string): TestErrorRecord[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => item && typeof item === "object" ? item as Partial<TestErrorRecord> : null)
+    .filter((item): item is Partial<TestErrorRecord> => Boolean(item))
+    .map((item) => normalizeTestErrorRecord({
+      ...item,
+      project_id: item.project_id || projectId,
+    }, projectId))
+    .slice(0, 200);
+}
+
+function normalizeHistoricalOptimizations(input: unknown, projectId: string): OptimizationProjectItem[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => item && typeof item === "object" ? item as Partial<OptimizationProjectItem> : null)
+    .filter((item): item is Partial<OptimizationProjectItem> => Boolean(item))
+    .map((item) => normalizeOptimizationProjectItem({
+      ...item,
+      project_id: item.project_id || projectId,
+    }, projectId))
+    .slice(0, 200);
+}
+
+function backlogToStructuredErrors(
+  items: OptimizationBacklogItem[],
+  projectId: string,
+  reportId: string,
+  status: "open" | "fixing" | "resolved" | "regression",
+): TestErrorRecord[] {
+  return items.map((item) => legacyBacklogItemToErrorRecord(item, projectId, reportId, status));
+}
+
 function classifyErrorType(message: string): { title: string; severity: "red" | "yellow"; action: string } {
   const lower = message.toLowerCase();
   if (lower.includes("api key") || lower.includes("unauthorized") || lower.includes("未授权") || lower.includes("无效")) {
@@ -530,8 +576,22 @@ export async function POST(req: NextRequest) {
 
     const body: TestChannelRequest = await req.json().catch(() => ({}));
     const autoSuite = body.autoSuite !== false;
+    const projectId = cleanString(body.projectId, 120) || "ai-prompt-generator";
+    const historicalErrors = normalizeHistoricalErrors(body.historicalErrors, projectId);
+    const historicalOptimizations = normalizeHistoricalOptimizations(body.historicalOptimizations, projectId);
+    const initialAdaptivePlan = buildAdaptiveTestPlan({
+      projectId,
+      historicalErrors,
+      historicalOptimizations,
+    });
     const manualUserIdea = cleanString(body.userIdea, 6000);
-    const userIdea = autoSuite ? buildAutoSuiteIdea(manualUserIdea) : manualUserIdea;
+    const userIdea = autoSuite
+      ? buildAutoSuiteIdea([
+          manualUserIdea,
+          initialAdaptivePlan.summary,
+          ...initialAdaptivePlan.mutation_hints.slice(0, 4),
+        ].filter(Boolean).join("\n"))
+      : manualUserIdea;
     if (!userIdea) {
       return NextResponse.json(
         { ok: false, error: "请输入测试目标 / Test objective is required" },
@@ -558,12 +618,46 @@ export async function POST(req: NextRequest) {
     ].map((id) => cleanString(id, 180)).filter(Boolean))).slice(0, 6);
     const generatorPlan = buildGeneratorPlan(models, requestedGeneratorIds, userKeys, availableModelIds);
     if (!generatorPlan.length) {
+      const noModelError = normalizeTestErrorRecord({
+        project_id: projectId,
+        error_type: "api",
+        severity: "high",
+        summary: "测试通道没有可调用的生成/评价模型 / No callable generation/evaluation model is available",
+        detail: "未发现可使用当前密钥调用的文本模型。 / No text model callable with the current keys was found.",
+        reproduction_path: [
+          "打开 AI 提示词测试通道 / Open AI prompt test channel",
+          "点击一键全流程测试 / Click one-click full-flow test",
+          "系统自动选择生成/评价模型失败 / The system failed to auto-select a callable generation/evaluation model",
+        ],
+        test_case_id: "provider_connectivity",
+        status: "open",
+        optimization_suggestion: "保存有效 API Key、刷新中转站模型列表，并优先选择当前中转站明确支持的文本 chat 模型。 / Save a valid API key, refresh relay models, and choose a text chat model explicitly supported by the relay.",
+        auto_optimized: false,
+        optimization_history: [],
+        fingerprint: buildOptimizationFingerprint([projectId, "api", "no_callable_model"]),
+      }, projectId);
+      const errorRecords = reconcileTestErrorRecords({
+        historicalErrors,
+        currentErrors: [noModelError],
+        projectId,
+        runId: `test_channel_no_model_${Date.now()}`,
+        runStatus: "fail",
+      });
+      const optimizationItems = reconcileOptimizationItems(historicalOptimizations, errorRecords, projectId);
+      const adaptivePlan = buildAdaptiveTestPlan({
+        projectId,
+        historicalErrors: errorRecords,
+        historicalOptimizations: optimizationItems,
+      });
       return NextResponse.json(
         {
           ok: false,
           status: "fail",
           error: "测试通道没有可调用的生成/评价模型。请先在右上角钥匙设置中保存 API Key，或配置服务器环境变量。 / No callable generation/evaluation model is available for the test channel.",
           providerStatus: configuredProviders(userKeys),
+          errorRecords,
+          optimizationItems,
+          adaptivePlan,
           secretHandling: "原始密钥未保存；这里只检查了供应商是否已配置。 / Raw keys were not stored; only provider presence was inspected.",
         },
         { status: 400 },
@@ -587,6 +681,9 @@ export async function POST(req: NextRequest) {
       "- Human feedback remains higher priority than AI scoring in normal optimization.",
       "- Do not leak API keys. Do not include secrets in prompt text, reports, logs, or GitHub datasets.",
       "- If any key quality dimension is below target, rewrite internally before returning the best candidate.",
+      initialAdaptivePlan.summary,
+      ...initialAdaptivePlan.mutation_hints.slice(0, 4),
+      ...buildStructuredOptimizationRules(historicalErrors, historicalOptimizations, initialAdaptivePlan).slice(0, 6),
       hasReferenceImage
         ? "- Reference image mode: preserve visual style, composition, palette, lighting, subject relation, and user text goal."
         : "",
@@ -753,6 +850,24 @@ export async function POST(req: NextRequest) {
         coreDimensionMin,
         passTotal,
       });
+      const currentErrorRecords = backlogToStructuredErrors(optimizationBacklog.items, projectId, reportId, "open");
+      const errorRecords = reconcileTestErrorRecords({
+        historicalErrors,
+        currentErrors: currentErrorRecords,
+        projectId,
+        runId: reportId,
+        runStatus: "fail",
+      });
+      const optimizationItems = reconcileOptimizationItems(
+        historicalOptimizations,
+        errorRecords,
+        projectId,
+      );
+      const adaptivePlan = buildAdaptiveTestPlan({
+        projectId,
+        historicalErrors: errorRecords,
+        historicalOptimizations: optimizationItems,
+      });
       const github = await safeExportDatasetRow("test-channel-runs", {
         id: reportId,
         timestamp: startedAt,
@@ -771,6 +886,7 @@ export async function POST(req: NextRequest) {
           passTotal,
           coreDimensionMin,
           testSuite,
+          adaptivePlan,
         },
         testChannel: {
           status: "fail",
@@ -795,6 +911,9 @@ export async function POST(req: NextRequest) {
           secret_handling: "原始 API Key 只在本次请求内存中使用；脱敏报告排除完整密钥值。 / Raw API keys are used only in-memory for this request; sanitized reports exclude key values.",
         },
         optimizationBacklog,
+        errorRecords,
+        optimizationItems,
+        adaptivePlan,
       });
       if (optimizationBacklog.itemCount > 0) {
         await safeExportDatasetRow("optimization-backlog", {
@@ -823,6 +942,9 @@ export async function POST(req: NextRequest) {
             secret_handling: "脱敏待优化队列不保存原始密钥。 / Sanitized optimization backlog does not store raw keys.",
           },
           optimizationBacklog,
+          errorRecords,
+          optimizationItems,
+          adaptivePlan,
         });
       }
       return NextResponse.json(
@@ -844,6 +966,9 @@ export async function POST(req: NextRequest) {
           checks: failedChecks,
           testSuite,
           optimizationBacklog,
+          errorRecords,
+          optimizationItems,
+          adaptivePlan,
           improvementPlan: [
             "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
             "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
@@ -881,6 +1006,24 @@ export async function POST(req: NextRequest) {
       coreDimensionMin,
       passTotal,
     });
+    const currentErrorRecords = backlogToStructuredErrors(optimizationBacklog.items, projectId, reportId, "open");
+    const errorRecords = reconcileTestErrorRecords({
+      historicalErrors,
+      currentErrors: currentErrorRecords,
+      projectId,
+      runId: reportId,
+      runStatus: statusBeforeReport,
+    });
+    const optimizationItems = reconcileOptimizationItems(
+      historicalOptimizations,
+      errorRecords,
+      projectId,
+    );
+    const adaptivePlan = buildAdaptiveTestPlan({
+      projectId,
+      historicalErrors: errorRecords,
+      historicalOptimizations: optimizationItems,
+    });
 
     const github = await safeExportDatasetRow("test-channel-runs", {
       id: reportId,
@@ -900,6 +1043,7 @@ export async function POST(req: NextRequest) {
         passTotal,
         coreDimensionMin,
         testSuite,
+        adaptivePlan,
       },
       testChannel: {
         status: statusBeforeReport,
@@ -924,6 +1068,9 @@ export async function POST(req: NextRequest) {
         secret_handling: "原始 API Key 只在本次请求内存中使用；脱敏报告排除完整密钥值。 / Raw API keys are used only in-memory for this request; sanitized reports exclude key values.",
       },
       optimizationBacklog,
+      errorRecords,
+      optimizationItems,
+      adaptivePlan,
     });
     if (optimizationBacklog.itemCount > 0) {
       await safeExportDatasetRow("optimization-backlog", {
@@ -943,6 +1090,7 @@ export async function POST(req: NextRequest) {
           passTotal,
           coreDimensionMin,
           testSuite,
+          adaptivePlan,
         },
         testChannel: {
           status: statusBeforeReport,
@@ -963,6 +1111,9 @@ export async function POST(req: NextRequest) {
           secret_handling: "脱敏待优化队列不保存原始密钥。 / Sanitized optimization backlog does not store raw keys.",
         },
         optimizationBacklog,
+        errorRecords,
+        optimizationItems,
+        adaptivePlan,
       });
     }
 
@@ -995,6 +1146,9 @@ export async function POST(req: NextRequest) {
       modelDiagnostics,
       testSuite,
       optimizationBacklog,
+      errorRecords,
+      optimizationItems,
+      adaptivePlan,
       improvementPlan: [
         status === "pass"
           ? "本次测试已通过，可把最佳提示词预览作为质量样例进入后续优化。 / This test passed; the best prompt preview can be used as a quality sample for future optimization."

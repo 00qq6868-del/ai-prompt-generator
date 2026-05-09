@@ -5,8 +5,20 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Activity, AlertTriangle, CheckCircle2, FlaskConical, KeyRound, Loader2, ShieldCheck, X, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { loadUserKeys } from "./KeysSettings";
-import { getPendingOptimizationItems, savePendingOptimizationItems } from "@/lib/prompt-feedback";
-import type { OptimizationBacklogPayload } from "@/lib/optimization-backlog";
+import {
+  getOptimizationProjectItems,
+  getPendingOptimizationItems,
+  getTestErrorRecords,
+  saveOptimizationProjectItems,
+  savePendingOptimizationItems,
+  saveTestErrorRecords,
+} from "@/lib/prompt-feedback";
+import type {
+  AdaptiveTestPlan,
+  OptimizationBacklogPayload,
+  OptimizationProjectItem,
+  TestErrorRecord,
+} from "@/lib/optimization-backlog";
 
 interface TestChannelPanelProps {
   open: boolean;
@@ -67,6 +79,9 @@ interface TestChannelResult {
     customObjectiveIncluded?: boolean;
   };
   optimizationBacklog?: OptimizationBacklogPayload;
+  errorRecords?: TestErrorRecord[];
+  optimizationItems?: OptimizationProjectItem[];
+  adaptivePlan?: AdaptiveTestPlan;
   stats: {
     latencyMs: number;
     inputTokens: number;
@@ -164,6 +179,24 @@ function persistOptimizationBacklog(backlog?: OptimizationBacklogPayload | null)
   return savePendingOptimizationItems(backlog.items).filter((item) => item.status !== "resolved").length;
 }
 
+function countPendingOptimizations(): number {
+  const legacyCount = getPendingOptimizationItems().filter((item) => item.status !== "resolved").length;
+  const structuredCount = getOptimizationProjectItems().filter((item) => !item.resolved_at).length;
+  const unresolvedErrorCount = getTestErrorRecords().filter((item) => item.status !== "resolved").length;
+  return Math.max(legacyCount, structuredCount, unresolvedErrorCount);
+}
+
+function persistStructuredTestData(data: Partial<TestChannelResult>): number {
+  if (Array.isArray(data.errorRecords) && data.errorRecords.length > 0) {
+    saveTestErrorRecords(data.errorRecords);
+  }
+  if (Array.isArray(data.optimizationItems) && data.optimizationItems.length > 0) {
+    saveOptimizationProjectItems(data.optimizationItems);
+  }
+  persistOptimizationBacklog(data.optimizationBacklog);
+  return countPendingOptimizations();
+}
+
 export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanelProps) {
   const [testIdea, setTestIdea] = useState(DEFAULT_TEST_IDEA);
   const [running, setRunning] = useState(false);
@@ -177,7 +210,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
   useEffect(() => {
     if (!open) return;
     setKeyCount(countConfiguredKeys(loadUserKeys()));
-    setPendingOptimizationCount(getPendingOptimizationItems().filter((item) => item.status !== "resolved").length);
+    setPendingOptimizationCount(countPendingOptimizations());
     setStoredTarget(localStorage.getItem(TARGET_STORAGE_KEY) || "gpt-5.5-pro");
     const generators = readJsonArray(GENERATOR_STORAGE_KEY);
     setStoredGenerators(generators.length ? generators : ["gpt-5.5-pro"]);
@@ -227,6 +260,9 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
           userKeys,
           availableModelIds: readProbeModels(),
           deviceId: ensureDeviceId(),
+          projectId: "ai-prompt-generator",
+          historicalErrors: getTestErrorRecords().filter((item) => item.project_id === "ai-prompt-generator").slice(0, 200),
+          historicalOptimizations: getOptimizationProjectItems().filter((item) => item.project_id === "ai-prompt-generator").slice(0, 200),
           qualityTargets: {
             passTotal: 85,
             coreDimensionMin: 9,
@@ -272,15 +308,18 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
             improvementPlan: data.improvementPlan || [],
             testSuite: data.testSuite,
             optimizationBacklog: data.optimizationBacklog,
+            errorRecords: data.errorRecords || [],
+            optimizationItems: data.optimizationItems || [],
+            adaptivePlan: data.adaptivePlan,
             secretHandling: data.secretHandling || "原始密钥不会出现在诊断或报告中 / Raw keys are not included in diagnostics or reports",
           });
-          const pendingCount = persistOptimizationBacklog(data.optimizationBacklog);
+          const pendingCount = persistStructuredTestData(data);
           setPendingOptimizationCount(pendingCount);
         }
         throw new Error(normalizeTestChannelError(data.error));
       }
       setResult(data);
-      const pendingCount = persistOptimizationBacklog(data.optimizationBacklog);
+      const pendingCount = persistStructuredTestData(data);
       setPendingOptimizationCount(pendingCount);
       toast.success(data.status === "pass" ? "测试通过 / Test passed" : "测试完成，需要继续优化 / Test completed with warnings");
       if (data.optimizationBacklog?.itemCount > 0) {
@@ -529,6 +568,70 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                           ))}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {result.adaptivePlan && (
+                    <div className="mt-4 rounded-xl border border-sky-300/15 bg-sky-500/10 p-3">
+                      <div className="text-sm font-semibold text-sky-50/90">历史缺陷回归 / Historical regression</div>
+                      <div className="mt-1 text-xs leading-5 text-sky-50/75">{result.adaptivePlan.summary}</div>
+                      <div className="mt-2 grid gap-2 text-xs text-sky-50/65 md:grid-cols-3">
+                        <div className="rounded-xl border border-white/10 bg-black/20 p-2">
+                          未解决错误 / Unresolved errors：{result.adaptivePlan.unresolved_error_count}
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-black/20 p-2">
+                          回归用例 / Regression cases：{result.adaptivePlan.regression_case_count}
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-black/20 p-2">
+                          重点类型 / Focus：{result.adaptivePlan.focus_error_types.join(", ") || "standard"}
+                        </div>
+                      </div>
+                      {result.adaptivePlan.regression_cases.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {result.adaptivePlan.regression_cases.slice(0, 3).map((item) => (
+                            <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/65">
+                              <div className="font-semibold text-white/80">{item.label}</div>
+                              <div className="mt-1">{item.objective}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {Array.isArray(result.errorRecords) && result.errorRecords.length > 0 && (
+                    <div className="mt-4 rounded-xl border border-rose-300/15 bg-rose-500/10 p-3">
+                      <div className="text-sm font-semibold text-rose-50/90">错误分类 / Error classification</div>
+                      <div className="mt-2 space-y-2">
+                        {result.errorRecords.slice(0, 5).map((item) => (
+                          <div key={item.error_id} className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/65">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="font-semibold text-white/80">{item.summary}</div>
+                              <div className="text-rose-100/80">
+                                {item.error_type} · {item.severity} · {item.status}
+                              </div>
+                            </div>
+                            <div className="mt-1">{item.optimization_suggestion}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {Array.isArray(result.optimizationItems) && result.optimizationItems.length > 0 && (
+                    <div className="mt-4 rounded-xl border border-amber-300/15 bg-amber-500/10 p-3">
+                      <div className="text-sm font-semibold text-amber-50/90">结构化待优化项目 / Structured optimization backlog</div>
+                      <div className="mt-2 space-y-2">
+                        {result.optimizationItems.filter((item) => !item.resolved_at).slice(0, 5).map((item) => (
+                          <div key={item.optimization_id} className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/65">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="font-semibold text-white/80">{item.description}</div>
+                              <div className="text-amber-100/80">{item.priority}</div>
+                            </div>
+                            {item.suggested_actions[0] && <div className="mt-1">{item.suggested_actions[0]}</div>}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

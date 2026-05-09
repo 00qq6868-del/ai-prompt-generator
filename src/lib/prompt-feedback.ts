@@ -1,15 +1,28 @@
 import {
   PENDING_OPTIMIZATION_STORAGE_KEY,
+  OPTIMIZATION_ITEMS_STORAGE_KEY,
+  TEST_ERROR_STORAGE_KEY,
+  buildAdaptiveTestPlan,
   buildOptimizationBacklogRules,
+  buildStructuredOptimizationRules,
+  mergeTestErrorRecords,
+  mergeOptimizationProjectItems,
   mergeOptimizationBacklogItems,
+  normalizeOptimizationProjectItem,
+  normalizeTestErrorRecord,
   normalizeOptimizationBacklogItem,
+  type AdaptiveTestPlan,
+  type OptimizationProjectItem,
   type OptimizationBacklogItem,
+  type TestErrorRecord,
 } from "./optimization-backlog";
 
 const FEEDBACK_STORAGE_KEY = "ai_prompt_feedback";
 const INTENT_MEMORY_STORAGE_KEY = "ai_prompt_intent_memory";
 const MAX_FEEDBACK_ITEMS = 200;
 const MAX_PENDING_OPTIMIZATION_ITEMS = 200;
+const MAX_TEST_ERROR_ITEMS = 400;
+const MAX_OPTIMIZATION_ITEMS = 400;
 
 export type PromptPreference = "new" | "old" | "blend" | "both_bad";
 export type PromptPreferenceV2 = "new_better" | "old_better" | "blend_needed" | "both_bad";
@@ -84,6 +97,22 @@ function saveAll(items: PromptFeedbackItem[]): void {
   localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(items.slice(0, MAX_FEEDBACK_ITEMS)));
 }
 
+function readJsonStorage<T>(key: string): T[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeJsonStorage<T>(key: string, items: T[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(key, JSON.stringify(items));
+}
+
 export function savePromptFeedback(input: SavePromptFeedbackInput): PromptFeedbackItem {
   const item: PromptFeedbackItem = {
     ...input,
@@ -138,6 +167,81 @@ export function savePendingOptimizationItems(items: OptimizationBacklogItem[]): 
     MAX_PENDING_OPTIMIZATION_ITEMS,
   );
   localStorage.setItem(PENDING_OPTIMIZATION_STORAGE_KEY, JSON.stringify(merged));
+  return merged;
+}
+
+export function getTestErrorRecords(): TestErrorRecord[] {
+  if (typeof window === "undefined") return [];
+  const legacyBacklog = getPendingOptimizationItems();
+  const structured = readJsonStorage<TestErrorRecord>(TEST_ERROR_STORAGE_KEY).map((item) =>
+    normalizeTestErrorRecord(item, item.project_id || "ai-prompt-generator")
+  );
+  const legacyConverted = legacyBacklog.map((item) => normalizeTestErrorRecord({
+    project_id: "ai-prompt-generator",
+    error_type: item.type === "model_error" ? "api" : item.type === "low_dimension" ? "logic" : "other",
+    severity: item.severity === "red" ? "high" : item.severity === "yellow" ? "medium" : "low",
+    summary: item.title,
+    detail: item.detail,
+    reproduction_path: [
+      "打开 AI 提示词测试通道 / Open AI prompt test channel",
+      "点击一键全流程测试 / Click one-click full-flow test",
+      item.modelId ? `调用模型 ${item.modelId}` : "",
+      item.checkId ? `触发检查 ${item.checkId}` : "",
+    ].filter(Boolean),
+    test_case_id: item.checkId || item.dimension || item.modelId || "one_click_full_flow",
+    discovered_at: new Date(item.createdAt).toISOString(),
+    status: item.status === "resolved" ? "resolved" : "open",
+    optimization_suggestion: item.action,
+    auto_optimized: false,
+    optimization_history: [],
+    fingerprint: item.fingerprint,
+    occurrences: item.occurrences,
+    last_seen_at: new Date(item.lastSeenAt).toISOString(),
+  }, "ai-prompt-generator"));
+  return mergeTestErrorRecords(structured, legacyConverted, MAX_TEST_ERROR_ITEMS);
+}
+
+export function saveTestErrorRecords(items: TestErrorRecord[]): TestErrorRecord[] {
+  if (typeof window === "undefined") return items;
+  const merged = mergeTestErrorRecords(
+    getTestErrorRecords(),
+    items.map((item) => normalizeTestErrorRecord(item, item.project_id || "ai-prompt-generator")),
+    MAX_TEST_ERROR_ITEMS,
+  );
+  writeJsonStorage(TEST_ERROR_STORAGE_KEY, merged);
+  return merged;
+}
+
+export function getOptimizationProjectItems(): OptimizationProjectItem[] {
+  if (typeof window === "undefined") return [];
+  const raw = readJsonStorage<OptimizationProjectItem>(OPTIMIZATION_ITEMS_STORAGE_KEY).map((item) =>
+    normalizeOptimizationProjectItem(item, item.project_id || "ai-prompt-generator")
+  );
+  const legacyConverted = getPendingOptimizationItems().map((item) =>
+    normalizeOptimizationProjectItem({
+      project_id: "ai-prompt-generator",
+      linked_error_ids: item.fingerprint ? [item.fingerprint] : [item.id],
+      priority: item.severity === "red" ? "P0" : item.severity === "yellow" ? "P1" : "P2",
+      description: item.title,
+      suggested_actions: [item.action],
+      created_at: new Date(item.createdAt).toISOString(),
+      resolved_at: item.status === "resolved" ? new Date(item.lastSeenAt).toISOString() : null,
+      auto_applied: false,
+      fingerprint: item.fingerprint,
+    }, "ai-prompt-generator")
+  );
+  return mergeOptimizationProjectItems(raw, legacyConverted, "ai-prompt-generator", MAX_OPTIMIZATION_ITEMS);
+}
+
+export function saveOptimizationProjectItems(items: OptimizationProjectItem[]): OptimizationProjectItem[] {
+  if (typeof window === "undefined") return items;
+  const merged = mergeOptimizationProjectItems(
+    getOptimizationProjectItems(),
+    items.map((item) => normalizeOptimizationProjectItem(item, item.project_id || "ai-prompt-generator")),
+    "ai-prompt-generator",
+    MAX_OPTIMIZATION_ITEMS,
+  );
+  writeJsonStorage(OPTIMIZATION_ITEMS_STORAGE_KEY, merged);
   return merged;
 }
 
@@ -219,6 +323,20 @@ export function buildPromptFeedbackMemory(userIdea: string, targetModel: string)
   }
 
   for (const rule of buildOptimizationBacklogRules(getPendingOptimizationItems()).slice(0, 12)) {
+    rules.add(rule);
+  }
+
+  const testErrorRecords = getTestErrorRecords();
+  const optimizationItems = getOptimizationProjectItems();
+  const adaptivePlan: AdaptiveTestPlan | undefined = testErrorRecords.length
+    ? buildAdaptiveTestPlan({
+        projectId: "ai-prompt-generator",
+        historicalErrors: testErrorRecords,
+        historicalOptimizations: optimizationItems,
+      })
+    : undefined;
+
+  for (const rule of buildStructuredOptimizationRules(testErrorRecords, optimizationItems, adaptivePlan).slice(0, 12)) {
     rules.add(rule);
   }
 

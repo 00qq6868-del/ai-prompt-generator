@@ -2210,3 +2210,20 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-09T09:25:03.298Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Implemented one-click full-flow test schema/adaptive upgrade: test channel now accepts historicalErrors/historicalOptimizations, returns schema-compliant errorRecords and optimizationItems, builds adaptive regression plans from unresolved defects, saves structured records to localStorage, injects them into future feedback_memory, sanitizes GitHub dataset exports, and shows bilingual historical regression/error classification/structured backlog UI. Validation passed: tsc, data:validate, diff check, targeted test-channel E2E 2/2, build, full prompt-generator E2E 19/19, quality E2E 5/5. Secret scan only matched fake E2E keys.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M src/app/api/test-channel/run/route.ts
+ M src/components/TestChannelPanel.tsx
+ M src/lib/optimization-backlog.ts
+ M src/lib/prompt-feedback.ts
+ M src/lib/server/github-dataset.ts
+ M tests/e2e/prompt-generator.spec.ts
+```

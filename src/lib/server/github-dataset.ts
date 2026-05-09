@@ -145,6 +145,86 @@ export function sanitizeDatasetRow(input: Record<string, unknown>) {
             : [],
         }
       : null,
+    error_records: Array.isArray(input.errorRecords)
+      ? input.errorRecords.map((item) => {
+          const record = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          return {
+            error_id: cleanString(record.error_id, 120),
+            project_id: cleanString(record.project_id, 120),
+            error_type: cleanString(record.error_type, 40),
+            severity: cleanString(record.severity, 40),
+            summary: cleanString(record.summary, 300),
+            detail: cleanString(record.detail, 1200),
+            reproduction_path: Array.isArray(record.reproduction_path)
+              ? (record.reproduction_path as unknown[]).map((step) => cleanString(step, 300)).filter(Boolean).slice(0, 12)
+              : [],
+            test_case_id: cleanString(record.test_case_id, 160),
+            discovered_at: cleanString(record.discovered_at, 80),
+            status: cleanString(record.status, 40),
+            optimization_suggestion: cleanString(record.optimization_suggestion, 1000),
+            auto_optimized: Boolean(record.auto_optimized),
+            fingerprint: cleanString(record.fingerprint, 180),
+            occurrences: Number.isFinite(Number(record.occurrences)) ? Number(record.occurrences) : null,
+            last_seen_at: cleanString(record.last_seen_at, 80),
+            resolved_at: cleanString(record.resolved_at, 80) || null,
+          };
+        }).filter((item) => item.error_id || item.summary).slice(0, 80)
+      : [],
+    optimization_items: Array.isArray(input.optimizationItems)
+      ? input.optimizationItems.map((item) => {
+          const record = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          return {
+            optimization_id: cleanString(record.optimization_id, 120),
+            project_id: cleanString(record.project_id, 120),
+            linked_error_ids: Array.isArray(record.linked_error_ids)
+              ? (record.linked_error_ids as unknown[]).map((id) => cleanString(id, 120)).filter(Boolean).slice(0, 20)
+              : [],
+            priority: cleanString(record.priority, 20),
+            description: cleanString(record.description, 800),
+            suggested_actions: Array.isArray(record.suggested_actions)
+              ? (record.suggested_actions as unknown[]).map((action) => cleanString(action, 600)).filter(Boolean).slice(0, 12)
+              : [],
+            created_at: cleanString(record.created_at, 80),
+            resolved_at: cleanString(record.resolved_at, 80) || null,
+            auto_applied: Boolean(record.auto_applied),
+            fingerprint: cleanString(record.fingerprint, 180),
+          };
+        }).filter((item) => item.optimization_id || item.description).slice(0, 80)
+      : [],
+    adaptive_test_plan: input.adaptivePlan && typeof input.adaptivePlan === "object"
+      ? {
+          project_id: cleanString((input.adaptivePlan as Record<string, unknown>).project_id, 120),
+          unresolved_error_count: Number.isFinite(Number((input.adaptivePlan as Record<string, unknown>).unresolved_error_count))
+            ? Number((input.adaptivePlan as Record<string, unknown>).unresolved_error_count)
+            : 0,
+          regression_case_count: Number.isFinite(Number((input.adaptivePlan as Record<string, unknown>).regression_case_count))
+            ? Number((input.adaptivePlan as Record<string, unknown>).regression_case_count)
+            : 0,
+          focus_error_types: Array.isArray((input.adaptivePlan as Record<string, unknown>).focus_error_types)
+            ? ((input.adaptivePlan as Record<string, unknown>).focus_error_types as unknown[]).map((type) => cleanString(type, 40)).filter(Boolean).slice(0, 8)
+            : [],
+          strategy_weights: (input.adaptivePlan as Record<string, unknown>).strategy_weights &&
+            typeof (input.adaptivePlan as Record<string, unknown>).strategy_weights === "object"
+            ? (input.adaptivePlan as Record<string, unknown>).strategy_weights
+            : {},
+          regression_cases: Array.isArray((input.adaptivePlan as Record<string, unknown>).regression_cases)
+            ? ((input.adaptivePlan as Record<string, unknown>).regression_cases as unknown[]).map((item) => {
+                const record = item && typeof item === "object" ? item as Record<string, unknown> : {};
+                return {
+                  id: cleanString(record.id, 120),
+                  label: cleanString(record.label, 300),
+                  source_error_id: cleanString(record.source_error_id, 120),
+                  error_type: cleanString(record.error_type, 40),
+                  severity: cleanString(record.severity, 40),
+                };
+              }).filter((item) => item.id || item.label).slice(0, 20)
+            : [],
+          mutation_hints: Array.isArray((input.adaptivePlan as Record<string, unknown>).mutation_hints)
+            ? ((input.adaptivePlan as Record<string, unknown>).mutation_hints as unknown[]).map((hint) => cleanString(hint, 500)).filter(Boolean).slice(0, 20)
+            : [],
+          summary: cleanString((input.adaptivePlan as Record<string, unknown>).summary, 1000),
+        }
+      : null,
     source_commits: Array.isArray(input.sourceCommits)
       ? input.sourceCommits.map((item) => cleanString(item, 220)).filter(Boolean).slice(0, 40)
       : [],
