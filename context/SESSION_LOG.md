@@ -2375,3 +2375,16 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-10T00:39:10.697Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Follow-up fix after user screenshot: health probe passed but one-click test still failed because the health-probe/full-generation split could consume too much budget and then mislabel a 41s guarded stop as 45s gateway timeout. Changed auto test to use compact quality-gate prompts, not the full production prompt optimizer prompt; health probe tightened to 5s, max 4 candidates, concurrency 2, one healthy model is enough; full run max tokens 650. Failure checks now distinguish provider connectivity, model health probe, full generation output, and total 45s time budget. If elapsedMs <= 45000, time budget passes even when full generation output fails. Validation passed: tsc, data:validate, build, test-channel E2E 5/5, full prompt-generator E2E 22/22, quality E2E 5/5, diff-check, gitleaks no leaks.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+ M src/app/api/test-channel/run/route.ts
+ M tests/e2e/prompt-generator.spec.ts
+```

@@ -45,12 +45,13 @@ const TEST_CHANNEL_MIN_REMAINING_MS = 4_000;
 const TEST_CHANNEL_AUTO_MAX_TOKENS = 900;
 const TEST_CHANNEL_AUTO_MAX_ATTEMPTS = 1;
 const TEST_CHANNEL_AUTO_MAX_MODELS = 6;
-const TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS = 8_000;
+const TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS = 5_000;
 const TEST_CHANNEL_HEALTH_PROBE_MAX_TOKENS = 32;
-const TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS = 6;
+const TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS = 4;
 const TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY = 2;
-const TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS = 2;
-const TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS = 14_000;
+const TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS = 1;
+const TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS = 12_000;
+const TEST_CHANNEL_FULL_RUN_MAX_TOKENS = 650;
 
 interface TestChannelRequest {
   projectId?: string;
@@ -555,6 +556,53 @@ function buildAutoSuiteIdea(extraObjective: string): string {
     lines.push("", "附加测试目标 / Extra test objective:", extraObjective.trim());
   }
   return lines.join("\n");
+}
+
+function buildCompactTestSystemPrompt(args: {
+  promptLanguage: "en" | "zh";
+  promptLanguageReason: string;
+}): string {
+  const truePromptLanguage = args.promptLanguage === "zh" ? "Chinese" : "English";
+  return [
+    "You are the production one-click test agent for an AI prompt generator.",
+    "Your job is to return one compact but high-quality test prompt that can be scored quickly inside a 45-second HTTP budget.",
+    `The copyable AI Prompt section MUST be written in ${truePromptLanguage}.`,
+    "The Chinese explanation section MUST be concise and user-facing.",
+    `Language policy reason: ${args.promptLanguageReason}`,
+    "Hard requirements:",
+    "- Output exactly two Markdown sections: ## AI Prompt and ## 中文说明.",
+    "- The AI Prompt must include role, task, context, constraints, workflow steps, output format, edge cases, acceptance checks, anti-hallucination rules, and self-check criteria.",
+    "- Cover one-click testing, model connectivity, quality gates, error classification, pending optimization backlog, feedback_memory, GitHub-safe logging, and secret redaction.",
+    "- Do not include or request any real API key, token, private URL, or user secret.",
+    "- Keep the whole response concise enough for a smoke-quality test; do not write a long architecture document.",
+    "- If something is unknown, write Unknown instead of inventing facts.",
+  ].join("\n");
+}
+
+function buildCompactTestUserPrompt(args: {
+  userIdea: string;
+  adaptiveSummary: string;
+  promptLanguage: "en" | "zh";
+  historicalRules: string[];
+}): string {
+  const truePromptLanguage = args.promptLanguage === "zh" ? "中文" : "English";
+  return [
+    "Generate the one-click test prompt now.",
+    `True AI Prompt language: ${truePromptLanguage}.`,
+    "Original test objective:",
+    safePreview(args.userIdea, 900),
+    "Historical regression summary:",
+    safePreview(args.adaptiveSummary, 420),
+    "Top regression rules to preserve:",
+    ...(args.historicalRules.length
+      ? args.historicalRules.slice(0, 4).map((rule, index) => `${index + 1}. ${safePreview(rule, 260)}`)
+      : ["1. No unresolved regression rule was provided."]),
+    "Return only:",
+    "## AI Prompt",
+    "[copyable prompt]",
+    "## 中文说明",
+    "[short Chinese explanation]",
+  ].join("\n");
 }
 
 function normalizeHistoricalErrors(input: unknown, projectId: string): TestErrorRecord[] {
@@ -1088,7 +1136,7 @@ export async function POST(req: NextRequest) {
     const targetCategory = targetModel.category ?? "text";
     const requestedMaxTokens = Math.min(Math.max(Number(body.maxTokens) || 1600, 512), 3000);
     const maxTokens = autoSuite
-      ? Math.min(requestedMaxTokens, TEST_CHANNEL_AUTO_MAX_TOKENS)
+      ? Math.min(requestedMaxTokens, TEST_CHANNEL_AUTO_MAX_TOKENS, TEST_CHANNEL_FULL_RUN_MAX_TOKENS)
       : Math.min(requestedMaxTokens, 1200);
     const maxAttempts = autoSuite
       ? TEST_CHANNEL_AUTO_MAX_ATTEMPTS
@@ -1100,6 +1148,11 @@ export async function POST(req: NextRequest) {
     let selected: TestModelPlan = generatorPlan[0];
     let bestPlan: TestModelPlan = selected;
 
+    const structuredOptimizationRules = buildStructuredOptimizationRules(
+      historicalErrors,
+      historicalOptimizations,
+      initialAdaptivePlan,
+    );
     const feedbackMemory = [
       "Test channel quality policy:",
       `- Run real provider generation with selected model candidates, then score strict quality.`,
@@ -1108,7 +1161,7 @@ export async function POST(req: NextRequest) {
       "- If any key quality dimension is below target, rewrite internally before returning the best candidate.",
       initialAdaptivePlan.summary,
       ...initialAdaptivePlan.mutation_hints.slice(0, 4),
-      ...buildStructuredOptimizationRules(historicalErrors, historicalOptimizations, initialAdaptivePlan).slice(0, 6),
+      ...structuredOptimizationRules.slice(0, 6),
       `Prompt language policy: ${promptLanguagePolicy.reasonEn}`,
       promptLanguageInstruction(promptLanguagePolicy),
       buildTranslationStrategyMemory(),
@@ -1119,7 +1172,10 @@ export async function POST(req: NextRequest) {
         : "",
     ].filter(Boolean).join("\n");
 
-    const systemPrompt = buildSystemPrompt({
+    const systemPrompt = autoSuite ? buildCompactTestSystemPrompt({
+      promptLanguage,
+      promptLanguageReason: `${promptLanguagePolicy.reasonZh} / ${promptLanguagePolicy.reasonEn}`,
+    }) : buildSystemPrompt({
       userIdea,
       targetModel: targetModel.name,
       targetProvider: targetModel.provider,
@@ -1131,7 +1187,12 @@ export async function POST(req: NextRequest) {
       feedbackMemory,
     });
 
-    const baseUserPrompt = buildUserPrompt({
+    const baseUserPrompt = autoSuite ? buildCompactTestUserPrompt({
+      userIdea,
+      adaptiveSummary: initialAdaptivePlan.summary,
+      promptLanguage,
+      historicalRules: structuredOptimizationRules,
+    }) : buildUserPrompt({
       userIdea,
       targetModel: targetModel.name,
       targetProvider: targetModel.provider,
@@ -1315,13 +1376,16 @@ export async function POST(req: NextRequest) {
 
     if (!bestScore) {
       const elapsedMs = Date.now() - startedAt;
+      const providerConnectivityPassed = healthProbe.healthyPlan.length > 0;
+      const totalBudgetExceeded = elapsedMs > TEST_CHANNEL_TOTAL_BUDGET_MS;
+      const generationBudgetGuardStopped = budgetExhausted && !totalBudgetExceeded;
       const failedChecks = [
         {
           id: "provider_connectivity",
           label: "真实模型连通性 / Provider connectivity",
-          value: 0,
+          value: providerConnectivityPassed ? 10 : 0,
           threshold: 10,
-          status: "fail" as const,
+          status: providerConnectivityPassed ? "pass" as const : "fail" as const,
         },
         {
           id: "model_health_probe",
@@ -1330,21 +1394,20 @@ export async function POST(req: NextRequest) {
           threshold: 10,
           status: healthProbe.healthyPlan.length ? "pass" as const : "fail" as const,
         },
-        ...(budgetExhausted
-          ? [{
-              id: "test_channel_time_budget",
-              label: "测试通道时间预算 / Test channel time budget",
-              value: elapsedMs,
-              threshold: TEST_CHANNEL_TOTAL_BUDGET_MS,
-              status: "fail" as const,
-            }]
-          : [{
-              id: "test_channel_time_budget",
-              label: "测试通道时间预算 / Test channel time budget",
-              value: elapsedMs,
-              threshold: TEST_CHANNEL_TOTAL_BUDGET_MS,
-              status: elapsedMs <= TEST_CHANNEL_TOTAL_BUDGET_MS ? "pass" as const : "fail" as const,
-            }])
+        {
+          id: "full_generation_output",
+          label: "完整生成输出 / Full generation output",
+          value: 0,
+          threshold: 10,
+          status: "fail" as const,
+        },
+        {
+          id: "test_channel_time_budget",
+          label: "测试通道时间预算 / Test channel time budget",
+          value: elapsedMs,
+          threshold: TEST_CHANNEL_TOTAL_BUDGET_MS,
+          status: totalBudgetExceeded ? "fail" as const : "pass" as const,
+        },
       ];
       const optimizationBacklog = buildOptimizationBacklog({
         reportId,
@@ -1470,9 +1533,13 @@ export async function POST(req: NextRequest) {
           ok: false,
           status: "fail",
           reportId,
-          error: budgetExhausted
+          error: totalBudgetExceeded
             ? "测试通道已在 45 秒预算内主动停止；慢模型或中转站无响应已被分类保存，不再等待到 Cloudflare/网关 504。 / Test channel stopped within the 45s budget; slow or unresponsive upstream calls were classified and saved instead of waiting for Cloudflare/gateway 504."
-            : "测试通道没有找到可健康响应的模型输出。强模型已先做短健康探测，失败模型已跳过并保存到待优化项；请刷新中转站模型列表或换用最近可稳定返回的模型。 / No healthy scorable model output was found. Strong models were short-probed first; failing models were skipped and saved to the optimization backlog. Refresh relay models or use a recently stable model.",
+            : providerConnectivityPassed && generationBudgetGuardStopped
+              ? "模型健康探测已通过，但完整生成没有在安全预算内返回可评分输出；本次已保存为完整生成输出失败，而不是误报为网关 504。 / Model health probe passed, but full generation did not return scorable output within the safe budget; this was saved as a full-generation-output failure, not mislabeled as gateway 504."
+              : providerConnectivityPassed
+                ? "模型健康探测已通过，但完整生成输出仍未达成；本次已保存为完整生成输出失败，并会在下一轮优先回归。 / Model health probe passed, but full generation output still did not complete; this was saved as a full-generation-output failure and will be prioritized in the next regression run."
+                : "测试通道没有找到可健康响应的模型输出。强模型已先做短健康探测，失败模型已跳过并保存到待优化项；请刷新中转站模型列表或换用最近可稳定返回的模型。 / No healthy scorable model output was found. Strong models were short-probed first; failing models were skipped and saved to the optimization backlog. Refresh relay models or use a recently stable model.",
           providerStatus: {
             configured: providerStatus.configured,
             keys: providerStatus.keyFingerprints.map((item) => ({
@@ -1495,7 +1562,8 @@ export async function POST(req: NextRequest) {
           adaptivePlan,
           improvementPlan: [
             "测试通道现在有 45 秒硬预算和 22 秒单模型超时；慢模型会被主动中断并进入待优化项，不再等待到网关 504。 / The test channel now has a 45s hard budget and a 22s per-model timeout; slow models are interrupted and saved to the optimization backlog instead of waiting for gateway 504.",
-            "新增 8 秒健康探测：强模型必须先证明能快速响应，才进入完整质量测试；历史回归中反复超时的模型会被自动避让。 / New 8s health probe: strong models must prove they can respond quickly before full quality testing; models with repeated historical timeout regressions are avoided automatically.",
+            "新增 5 秒健康探测：强模型必须先证明能快速响应，才进入完整质量测试；历史回归中反复超时的模型会被自动避让。 / New 5s health probe: strong models must prove they can respond quickly before full quality testing; models with repeated historical timeout regressions are avoided automatically.",
+            "自动测试使用轻量质量门提示词，覆盖角色、任务、约束、输出格式、验收、自检、防幻觉和密钥脱敏，但避免把超长生产提示词塞进一键测试导致超时。 / Auto test uses a compact quality-gate prompt covering role, task, constraints, output format, acceptance, self-check, hallucination control, and secret redaction without sending an oversized production prompt into one-click testing.",
             "测试前已按当前密钥/中转站模型列表做强模型预检；未列入中转站的旧别名、cli 包装模型和弱小快模型会降级或跳过。 / Strong-model preflight runs before testing; unlisted old aliases, cli wrappers, and weak small-fast models are downgraded or skipped.",
             "点击右上角模型选择，把生成/评价模型换成该中转站明确支持的 chat 文本模型。 / Open the model picker and choose a chat text model that the relay explicitly supports.",
             "打开密钥设置并保存一次，让系统重新探测中转站模型列表。 / Open key settings and save once so the app re-probes the relay model list.",
@@ -1701,7 +1769,8 @@ export async function POST(req: NextRequest) {
         status === "pass"
           ? "本次测试已通过，可把最佳提示词预览作为质量样例进入后续优化。 / This test passed; the best prompt preview can be used as a quality sample for future optimization."
           : "优先查看未通过/警告检查项，对应补强测试目标或提示词模板。 / First inspect failed or warning checks, then strengthen the test objective or prompt template accordingly.",
-        "已启用 8 秒健康探测和历史失败避让：强模型只有在当前中转站能快速响应时才进入完整质量门，反复超时模型会自动降级到待优化项。 / 8s health probing and historical failure avoidance are enabled: strong models enter full quality gates only when they respond quickly on the current relay; repeated timeouts are downgraded into the optimization backlog.",
+        "已启用 5 秒健康探测和历史失败避让：强模型只有在当前中转站能快速响应时才进入完整质量门，反复超时模型会自动降级到待优化项。 / 5s health probing and historical failure avoidance are enabled: strong models enter full quality gates only when they respond quickly on the current relay; repeated timeouts are downgraded into the optimization backlog.",
+        "自动测试使用轻量质量门提示词，覆盖核心验收项但避免超长生产提示词导致一键测试超时。 / Auto test uses a compact quality-gate prompt that covers core acceptance items without timing out on an oversized production prompt.",
         "测试前已按当前密钥/中转站模型列表做强模型预检；强模型会优先尝试，弱/旧/不可见别名会被降级或跳过。 / Strong-model preflight runs before testing; strong models are prioritized while weak, old, or unlisted aliases are downgraded or skipped.",
         `真正提示词语言：${promptLanguagePolicy.truePromptLanguageLabel}。${promptLanguagePolicy.reasonZh}`,
         "如果模型诊断中有 failed，优先换掉失败模型或刷新中转站模型列表。 / If model diagnostics contains failed items, replace the failed model or refresh the relay model list first.",

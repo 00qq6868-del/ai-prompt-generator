@@ -988,7 +988,7 @@ test.describe("PromptGenerator E2E", () => {
           },
           healthProbe: {
             enabled: true,
-            timeoutMs: 8000,
+            timeoutMs: 5000,
             maxModels: 6,
             concurrency: 2,
             healthyModelIds: ["claude-opus-4-7"],
@@ -1094,7 +1094,7 @@ test.describe("PromptGenerator E2E", () => {
           },
           healthProbe: {
             enabled: true,
-            timeoutMs: 8000,
+            timeoutMs: 5000,
             maxModels: 6,
             concurrency: 2,
             healthyModelIds: ["claude-opus-4-7"],
