@@ -49,7 +49,7 @@ const TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS = 5_000;
 const TEST_CHANNEL_HEALTH_PROBE_MAX_TOKENS = 32;
 const TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS = 4;
 const TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY = 2;
-const TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS = 1;
+const TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS = 2;
 const TEST_CHANNEL_FULL_RUN_MIN_BUDGET_MS = 12_000;
 const TEST_CHANNEL_FULL_RUN_MAX_TOKENS = 650;
 
@@ -124,6 +124,7 @@ type HealthProbeReport = {
   timeoutMs: number;
   maxModels: number;
   concurrency: number;
+  executionMaxHealthyModels: number;
   healthyModelIds: string[];
   failedModelIds: string[];
   skippedByHistoryModelIds: string[];
@@ -915,6 +916,7 @@ function buildHealthProbeReport(args: {
     timeoutMs: TEST_CHANNEL_HEALTH_PROBE_TIMEOUT_MS,
     maxModels: TEST_CHANNEL_HEALTH_PROBE_MAX_MODELS,
     concurrency: TEST_CHANNEL_HEALTH_PROBE_CONCURRENCY,
+    executionMaxHealthyModels: TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS,
     healthyModelIds: args.healthy.map((item) => item.model.id),
     failedModelIds: args.diagnostics
       .filter((item) => item.stage === "health_probe" && item.status === "failed")

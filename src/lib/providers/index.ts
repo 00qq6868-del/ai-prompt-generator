@@ -137,13 +137,34 @@ function maxRetriesFor(opts: GenerateOptions): number | undefined {
   return Number.isFinite(Number(opts.timeoutMs)) ? 0 : undefined;
 }
 
+function extractMessageContentText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === "string") return part;
+        if (!part || typeof part !== "object") return "";
+        const block = part as { type?: string; text?: unknown; content?: unknown };
+        if (typeof block.text === "string") return block.text;
+        if (typeof block.content === "string") return block.content;
+        return "";
+      })
+      .filter(Boolean)
+      .join("");
+  }
+  return "";
+}
+
 function extractOpenAIText(response: unknown, provider: string, model: string): string {
   const data = response as {
-    choices?: Array<{ message?: { content?: string | null } }>;
+    choices?: Array<{ text?: string | null; message?: { content?: unknown } }>;
+    output_text?: string;
   };
+  if (typeof data?.output_text === "string" && data.output_text.trim()) return data.output_text;
   const choice = Array.isArray(data?.choices) ? data.choices[0] : undefined;
-  const text = choice?.message?.content;
-  if (typeof text === "string") return text;
+  if (typeof choice?.text === "string" && choice.text.trim()) return choice.text;
+  const text = extractMessageContentText(choice?.message?.content);
+  if (text.trim()) return text;
   throw new Error(
     `Empty or invalid chat completion response from ${provider}/${model}. 上游模型或中转站返回了空 choices 或非标准响应，请换一个模型、刷新中转站模型列表，或检查该模型是否支持 chat/completions。`
   );
@@ -151,11 +172,14 @@ function extractOpenAIText(response: unknown, provider: string, model: string): 
 
 function extractAxiosText(responseData: unknown, provider: string, model: string): string {
   const data = responseData as {
-    choices?: Array<{ message?: { content?: string | null } }>;
+    choices?: Array<{ text?: string | null; message?: { content?: unknown } }>;
+    output_text?: string;
   };
+  if (typeof data?.output_text === "string" && data.output_text.trim()) return data.output_text;
   const choice = Array.isArray(data?.choices) ? data.choices[0] : undefined;
-  const text = choice?.message?.content;
-  if (typeof text === "string") return text;
+  if (typeof choice?.text === "string" && choice.text.trim()) return choice.text;
+  const text = extractMessageContentText(choice?.message?.content);
+  if (text.trim()) return text;
   throw new Error(
     `Empty or invalid chat completion response from ${provider}/${model}. 上游模型或中转站返回了空 choices 或非标准响应，请换一个模型、刷新中转站模型列表，或检查该模型是否支持 chat/completions。`
   );

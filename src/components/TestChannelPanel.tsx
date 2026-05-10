@@ -78,6 +78,7 @@ interface TestChannelResult {
     timeoutMs: number;
     maxModels: number;
     concurrency: number;
+    executionMaxHealthyModels?: number;
     healthyModelIds: string[];
     failedModelIds: string[];
     skippedByHistoryModelIds: string[];
@@ -805,6 +806,7 @@ export function TestChannelPanel({ open, onClose, onOpenKeys }: TestChannelPanel
                         <div className="text-sm font-semibold text-cyan-50/90">健康探测 / Health probe</div>
                         <div className="text-xs text-cyan-50/65">
                           {formatDuration(result.healthProbe.timeoutMs)} · 并发 / Concurrency {result.healthProbe.concurrency}
+                          {result.healthProbe.executionMaxHealthyModels ? ` · 备用 / Fallback ${result.healthProbe.executionMaxHealthyModels}` : ""}
                         </div>
                       </div>
                       <div className="mt-2 grid gap-2 text-xs leading-5 text-cyan-50/75 md:grid-cols-3">

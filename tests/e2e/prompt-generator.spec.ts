@@ -991,6 +991,7 @@ test.describe("PromptGenerator E2E", () => {
             timeoutMs: 5000,
             maxModels: 6,
             concurrency: 2,
+            executionMaxHealthyModels: 2,
             healthyModelIds: ["claude-opus-4-7"],
             failedModelIds: ["gpt-5.5"],
             skippedByHistoryModelIds: [],
@@ -1097,6 +1098,7 @@ test.describe("PromptGenerator E2E", () => {
             timeoutMs: 5000,
             maxModels: 6,
             concurrency: 2,
+            executionMaxHealthyModels: 2,
             healthyModelIds: ["claude-opus-4-7"],
             failedModelIds: ["gpt-5.5"],
             skippedByHistoryModelIds: [],
@@ -1122,6 +1124,7 @@ test.describe("PromptGenerator E2E", () => {
     await expect(dialog.getByText("密钥防泄露 / Secret handling")).toBeVisible();
     await expect(dialog.getByText("强模型预检 / Strong model preflight")).toBeVisible();
     await expect(dialog.getByText("健康探测 / Health probe")).toBeVisible();
+    await expect(dialog.getByText(/备用 \/ Fallback 2/)).toBeVisible();
     await expect(dialog.getByText(/Healthy：claude-opus-4-7/)).toBeVisible();
     await expect(dialog.getByText("Claude Opus 4.7")).toBeVisible();
     await dialog.getByText(/已降级或跳过的弱\/风险模型/).click();
