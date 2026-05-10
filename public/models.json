@@ -2195,6 +2195,26 @@
     "category": "text"
   },
   {
+    "id": "ernie-5.0",
+    "name": "ernie-5.0",
+    "provider": "百度",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.2,
+    "outputCostPer1M": 0.2,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
@@ -4467,6 +4487,23 @@
     "id": "doubao-seed-2-0-lite-260215",
     "name": "doubao-seed-2-0-lite-260215",
     "provider": "字节豆包",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "ernie-5.1",
+    "name": "ernie-5.1",
+    "provider": "百度",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
