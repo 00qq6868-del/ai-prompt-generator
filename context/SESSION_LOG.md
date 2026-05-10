@@ -2388,3 +2388,14 @@ Operational note:
  M src/app/api/test-channel/run/route.ts
  M tests/e2e/prompt-generator.spec.ts
 ```
+
+
+## 2026-05-10T01:16:50.158Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Completed all current user requests: fixed follow-up one-click test screenshot failure by compacting auto-test prompts, tightening health probe to 5s/max4/concurrency2/one healthy model, capping full run max tokens to 650, separating full_generation_output from provider connectivity and 45s time budget; added bilingual secure prompt system docs and secure local Python test harness with .env.local/.env/.secure loading, masked tkinter fallback, sanitized report, and best-effort key cleanup. Validation passed after merge and final changes: py_compile, package JSON parse, tsc, data:validate, build, prompt-generator E2E 22/22, quality E2E 5/5, diff-check, gitleaks no leaks. Pushed f741463 to GitHub main; GitHub E2E run 25616330014 succeeded with 27 passed. Production smoke passed: homepage/models/analytics ok, /api/test-channel/run HTTP 200 JSON ok=false controlled no-key in 1460ms, no Cloudflare HTML/504 observed.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
