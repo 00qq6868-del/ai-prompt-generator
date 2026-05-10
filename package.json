@@ -29,6 +29,7 @@
     "test:gpt-image2:panel": "node scripts/gpt-image2-live-review-panel.cjs",
     "memory:boot": "node scripts/update-memory-checkpoint.cjs --boot",
     "memory:checkpoint": "node scripts/update-memory-checkpoint.cjs",
+    "test:secure-prompt": "python scripts/secure_prompt_quality_test.py",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
     "test:quality": "npx playwright test tests/e2e/quality.spec.ts --project=chromium"
