@@ -2410,3 +2410,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-10T01:48:09.775Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Fixed user screenshot issue where Provider connectivity and Model health probe passed but Full generation output failed. Root cause: test channel collected only one healthy model, so if that short-probe-healthy model failed during full generation, no fallback healthy model was tried even with remaining budget. Fix: TEST_CHANNEL_EXECUTION_MAX_HEALTHY_MODELS now 2, healthProbe report/UI shows executionMaxHealthyModels fallback count, and OpenAI-compatible/Axios response extraction now supports output_text, choice.text, and array message.content text blocks to avoid false empty-output failures. Validation after merging latest origin/main auto model update: tsc, data:validate, build, test-channel E2E 5/5, full prompt-generator E2E 22/22, quality E2E 5/5, diff-check, gitleaks no leaks. Pushed merge commit 3d1c3ad to main; GitHub E2E run 25616865586 passed with 27 tests; production smoke passed with /api/test-channel/run HTTP 200 JSON ok=false controlled no-key in 1114ms.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
