@@ -210,6 +210,11 @@ Models such as `gpt-5.5`, preview variants, or newly released models may be unav
 
 Engineering rule: never assume a model is callable just because it appears in a static list. The system must probe the current endpoint, classify the model strength, run a short health check, and only then include it in the test/generation queue.
 
+Official references to verify live access / 可用于核对实时权限的官方参考：
+
+- OpenAI API model availability by usage tier and verification status: https://help.openai.com/en/articles/10362446
+- OpenAI API organization verification: https://help.openai.com/en/articles/10910291-api-organisatie-verification
+
 ### 中文
 
 `gpt-5.5`、预览版模型或刚发布的新模型没有出现在普通 UI 或 API 列表中，可能是正常现象，常见原因包括：
@@ -222,6 +227,11 @@ Engineering rule: never assume a model is callable just because it appears in a 
 - 中转站抽象：自定义 endpoint 可能重命名、隐藏、代理模型，或滞后于官方模型列表。
 
 工程规则：不能因为模型出现在静态列表里就假设它一定可调用。系统必须先探测当前 endpoint，判断模型强度，做短健康检查，然后再把它加入测试或生成队列。
+
+用于核对实时权限的官方参考 / Official references：
+
+- OpenAI API 模型可用性、使用层级与验证状态：https://help.openai.com/en/articles/10362446
+- OpenAI API 组织验证：https://help.openai.com/en/articles/10910291-api-organisatie-verification
 
 ## 3. Secure Execution Script / 安全测试脚本
 
