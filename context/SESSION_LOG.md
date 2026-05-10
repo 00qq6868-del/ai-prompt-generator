@@ -2399,3 +2399,14 @@ Operational note:
 ```text
 ## codex/safe-audit-20260501-232542...origin/main
 ```
+
+
+## 2026-05-10T01:18:38.283Z — Memory Checkpoint
+
+- Updated `context/CURRENT_HANDOFF.md` with current Git/GitHub state.
+- Note: Final checkpoint after adding official OpenAI model-visibility references to docs/BILINGUAL_SECURE_PROMPT_SYSTEM.md. Latest pushed code/docs on main include one-click test channel budget/full_generation_output fix, secure bilingual prompt test harness, sanitized local key workflow, and model visibility source citations. Last full validation before final doc citation: py_compile, package JSON parse, tsc, data:validate, build, prompt-generator E2E 22/22, quality E2E 5/5, diff-check, gitleaks no leaks; GitHub E2E run 25616330014 success 27 passed; production smoke passed with /api/test-channel/run HTTP 200 JSON controlled no-key in 1460ms. Final citation-only doc patch passed diff-check and gitleaks, then pushed as 530b076.
+- Working tree status summary:
+
+```text
+## codex/safe-audit-20260501-232542...origin/main
+```
