@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-11T20:04:51.239Z",
+  "updatedAt": "2026-05-11T21:42:39.315Z",
   "totalModels": 285,
   "byCategory": {
     "text": 260,
@@ -36,8 +36,8 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 6,
+    "added": 0,
     "updated": 260,
-    "previousTotal": 279
+    "previousTotal": 285
   }
 }
