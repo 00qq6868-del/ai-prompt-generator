@@ -4980,6 +4980,86 @@
     "category": "text"
   },
   {
+    "id": "gemini-3.1-flash-lite-preview-agent",
+    "name": "Gemini 3.1 Flash Lite Preview (Agent)",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-pro-preview-agent",
+    "name": "Gemini 3.1 Pro Preview (Agent)",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3.1-flash-tts-preview-agent",
+    "name": "Gemini 3.1 Flash TTS Preview (Agent)",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "tts"
+  },
+  {
+    "id": "gemini-3.1-flash-image-preview-agent",
+    "name": "Gemini 3.1 Flash Image Preview (Agent)",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 65536,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "image"
+  },
+  {
     "id": "gemini-3-pro-preview",
     "name": "Gemini 3 Pro Preview",
     "provider": "Google",
@@ -5038,6 +5118,46 @@
     ],
     "releaseDate": "2025-06-01",
     "category": "text"
+  },
+  {
+    "id": "gemini-3-flash-preview-agent",
+    "name": "Gemini 3 Flash Preview (Agent)",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gemini-3-pro-image-preview-agent",
+    "name": "Gemini 3 Pro Image Preview (Agent)",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 32768,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "image"
   },
   {
     "id": "gemini-2.5-flash-image",
