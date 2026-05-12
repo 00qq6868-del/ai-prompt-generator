@@ -1,8 +1,8 @@
-export const GITHUB_PROJECT_TRACKER_UPDATED_AT = "2026-05-11T20:03:23.283Z";
+export const GITHUB_PROJECT_TRACKER_UPDATED_AT = "2026-05-12T04:04:33.583Z";
 
 export const GITHUB_PROJECT_TRACKER_STATUS = {
   "schema_version": "1.0",
-  "generatedAt": "2026-05-11T20:03:23.283Z",
+  "generatedAt": "2026-05-12T04:04:33.583Z",
   "projects": [
     {
       "group": "hallucination",
@@ -11,13 +11,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "LLM evaluation metrics and hallucination scoring.",
       "description": "The LLM Evaluation Framework",
-      "stars": 15317,
-      "forks": 1419,
-      "updatedAt": "2026-05-11T19:47:05Z",
-      "pushedAt": "2026-05-11T12:24:28Z",
+      "stars": 15325,
+      "forks": 1418,
+      "updatedAt": "2026-05-12T03:27:53Z",
+      "pushedAt": "2026-05-12T02:01:32Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 88.8
     },
     {
@@ -27,13 +27,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "LLM observability, traces, evals, dataset debugging.",
       "description": "AI Observability & Evaluation",
-      "stars": 9616,
-      "forks": 860,
-      "updatedAt": "2026-05-11T18:47:13Z",
-      "pushedAt": "2026-05-11T20:00:23Z",
+      "stars": 9621,
+      "forks": 861,
+      "updatedAt": "2026-05-12T03:50:30Z",
+      "pushedAt": "2026-05-12T03:51:11Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 86.7
     },
     {
@@ -43,13 +43,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Feedback functions and groundedness checks.",
       "description": "Evaluation and Tracking for LLM Experiments and AI Agents",
-      "stars": 3305,
+      "stars": 3307,
       "forks": 274,
-      "updatedAt": "2026-05-11T13:08:47Z",
+      "updatedAt": "2026-05-12T03:42:41Z",
       "pushedAt": "2026-05-11T18:58:33Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 82
     },
     {
@@ -65,7 +65,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2024-08-18T13:30:44Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 65.5
     },
     {
@@ -81,7 +81,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-01-31T04:13:47Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 73.9
     },
     {
@@ -97,7 +97,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-11T02:04:19Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 77.7
     },
     {
@@ -113,7 +113,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2024-06-26T16:17:02Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 60
     },
     {
@@ -129,7 +129,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-11T13:57:35Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 74.1
     },
     {
@@ -145,7 +145,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2024-10-07T07:32:49Z",
       "defaultBranch": "master",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 57.5
     },
     {
@@ -155,13 +155,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Prompt corpus for defensive pattern analysis.",
       "description": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts, Internal Tools & AI Models",
-      "stars": 137159,
+      "stars": 137183,
       "forks": 34201,
-      "updatedAt": "2026-05-11T19:55:48Z",
+      "updatedAt": "2026-05-12T03:55:03Z",
       "pushedAt": "2026-05-10T15:03:26Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 98.6
     },
     {
@@ -171,13 +171,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Prompt engineering methods and examples.",
       "description": "🐙 Guides, papers, lessons, notebooks and resources for prompt engineering, context engineering, RAG, and AI Agents.",
-      "stars": 74440,
-      "forks": 8043,
-      "updatedAt": "2026-05-11T18:35:04Z",
+      "stars": 74452,
+      "forks": 8044,
+      "updatedAt": "2026-05-12T03:11:08Z",
       "pushedAt": "2026-03-11T20:09:13Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 90.8
     },
     {
@@ -187,13 +187,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Reusable task prompt workflow templates.",
       "description": "Fabric is an open-source framework for augmenting humans using AI. It provides a modular system for solving specific problems using a crowdsourced set of AI prompts that can be used anywhere.",
-      "stars": 41650,
-      "forks": 4134,
-      "updatedAt": "2026-05-11T19:58:47Z",
+      "stars": 41655,
+      "forks": 4135,
+      "updatedAt": "2026-05-12T03:33:32Z",
       "pushedAt": "2026-05-11T16:41:22Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 93.2
     },
     {
@@ -205,11 +205,11 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "description": "A GPT-4 AI Tutor Prompt for customizable personalized learning experiences.",
       "stars": 29634,
       "forks": 3313,
-      "updatedAt": "2026-05-11T08:47:04Z",
+      "updatedAt": "2026-05-12T02:46:34Z",
       "pushedAt": "2025-09-30T08:08:00Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 81.9
     },
     {
@@ -219,13 +219,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Prompt optimizer product patterns.",
       "description": "An AI prompt optimizer for writing better prompts and getting better AI results.",
-      "stars": 28616,
-      "forks": 3361,
-      "updatedAt": "2026-05-11T20:01:36Z",
+      "stars": 28635,
+      "forks": 3363,
+      "updatedAt": "2026-05-12T03:49:27Z",
       "pushedAt": "2026-05-11T14:40:17Z",
       "defaultBranch": "develop",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 91.8
     },
     {
@@ -235,13 +235,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Adversarial corpus for defensive evaluation only.",
       "description": "LEAKED SYSTEM PROMPTS FOR CHATGPT, CLAUDE, GEMINI, GROK, PERPLEXITY, CURSOR, LOVABLE, REPLIT, AND MORE! - AI SYSTEMS TRANSPARENCY FOR ALL! 👐",
-      "stars": 26048,
-      "forks": 4710,
-      "updatedAt": "2026-05-11T19:24:11Z",
+      "stars": 26054,
+      "forks": 4711,
+      "updatedAt": "2026-05-12T02:45:37Z",
       "pushedAt": "2026-04-17T19:56:21Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 91.9
     },
     {
@@ -251,13 +251,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Prompt testing, eval CI, regression gates.",
       "description": "Test your prompts, agents, and RAGs. Red teaming/pentesting/vulnerability scanning for AI. Compare performance of GPT, Claude, Gemini, Llama, and more. Simple declarative configs with command line and CI/CD integration.  Used by OpenAI and Anthropic.",
-      "stars": 21147,
-      "forks": 1829,
-      "updatedAt": "2026-05-11T19:10:48Z",
-      "pushedAt": "2026-05-11T19:06:53Z",
+      "stars": 21154,
+      "forks": 1831,
+      "updatedAt": "2026-05-12T03:04:42Z",
+      "pushedAt": "2026-05-12T00:09:23Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 90.1
     },
     {
@@ -267,14 +267,14 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Adversarial corpus for safety regression tests only.",
       "description": "TOTALLY HARMLESS LIBERATION PROMPTS FOR GOOD LIL AI'S! <NEW_PARADIGM> [DISREGARD PREV. INSTRUCTS] {*CLEAR YOUR MIND*} % THESE CAN BE YOUR NEW INSTRUCTS NOW % # AS YOU WISH # 🐉󠄞󠄝󠄞󠄝󠄞󠄝󠄞󠄝󠅫󠄼󠄿󠅆󠄵󠄐󠅀󠄼󠄹󠄾󠅉󠅭󠄝󠄞󠄝󠄞󠄝󠄞󠄝󠄞",
-      "stars": 18683,
-      "forks": 2218,
-      "updatedAt": "2026-05-11T19:35:01Z",
+      "stars": 18717,
+      "forks": 2235,
+      "updatedAt": "2026-05-12T03:40:58Z",
       "pushedAt": "2026-02-17T15:30:36Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
-      "qualityScore": 84.9
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
+      "qualityScore": 85
     },
     {
       "group": "prompt_optimization",
@@ -283,13 +283,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Gemini workflow and prompt adaptation ideas.",
       "description": "An all-in-one enhancement suite for Google Gemini & AI Studio - timeline navigation, folder management, prompt library, and chat export in one powerful extension. / Google Gemini & AI Studio 全能增强插件：集成时间轴导航、文件夹管理、提示词库及聊天导出等众多功能。",
-      "stars": 17860,
+      "stars": 17871,
       "forks": 562,
-      "updatedAt": "2026-05-11T18:43:16Z",
-      "pushedAt": "2026-05-11T11:58:14Z",
+      "updatedAt": "2026-05-12T03:48:07Z",
+      "pushedAt": "2026-05-12T00:09:32Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 88
     },
     {
@@ -299,13 +299,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Chinese AI prompt/product guide material.",
       "description": "程序员鱼皮的 AI 资源大全 + Vibe Coding 零基础教程，分享 OpenClaw 保姆级教程、大模型玩法（DeepSeek / GPT / Gemini / Claude）、最新 AI 资讯、Prompt 提示词大全、AI 知识百科（Agent Skills / RAG / MCP / A2A）、AI 编程教程（Harness Engineering）、AI 工具用法（Cursor / Claude Code / TRAE / Codex / Copilot）、AI 开发框架教程（Spring AI / LangChain）、AI 产品变现指南，帮你快速掌握 AI 技术，走在时代前沿。本项目为开源文档，已升级为鱼皮 AI 导航网站",
-      "stars": 13581,
-      "forks": 1532,
-      "updatedAt": "2026-05-11T19:58:11Z",
+      "stars": 13600,
+      "forks": 1535,
+      "updatedAt": "2026-05-12T03:50:15Z",
       "pushedAt": "2026-04-30T15:25:20Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 88.5
     },
     {
@@ -315,13 +315,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "GPT Image 2 API and prompt examples.",
       "description": "GPT-Image-2 API and Prompts",
-      "stars": 13914,
-      "forks": 1379,
-      "updatedAt": "2026-05-11T19:37:57Z",
+      "stars": 13950,
+      "forks": 1383,
+      "updatedAt": "2026-05-12T03:39:40Z",
       "pushedAt": "2026-05-11T06:15:46Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 88.4
     },
     {
@@ -337,7 +337,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-04-23T13:07:19Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 79.9
     },
     {
@@ -347,13 +347,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "GPT Image 2 skill/prompt patterns.",
       "description": "GPT Image 2 prompt gallery, image prompt library, agentic skill, and CLI for OpenAI image generation/editing",
-      "stars": 1888,
+      "stars": 1898,
       "forks": 180,
-      "updatedAt": "2026-05-11T18:50:23Z",
+      "updatedAt": "2026-05-12T03:59:42Z",
       "pushedAt": "2026-05-08T15:13:27Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 79.7
     },
     {
@@ -363,14 +363,14 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": true,
       "focus": "Awesome list for GPT Image 2 resources.",
       "description": "🚀 World's largest GPT Image 2 prompt library, updated daily — 2000+ curated prompts with preview images, 16 languages. OpenAI's next-gen image model with pixel-perfect text rendering, cross-image consistency, and commercial-grade illustration. Free & open source.",
-      "stars": 5474,
-      "forks": 489,
-      "updatedAt": "2026-05-11T19:47:06Z",
-      "pushedAt": "2026-05-11T14:29:53Z",
+      "stars": 5495,
+      "forks": 493,
+      "updatedAt": "2026-05-12T03:36:39Z",
+      "pushedAt": "2026-05-12T01:59:05Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
-      "qualityScore": 84.2
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
+      "qualityScore": 84.3
     },
     {
       "group": "hallucination",
@@ -385,7 +385,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-11T09:46:09Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 79.3
     },
     {
@@ -401,7 +401,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-09T08:45:33Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 75.5
     },
     {
@@ -417,7 +417,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2025-06-07T06:26:01Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 59.2
     },
     {
@@ -433,7 +433,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-04-09T05:06:19Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 63.7
     },
     {
@@ -449,7 +449,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2024-01-15T02:51:07Z",
       "defaultBranch": "master",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 48.3
     },
     {
@@ -465,7 +465,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2025-01-04T03:01:40Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 38.3
     },
     {
@@ -481,7 +481,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-04-03T23:55:51Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 48.3
     },
     {
@@ -497,7 +497,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-04-10T16:54:57Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 48.3
     },
     {
@@ -513,7 +513,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-03-16T15:51:30Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 47.1
     },
     {
@@ -529,7 +529,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-01-10T19:57:17Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 47.1
     },
     {
@@ -545,7 +545,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2025-11-26T06:22:57Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 47.1
     },
     {
@@ -555,13 +555,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": false,
       "focus": "Discovered by GitHub search query: prompt engineering evaluation",
       "description": "🪢 Open source LLM engineering platform: LLM Observability, metrics, evals, prompt management, playground, datasets. Integrates with OpenTelemetry, Langchain, OpenAI SDK, LiteLLM, and more. 🍊YC W23 ",
-      "stars": 26992,
-      "forks": 2739,
-      "updatedAt": "2026-05-11T20:01:13Z",
-      "pushedAt": "2026-05-11T19:39:22Z",
+      "stars": 27008,
+      "forks": 2741,
+      "updatedAt": "2026-05-12T03:43:26Z",
+      "pushedAt": "2026-05-11T20:43:23Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 91.3
     },
     {
@@ -573,11 +573,11 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "description": "Open source platform for AI Engineering: OpenTelemetry-native LLM Observability, GPU Monitoring, Guardrails, Evaluations, Prompt Management, Vault, Playground. 🚀💻 Integrates with 50+ LLM Providers, VectorDBs, Agent Frameworks and GPUs.",
       "stars": 2430,
       "forks": 274,
-      "updatedAt": "2026-05-11T17:13:19Z",
+      "updatedAt": "2026-05-12T01:53:39Z",
       "pushedAt": "2026-05-11T17:12:04Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 81
     },
     {
@@ -593,7 +593,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2025-07-16T19:09:13Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 65.9
     },
     {
@@ -609,7 +609,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-03-16T21:19:53Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 68.8
     },
     {
@@ -625,7 +625,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-01-11T07:02:22Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 68.8
     },
     {
@@ -635,13 +635,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": false,
       "focus": "Discovered by GitHub search query: prompt optimizer LLM",
       "description": "An open-source tool for LLM prompt optimization.",
-      "stars": 809,
+      "stars": 810,
       "forks": 124,
-      "updatedAt": "2026-05-10T14:42:46Z",
+      "updatedAt": "2026-05-12T02:59:38Z",
       "pushedAt": "2026-04-21T18:28:47Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 76.7
     },
     {
@@ -651,13 +651,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": false,
       "focus": "Discovered by GitHub search query: prompt optimizer LLM",
       "description": "Open-source LLM router & AI cost optimizer. Routes simple prompts to cheap/local models, complex ones to premium — automatically. Drop-in OpenAI-compatible proxy for Claude Code, Codex, Cursor, OpenClaw. Saves 40-70% on AI API costs. Self-hosted, no middleman.",
-      "stars": 481,
+      "stars": 483,
       "forks": 57,
-      "updatedAt": "2026-05-11T19:59:20Z",
+      "updatedAt": "2026-05-12T03:13:02Z",
       "pushedAt": "2026-05-11T13:15:07Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 74.1
     },
     {
@@ -667,13 +667,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": false,
       "focus": "Discovered by GitHub search query: prompt optimizer LLM",
       "description": "Awesome-LLM-Prompt-Optimization: a curated list of advanced prompt optimization and tuning methods in Large Language Models",
-      "stars": 406,
+      "stars": 407,
       "forks": 21,
-      "updatedAt": "2026-05-11T03:38:21Z",
+      "updatedAt": "2026-05-12T03:03:52Z",
       "pushedAt": "2026-05-11T03:38:17Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 72.3
     },
     {
@@ -689,7 +689,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2025-07-17T05:33:45Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 62.8
     },
     {
@@ -705,7 +705,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2024-12-17T14:07:12Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 45.1
     },
     {
@@ -721,7 +721,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-04-12T20:13:31Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 58.1
     },
     {
@@ -737,7 +737,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2025-12-04T19:39:43Z",
       "defaultBranch": "master",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 51.8
     },
     {
@@ -753,7 +753,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-03-10T16:11:02Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 50.8
     },
     {
@@ -769,7 +769,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2023-06-16T01:41:59Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 33.3
     },
     {
@@ -779,13 +779,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": false,
       "focus": "Discovered by GitHub search query: \"gpt-image-2\" prompts",
       "description": "Prompt as Code | GPT-Image2 工业级提示词引擎与模板库，370+ 个案例逆向工程，20+ 套工业级模板，持续更新中",
-      "stars": 4975,
-      "forks": 691,
-      "updatedAt": "2026-05-11T19:49:20Z",
+      "stars": 4999,
+      "forks": 693,
+      "updatedAt": "2026-05-12T03:49:10Z",
       "pushedAt": "2026-05-11T06:53:30Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 84.4
     },
     {
@@ -801,7 +801,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-10T17:00:38Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 64.3
     },
     {
@@ -817,7 +817,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-08T05:59:14Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 57.3
     },
     {
@@ -833,7 +833,7 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "pushedAt": "2026-05-06T10:05:12Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 54.9
     },
     {
@@ -843,13 +843,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
       "required": false,
       "focus": "Discovered by GitHub search query: \"gpt image 2\" awesome",
       "description": "A curated collection of the best GPT Image 2 prompts and examples. The prompts come from top creators on X.",
-      "stars": 1233,
+      "stars": 1235,
       "forks": 93,
-      "updatedAt": "2026-05-11T15:35:03Z",
-      "pushedAt": "2026-05-11T15:24:01Z",
+      "updatedAt": "2026-05-12T03:52:12Z",
+      "pushedAt": "2026-05-12T03:44:20Z",
       "defaultBranch": "main",
       "verificationStatus": "verified",
-      "verifiedAt": "2026-05-11T20:03:23.283Z",
+      "verifiedAt": "2026-05-12T04:04:33.583Z",
       "qualityScore": 77.6
     }
   ],
@@ -862,13 +862,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "LLM evaluation metrics and hallucination scoring.",
         "description": "The LLM Evaluation Framework",
-        "stars": 15317,
-        "forks": 1419,
-        "updatedAt": "2026-05-11T19:47:05Z",
-        "pushedAt": "2026-05-11T12:24:28Z",
+        "stars": 15325,
+        "forks": 1418,
+        "updatedAt": "2026-05-12T03:27:53Z",
+        "pushedAt": "2026-05-12T02:01:32Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 88.8
       },
       {
@@ -878,13 +878,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "LLM observability, traces, evals, dataset debugging.",
         "description": "AI Observability & Evaluation",
-        "stars": 9616,
-        "forks": 860,
-        "updatedAt": "2026-05-11T18:47:13Z",
-        "pushedAt": "2026-05-11T20:00:23Z",
+        "stars": 9621,
+        "forks": 861,
+        "updatedAt": "2026-05-12T03:50:30Z",
+        "pushedAt": "2026-05-12T03:51:11Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 86.7
       },
       {
@@ -894,13 +894,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "Feedback functions and groundedness checks.",
         "description": "Evaluation and Tracking for LLM Experiments and AI Agents",
-        "stars": 3305,
+        "stars": 3307,
         "forks": 274,
-        "updatedAt": "2026-05-11T13:08:47Z",
+        "updatedAt": "2026-05-12T03:42:41Z",
         "pushedAt": "2026-05-11T18:58:33Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 82
       }
     ],
@@ -912,13 +912,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "Prompt corpus for defensive pattern analysis.",
         "description": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts, Internal Tools & AI Models",
-        "stars": 137159,
+        "stars": 137183,
         "forks": 34201,
-        "updatedAt": "2026-05-11T19:55:48Z",
+        "updatedAt": "2026-05-12T03:55:03Z",
         "pushedAt": "2026-05-10T15:03:26Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 98.6
       },
       {
@@ -928,13 +928,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "Prompt engineering methods and examples.",
         "description": "🐙 Guides, papers, lessons, notebooks and resources for prompt engineering, context engineering, RAG, and AI Agents.",
-        "stars": 74440,
-        "forks": 8043,
-        "updatedAt": "2026-05-11T18:35:04Z",
+        "stars": 74452,
+        "forks": 8044,
+        "updatedAt": "2026-05-12T03:11:08Z",
         "pushedAt": "2026-03-11T20:09:13Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 90.8
       },
       {
@@ -944,13 +944,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "Reusable task prompt workflow templates.",
         "description": "Fabric is an open-source framework for augmenting humans using AI. It provides a modular system for solving specific problems using a crowdsourced set of AI prompts that can be used anywhere.",
-        "stars": 41650,
-        "forks": 4134,
-        "updatedAt": "2026-05-11T19:58:47Z",
+        "stars": 41655,
+        "forks": 4135,
+        "updatedAt": "2026-05-12T03:33:32Z",
         "pushedAt": "2026-05-11T16:41:22Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 93.2
       }
     ],
@@ -962,13 +962,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "GPT Image 2 API and prompt examples.",
         "description": "GPT-Image-2 API and Prompts",
-        "stars": 13914,
-        "forks": 1379,
-        "updatedAt": "2026-05-11T19:37:57Z",
+        "stars": 13950,
+        "forks": 1383,
+        "updatedAt": "2026-05-12T03:39:40Z",
         "pushedAt": "2026-05-11T06:15:46Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 88.4
       },
       {
@@ -978,14 +978,14 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": true,
         "focus": "Awesome list for GPT Image 2 resources.",
         "description": "🚀 World's largest GPT Image 2 prompt library, updated daily — 2000+ curated prompts with preview images, 16 languages. OpenAI's next-gen image model with pixel-perfect text rendering, cross-image consistency, and commercial-grade illustration. Free & open source.",
-        "stars": 5474,
-        "forks": 489,
-        "updatedAt": "2026-05-11T19:47:06Z",
-        "pushedAt": "2026-05-11T14:29:53Z",
+        "stars": 5495,
+        "forks": 493,
+        "updatedAt": "2026-05-12T03:36:39Z",
+        "pushedAt": "2026-05-12T01:59:05Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
-        "qualityScore": 84.2
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
+        "qualityScore": 84.3
       },
       {
         "group": "gpt_image_2",
@@ -994,13 +994,13 @@ export const GITHUB_PROJECT_TRACKER_STATUS = {
         "required": false,
         "focus": "Discovered by GitHub search query: \"gpt-image-2\" prompts",
         "description": "Prompt as Code | GPT-Image2 工业级提示词引擎与模板库，370+ 个案例逆向工程，20+ 套工业级模板，持续更新中",
-        "stars": 4975,
-        "forks": 691,
-        "updatedAt": "2026-05-11T19:49:20Z",
+        "stars": 4999,
+        "forks": 693,
+        "updatedAt": "2026-05-12T03:49:10Z",
         "pushedAt": "2026-05-11T06:53:30Z",
         "defaultBranch": "main",
         "verificationStatus": "verified",
-        "verifiedAt": "2026-05-11T20:03:23.283Z",
+        "verifiedAt": "2026-05-12T04:04:33.583Z",
         "qualityScore": 84.4
       }
     ]
