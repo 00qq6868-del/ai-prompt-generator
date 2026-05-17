@@ -1,6 +1,6 @@
 # GitHub Project Tracker Status
 
-Updated: 2026-05-17T13:56:29.229Z
+Updated: 2026-05-17T19:35:47.978Z
 
 All user-provided repositories are retained. Stars/forks/activity are only filled when verified by GitHub API.
 
@@ -8,13 +8,13 @@ All user-provided repositories are retained. Stars/forks/activity are only fille
 
 | Repo | Stars | Forks | Quality | Verified | Focus |
 |---|---:|---:|---:|---|---|
-| [confident-ai/deepeval](https://github.com/confident-ai/deepeval) | 15499 | 1438 | 88.8 | verified | LLM evaluation metrics and hallucination scoring. |
-| [Arize-ai/phoenix](https://github.com/Arize-ai/phoenix) | 9713 | 874 | 86.7 | verified | LLM observability, traces, evals, dataset debugging. |
+| [confident-ai/deepeval](https://github.com/confident-ai/deepeval) | 15503 | 1440 | 88.8 | verified | LLM evaluation metrics and hallucination scoring. |
+| [Arize-ai/phoenix](https://github.com/Arize-ai/phoenix) | 9715 | 874 | 86.7 | verified | LLM observability, traces, evals, dataset debugging. |
 | [truera/trulens](https://github.com/truera/trulens) | 3326 | 279 | 82 | verified | Feedback functions and groundedness checks. |
 | [uptrain-ai/uptrain](https://github.com/uptrain-ai/uptrain) | 2347 | 203 | 65.5 | verified | LLM evaluation checks and experiment tracking. |
 | [onestardao/WFGY](https://github.com/onestardao/WFGY) | 1751 | 160 | 79.3 | verified | Discovered by GitHub search query: LLM hallucination evaluation |
 | [stanford-oval/WikiChat](https://github.com/stanford-oval/WikiChat) | 1592 | 143 | 73.9 | verified | Grounded conversational QA ideas. |
-| [cvs-health/uqlm](https://github.com/cvs-health/uqlm) | 1152 | 123 | 77.7 | verified | Uncertainty quantification for LLM outputs. |
+| [cvs-health/uqlm](https://github.com/cvs-health/uqlm) | 1153 | 124 | 77.7 | verified | Uncertainty quantification for LLM outputs. |
 | [MigoXLab/dingo](https://github.com/MigoXLab/dingo) | 700 | 72 | 75.5 | verified | Discovered by GitHub search query: LLM hallucination evaluation |
 | [potsawee/selfcheckgpt](https://github.com/potsawee/selfcheckgpt) | 612 | 70 | 60.1 | verified | Sampling-based self-consistency hallucination checks. |
 | [KRLabsOrg/LettuceDetect](https://github.com/KRLabsOrg/LettuceDetect) | 573 | 40 | 74.2 | verified | Hallucination/factual inconsistency detection; verify README. |
@@ -35,30 +35,16 @@ Top 3 by verified stars: confident-ai/deepeval, Arize-ai/phoenix, truera/trulens
 
 | Repo | Stars | Forks | Quality | Verified | Focus |
 |---|---:|---:|---:|---|---|
-| [x1xhlol/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools) | 137528 | 34255 | 98.6 | verified | Prompt corpus for defensive pattern analysis. |
-| [dair-ai/Prompt-Engineering-Guide](https://github.com/dair-ai/Prompt-Engineering-Guide) | 74662 | 8079 | 90.8 | verified | Prompt engineering methods and examples. |
-| [danielmiessler/Fabric](https://github.com/danielmiessler/Fabric) | 41744 | 4141 | 93.2 | verified | Reusable task prompt workflow templates. |
+| [x1xhlol/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools) | 137570 | 34281 | 98.6 | verified | Prompt corpus for defensive pattern analysis. |
+| [dair-ai/Prompt-Engineering-Guide](https://github.com/dair-ai/Prompt-Engineering-Guide) | 74675 | 8080 | 90.8 | verified | Prompt engineering methods and examples. |
+| [danielmiessler/Fabric](https://github.com/danielmiessler/Fabric) | 41747 | 4142 | 93.2 | verified | Reusable task prompt workflow templates. |
 | [JushBJJ/Mr.-Ranedeer-AI-Tutor](https://github.com/JushBJJ/Mr.-Ranedeer-AI-Tutor) | 29632 | 3309 | 81.9 | verified | Adaptive tutor prompt patterns. |
-| [linshenkx/prompt-optimizer](https://github.com/linshenkx/prompt-optimizer) | 28975 | 3392 | 91.8 | verified | Prompt optimizer product patterns. |
-| [langfuse/langfuse](https://github.com/langfuse/langfuse) | 27337 | 2788 | 91.4 | verified | Discovered by GitHub search query: prompt engineering evaluation |
-| [elder-plinius/CL4R1T4S](https://github.com/elder-plinius/CL4R1T4S) | 26158 | 4725 | 91.9 | verified | Adversarial corpus for defensive evaluation only. |
-| [promptfoo/promptfoo](https://github.com/promptfoo/promptfoo) | 21322 | 1856 | 90.1 | verified | Prompt testing, eval CI, regression gates. |
-| [elder-plinius/L1B3RT4S](https://github.com/elder-plinius/L1B3RT4S) | 18860 | 2279 | 85 | verified | Adversarial corpus for safety regression tests only. |
-| [Nagi-ovo/gemini-voyager](https://github.com/Nagi-ovo/gemini-voyager) | 17988 | 567 | 88 | verified | Gemini workflow and prompt adaptation ideas. |
-| [liyupi/ai-guide](https://github.com/liyupi/ai-guide) | 13997 | 1578 | 88.6 | verified | Chinese AI prompt/product guide material. |
-| [openlit/openlit](https://github.com/openlit/openlit) | 2448 | 277 | 81.1 | verified | Discovered by GitHub search query: prompt engineering evaluation |
-| [meta-llama/prompt-ops](https://github.com/meta-llama/prompt-ops) | 812 | 124 | 76.7 | verified | Discovered by GitHub search query: prompt optimizer LLM |
-| [insaaniManav/prompt-forge](https://github.com/insaaniManav/prompt-forge) | 775 | 76 | 65.9 | verified | Discovered by GitHub search query: prompt engineering evaluation |
-| [NadirRouter/NadirClaw](https://github.com/NadirRouter/NadirClaw) | 497 | 58 | 74.2 | verified | Discovered by GitHub search query: prompt optimizer LLM |
-| [preset-io/promptimize](https://github.com/preset-io/promptimize) | 494 | 43 | 68.8 | verified | Discovered by GitHub search query: prompt engineering evaluation |
-| [jxzhangjhu/Awesome-LLM-Prompt-Optimization](https://github.com/jxzhangjhu/Awesome-LLM-Prompt-Optimization) | 407 | 21 | 72.3 | verified | Discovered by GitHub search query: prompt optimizer LLM |
-| [spring-ai-alibaba/spring-ai-alibaba-admin](https://github.com/spring-ai-alibaba/spring-ai-alibaba-admin) | 390 | 75 | 68.8 | verified | Discovered by GitHub search query: prompt engineering evaluation |
-| [maitrix-org/PromptAgent](https://github.com/maitrix-org/PromptAgent) | 353 | 45 | 62.8 | verified | Discovered by GitHub search query: prompt optimizer LLM |
-| [Pythagora-io/eval-tool](https://github.com/Pythagora-io/eval-tool) | 12 | 5 | 45.1 | verified | Discovered by GitHub search query: prompt testing LLM eval |
-| [Spectral-Knight-Ops/local-llm-evaluator](https://github.com/Spectral-Knight-Ops/local-llm-evaluator) | 8 | 2 | 53.1 | verified | Discovered by GitHub search query: prompt testing LLM eval |
-| [syamsasi99/prompt-evaluator](https://github.com/syamsasi99/prompt-evaluator) | 6 | 1 | 51.8 | verified | Discovered by GitHub search query: prompt testing LLM eval |
-| [amitbad/llm-evaluation](https://github.com/amitbad/llm-evaluation) | 4 | 1 | 50.8 | verified | Discovered by GitHub search query: prompt testing LLM eval |
-| [birdsean/tetris-puzzle-eval-generator](https://github.com/birdsean/tetris-puzzle-eval-generator) | 2 | 0 | 33.3 | verified | Discovered by GitHub search query: prompt testing LLM eval |
+| [linshenkx/prompt-optimizer](https://github.com/linshenkx/prompt-optimizer) | 28997 | 3394 | 91.8 | verified | Prompt optimizer product patterns. |
+| [elder-plinius/CL4R1T4S](https://github.com/elder-plinius/CL4R1T4S) | 26161 | 4726 | 91.9 | verified | Adversarial corpus for defensive evaluation only. |
+| [promptfoo/promptfoo](https://github.com/promptfoo/promptfoo) | 21331 | 1857 | 90.1 | verified | Prompt testing, eval CI, regression gates. |
+| [elder-plinius/L1B3RT4S](https://github.com/elder-plinius/L1B3RT4S) | 18862 | 2280 | 85 | verified | Adversarial corpus for safety regression tests only. |
+| [Nagi-ovo/gemini-voyager](https://github.com/Nagi-ovo/gemini-voyager) | 17990 | 567 | 88 | verified | Gemini workflow and prompt adaptation ideas. |
+| [liyupi/ai-guide](https://github.com/liyupi/ai-guide) | 14008 | 1581 | 88.6 | verified | Chinese AI prompt/product guide material. |
 
 Top 3 by verified stars: x1xhlol/system-prompts-and-models-of-ai-tools, dair-ai/Prompt-Engineering-Guide, danielmiessler/Fabric
 
@@ -66,17 +52,12 @@ Top 3 by verified stars: x1xhlol/system-prompts-and-models-of-ai-tools, dair-ai/
 
 | Repo | Stars | Forks | Quality | Verified | Focus |
 |---|---:|---:|---:|---|---|
-| [EvoLinkAI/awesome-gpt-image-2-API-and-Prompts](https://github.com/EvoLinkAI/awesome-gpt-image-2-API-and-Prompts) | 14779 | 1492 | 88.7 | verified | GPT Image 2 API and prompt examples. |
-| [YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2) | 6103 | 547 | 84.7 | verified | Awesome list for GPT Image 2 resources. |
-| [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2) | 5497 | 742 | 84.8 | verified | Discovered by GitHub search query: "gpt-image-2" prompts |
-| [wuyoscar/gpt_image_2_skill](https://github.com/wuyoscar/gpt_image_2_skill) | 2152 | 209 | 80.3 | verified | GPT Image 2 skill/prompt patterns. |
-| [Anil-matcha/Awesome-GPT-Image-2-API-Prompts](https://github.com/Anil-matcha/Awesome-GPT-Image-2-API-Prompts) | 1999 | 210 | 80.1 | verified | GPT Image 2 prompt examples and API notes. |
-| [ZeroLu/awesome-gpt-image](https://github.com/ZeroLu/awesome-gpt-image) | 1386 | 112 | 78.2 | verified | Discovered by GitHub search query: "gpt image 2" awesome |
-| [ipinputra/GPT-Image-2-Unlocked-API-Toolkit](https://github.com/ipinputra/GPT-Image-2-Unlocked-API-Toolkit) | 185 | 0 | 65.9 | verified | Discovered by GitHub search query: "GPT Image 2" API prompts |
-| [moosl/awsome-gpt-image-2-prompts](https://github.com/moosl/awsome-gpt-image-2-prompts) | 52 | 5 | 64.4 | verified | Discovered by GitHub search query: "GPT Image 2" API prompts |
-| [EvoLinkAI/gpt-image-2-for-e-commerce](https://github.com/EvoLinkAI/gpt-image-2-for-e-commerce) | 10 | 0 | 57.3 | verified | Discovered by GitHub search query: "GPT Image 2" API prompts |
+| [EvoLinkAI/awesome-gpt-image-2-API-and-Prompts](https://github.com/EvoLinkAI/awesome-gpt-image-2-API-and-Prompts) | 14804 | 1497 | 88.7 | verified | GPT Image 2 API and prompt examples. |
+| [YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2) | 6129 | 553 | 84.7 | verified | Awesome list for GPT Image 2 resources. |
+| [wuyoscar/gpt_image_2_skill](https://github.com/wuyoscar/gpt_image_2_skill) | 2162 | 209 | 80.3 | verified | GPT Image 2 skill/prompt patterns. |
+| [Anil-matcha/Awesome-GPT-Image-2-API-Prompts](https://github.com/Anil-matcha/Awesome-GPT-Image-2-API-Prompts) | 2004 | 211 | 80.1 | verified | GPT Image 2 prompt examples and API notes. |
 
-Top 3 by verified stars: EvoLinkAI/awesome-gpt-image-2-API-and-Prompts, YouMind-OpenLab/awesome-gpt-image-2, freestylefly/awesome-gpt-image-2
+Top 3 by verified stars: EvoLinkAI/awesome-gpt-image-2-API-and-Prompts, YouMind-OpenLab/awesome-gpt-image-2, wuyoscar/gpt_image_2_skill
 
 ## Extracted Rules
 
