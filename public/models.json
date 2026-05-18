@@ -22,6 +22,29 @@
     "category": "text"
   },
   {
+    "id": "gpt-5.5-pro",
+    "name": "GPT-5.5 Pro",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 1048576,
+    "maxOutput": 128000,
+    "inputCostPer1M": 30,
+    "outputCostPer1M": 180,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": true,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision",
+      "agentic",
+      "pro"
+    ],
+    "releaseDate": "2026-04-24",
+    "category": "text"
+  },
+  {
     "id": "sophnet-deepseek-v4-pro",
     "name": "DeepSeek V4 Pro (SophNet relay)",
     "provider": "DeepSeek",
@@ -4532,29 +4555,6 @@
     "isLatest": false,
     "tags": [],
     "releaseDate": "",
-    "category": "text"
-  },
-  {
-    "id": "gpt-5.5-pro",
-    "name": "GPT-5.5 Pro",
-    "provider": "OpenAI",
-    "apiProvider": "openai",
-    "contextWindow": 1048576,
-    "maxOutput": 128000,
-    "inputCostPer1M": 30,
-    "outputCostPer1M": 180,
-    "speed": "medium",
-    "accuracy": "supreme",
-    "supportsStreaming": true,
-    "isLatest": true,
-    "tags": [
-      "reasoning",
-      "code",
-      "vision",
-      "agentic",
-      "pro"
-    ],
-    "releaseDate": "2026-04-24",
     "category": "text"
   },
   {
