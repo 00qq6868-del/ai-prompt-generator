@@ -4575,6 +4575,23 @@
     "category": "text"
   },
   {
+    "id": "claude-opus-4-8",
+    "name": "claude-opus-4-8",
+    "provider": "Anthropic",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "gpt-realtime-1.5",
     "name": "GPT Realtime 1.5",
     "provider": "OpenAI",
