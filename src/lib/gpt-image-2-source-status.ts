@@ -1,6 +1,6 @@
 export const GPT_IMAGE_2_SOURCE_COMMITS = [
   "EvoLinkAI/awesome-gpt-image-2-API-and-Prompts@897b14d",
-  "YouMind-OpenLab/awesome-gpt-image-2@003366d",
+  "YouMind-OpenLab/awesome-gpt-image-2@37176e5",
   "Anil-matcha/Awesome-GPT-Image-2-API-Prompts@1123572",
   "wuyoscar/gpt_image_2_skill@46c47d2",
 ] as const;
