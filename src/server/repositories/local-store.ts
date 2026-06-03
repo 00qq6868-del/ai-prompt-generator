@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 
@@ -97,16 +96,7 @@ export interface StoreSnapshot {
   datasetExports: DatasetExportRecord[];
 }
 
-function resolveDataDir(): string {
-  const configured = process.env.AI_PROMPT_V3_DATA_DIR?.trim();
-  if (configured) return configured;
-  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT) {
-    return path.join(os.tmpdir(), "ai-prompt-generator-v3");
-  }
-  return path.join(process.cwd(), ".local-data");
-}
-
-export const DATA_DIR = resolveDataDir();
+export const DATA_DIR = path.join(process.cwd(), ".local-data");
 const STORE_FILE = path.join(DATA_DIR, "v3-store.json");
 export const DEFAULT_DEVICE_ID = "anonymous-local-device";
 
