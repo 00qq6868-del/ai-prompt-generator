@@ -3,7 +3,6 @@ node_modules/
 
 # 构建产物
 .next/
-dist-tests/
 dist-electron/
 tsconfig.tsbuildinfo
 android/.gradle/

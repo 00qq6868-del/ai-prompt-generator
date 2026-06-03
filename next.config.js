@@ -65,15 +65,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["@anthropic-ai/sdk", "sharp"],
   },
-  webpack: (config) => {
-    config.resolve.extensionAlias = {
-      ...(config.resolve.extensionAlias || {}),
-      ".js": [".ts", ".tsx", ".js"],
-      ".mjs": [".mts", ".mjs"],
-      ".cjs": [".cts", ".cjs"],
-    };
-    return config;
-  },
 };
 
 module.exports = withPWA(nextConfig);
