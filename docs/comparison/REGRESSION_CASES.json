@@ -1,0 +1,42 @@
+[
+  {
+    "id": "model-picker-drag-click-regression",
+    "source": "legacy-session-log",
+    "symptom": "Model picker could scroll but model cards could not be selected.",
+    "rootCause": "Nested interactive controls and pointer capture before drag threshold.",
+    "v3Prevention": "No nested buttons inside selectable cards; pointer capture only after movement threshold.",
+    "requiredTest": "Model card remains clickable after scroll and drag."
+  },
+  {
+    "id": "pwa-waiting-undefined-regression",
+    "source": "legacy-session-log",
+    "symptom": "PWA registration crashed with undefined waiting property.",
+    "rootCause": "Unguarded service worker lifecycle access.",
+    "v3Prevention": "Guarded opt-in service worker registration; no automatic unsafe access.",
+    "requiredTest": "No console/page error during app startup."
+  },
+  {
+    "id": "local-panel-empty-selectors-regression",
+    "source": "legacy-session-log",
+    "symptom": "Local GPT Image 2 panel loaded empty model selectors and disabled start buttons.",
+    "rootCause": "Client script error and brittle model options loading.",
+    "v3Prevention": "Test Client SDK handles empty model lists with fallback and visible recoverable error.",
+    "requiredTest": "Panel renders model cards or an actionable fallback state."
+  },
+  {
+    "id": "slow-model-502-aborts-run-regression",
+    "source": "legacy-session-log",
+    "symptom": "One relay 502 or slow model aborted the whole multi-model test.",
+    "rootCause": "Per-model failure was not isolated from run-level completion.",
+    "v3Prevention": "Model-level timeout/failure isolation; complete if at least one selected model succeeds.",
+    "requiredTest": "One failing model is logged and skipped while successful models complete."
+  },
+  {
+    "id": "feedback-local-only-data-silo-regression",
+    "source": "legacy-architecture",
+    "symptom": "Feedback stored only in local browser memory cannot train server-side optimization.",
+    "rootCause": "localStorage used as primary learning state.",
+    "v3Prevention": "Server-first feedback storage with local cache and idempotent offline sync.",
+    "requiredTest": "Feedback is persisted server-side and local duplicate sync is idempotent."
+  }
+]

@@ -6,9 +6,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { WebVitals } from "@/components/WebVitals";
 
 export const metadata: Metadata = {
-  title: "AI 提示词生成器",
+  title: "AI提示词生成器 V3",
   description:
-    "支持 GPT-5、Claude、Gemini、Grok、Llama、DeepSeek、Kimi、Qwen 等 230+ 大模型的智能提示词优化生成器",
+    "AI Prompt Generator V3 clean-room prompt MLOps workbench with old-vs-new comparison and feedback memory.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

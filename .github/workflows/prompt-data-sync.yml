@@ -36,17 +36,23 @@ jobs:
         run: npm run data:validate
 
       - name: Type check
-        run: npx tsc --noEmit
+        run: npm run typecheck
+
+      - name: Run V3 unit and comparison tests
+        run: |
+          npm test
+          npm run comparison:validate
+          npm run quality:golden
+          npm run schema:validate
 
       - name: Build
         run: npm run build
 
+      - name: Run V3 HTTP smoke
+        run: npm run smoke:http
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: E2E
-        run: npx playwright test --project=chromium
-        env:
-          HOSTNAME: 127.0.0.1
-          PORT: 3000
-          PLAYWRIGHT_WEB_SERVER_COMMAND: npm run start:e2e
+      - name: V3 browser smoke
+        run: npm run e2e:playwright

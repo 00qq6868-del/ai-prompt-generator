@@ -164,7 +164,36 @@ async function main() {
 
   const homepage = await fetchWithTimeout(`${BASE_URL}/`);
   assert(homepage.ok, `homepage returned ${homepage.status}`);
-  log("homepage ok");
+  const homepageText = await homepage.text();
+  assert(
+    homepageText.includes("AI提示词生成器 V3"),
+    "homepage did not render the V3 surface marker",
+  );
+  log("homepage ok: V3 surface detected");
+
+  const v3Preference = await readJson(`${BASE_URL}/api/v3/model-preferences?deviceId=production-smoke`);
+  assert(v3Preference.ok === true, "/api/v3/model-preferences did not return ok=true");
+  assert(v3Preference.data?.targetModelId, "/api/v3/model-preferences missing targetModelId");
+  log(`v3 model preferences ok: target=${v3Preference.data.targetModelId}`);
+
+  const v3Generated = await readJson(`${BASE_URL}/api/v3/prompts/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      deviceId: "production-smoke",
+      userIdea: "用参考照片生成商业海报，保留人物身份，中文标题清晰，手部不能畸形",
+      failedDimensions: ["hand_anatomy", "text_rendering", "reference_similarity"],
+      hasReferenceImage: true,
+    }),
+  });
+  assert(v3Generated.ok === true, "/api/v3/prompts/generate did not return ok=true");
+  assert(
+    typeof v3Generated.data?.optimizedPrompt === "string" &&
+      v3Generated.data.optimizedPrompt.includes("V3 Optimized Prompt"),
+    "/api/v3/prompts/generate did not return a V3 optimized prompt",
+  );
+  assert(v3Generated.qualityGate?.intentFidelity >= 8, "/api/v3/prompts/generate quality gate was missing or too low");
+  log(`v3 prompt generation ok: prompt=${v3Generated.data.promptId}, pass=${v3Generated.qualityGate.pass}`);
 
   const modelsData = await readJson(`${BASE_URL}/api/models?smoke=${Date.now()}`);
   const models = Array.isArray(modelsData) ? modelsData : modelsData.models;
