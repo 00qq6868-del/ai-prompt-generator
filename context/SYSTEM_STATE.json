@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-06-05T04:48:33.500Z",
-  "totalModels": 300,
+  "updatedAt": "2026-06-05T08:52:55.700Z",
+  "totalModels": 301,
   "byCategory": {
-    "text": 273,
+    "text": 274,
     "image": 12,
     "video": 7,
     "tts": 8
@@ -19,7 +19,7 @@
     "MiniMax": 22,
     "智谱AI": 17,
     "ByteDance": 2,
-    "阶跃星辰": 3,
+    "阶跃星辰": 4,
     "Cohere": 5,
     "Mistral AI": 3,
     "字节豆包": 3,
@@ -27,7 +27,7 @@
     "月之暗面": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 31,
+  "zeroCostModels": 32,
   "metaCoverage": 269,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
@@ -37,7 +37,7 @@
   },
   "lastUpdate": {
     "added": 1,
-    "updated": 269,
-    "previousTotal": 299
+    "updated": 270,
+    "previousTotal": 300
   }
 }
