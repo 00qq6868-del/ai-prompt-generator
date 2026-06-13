@@ -2665,6 +2665,46 @@
     "category": "text"
   },
   {
+    "id": "coding-glm-5.2",
+    "name": "coding-glm-5.2",
+    "provider": "智谱AI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "coding-glm-5.2-free",
+    "name": "coding-glm-5.2-free",
+    "provider": "智谱AI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.5,
+    "outputCostPer1M": 0.5,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
