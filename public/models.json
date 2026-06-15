@@ -610,6 +610,26 @@
     "category": "text"
   },
   {
+    "id": "kimi-k2.7-code-highspeed",
+    "name": "kimi-k2.7-code-highspeed",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 2,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code"
+    ],
+    "releaseDate": "2025-09-01",
+    "category": "text"
+  },
+  {
     "id": "gpt-5.2-codex",
     "name": "gpt-5.2-codex",
     "provider": "OpenAI",
