@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-06-23T01:49:44.109Z",
-  "totalModels": 393,
+  "updatedAt": "2026-06-23T06:28:37.241Z",
+  "totalModels": 395,
   "byCategory": {
-    "text": 365,
+    "text": 367,
     "image": 12,
     "video": 7,
     "tts": 8,
@@ -24,12 +24,12 @@
     "阶跃星辰": 4,
     "Cohere": 7,
     "Mistral AI": 3,
-    "字节豆包": 11,
+    "字节豆包": 13,
     "Groq": 2,
     "月之暗面": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 89,
+  "zeroCostModels": 91,
   "metaCoverage": 304,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
@@ -38,7 +38,7 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
+    "added": 2,
     "updated": 377,
     "previousTotal": 393
   }
