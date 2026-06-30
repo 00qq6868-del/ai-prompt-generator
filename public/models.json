@@ -7137,6 +7137,26 @@
     "category": "image"
   },
   {
+    "id": "gemini-3.1-flash-lite-image",
+    "name": "Gemini 3.1 Flash Lite Image",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 65536,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "image"
+  },
+  {
     "id": "gemini-3-pro-preview",
     "name": "Gemini 3 Pro Preview",
     "provider": "Google",
@@ -7543,6 +7563,23 @@
       "fast"
     ],
     "releaseDate": "2025-02-05",
+    "category": "text"
+  },
+  {
+    "id": "gemini-omni-flash-preview",
+    "name": "Gemini Omni Flash Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
     "category": "text"
   },
   {
