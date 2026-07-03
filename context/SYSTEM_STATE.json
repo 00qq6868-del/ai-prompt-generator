@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-02T22:47:33.378Z",
+  "updatedAt": "2026-07-03T00:19:09.785Z",
   "totalModels": 405,
   "byCategory": {
     "text": 374,
@@ -9,11 +9,11 @@
     "ocr": 1
   },
   "byProvider": {
-    "Google": 58,
     "OpenAI": 61,
     "DeepSeek": 16,
     "Anthropic": 27,
     "Other": 70,
+    "Google": 58,
     "阿里巴巴": 51,
     "xAI": 18,
     "百度": 12,
@@ -34,12 +34,12 @@
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
     "added": 0,
-    "updated": 18,
+    "updated": 19,
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
     "added": 0,
-    "updated": 355,
+    "updated": 386,
     "previousTotal": 405
   }
 }
