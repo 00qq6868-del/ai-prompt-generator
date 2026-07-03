@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-07-03T13:12:42.210Z",
-  "totalModels": 405,
+  "updatedAt": "2026-07-03T15:26:28.522Z",
+  "totalModels": 406,
   "byCategory": {
-    "text": 374,
+    "text": 375,
     "image": 15,
     "video": 7,
     "tts": 8,
@@ -22,7 +22,7 @@
     "ByteDance": 2,
     "Meta": 4,
     "阶跃星辰": 4,
-    "Cohere": 7,
+    "Cohere": 8,
     "Mistral AI": 3,
     "字节豆包": 13,
     "Groq": 2,
@@ -30,7 +30,7 @@
     "Ollama": 2
   },
   "zeroCostModels": 100,
-  "metaCoverage": 305,
+  "metaCoverage": 306,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
     "added": 0,
@@ -38,7 +38,7 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
+    "added": 1,
     "updated": 386,
     "previousTotal": 405
   }
