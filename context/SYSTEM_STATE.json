@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-07-06T11:04:52.943Z",
-  "totalModels": 406,
+  "updatedAt": "2026-07-06T14:37:33.772Z",
+  "totalModels": 407,
   "byCategory": {
-    "text": 375,
+    "text": 376,
     "image": 15,
     "video": 7,
     "tts": 8,
@@ -12,7 +12,7 @@
     "OpenAI": 61,
     "DeepSeek": 16,
     "Anthropic": 27,
-    "Other": 70,
+    "Other": 71,
     "Google": 58,
     "阿里巴巴": 51,
     "xAI": 18,
@@ -29,7 +29,7 @@
     "月之暗面": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 100,
+  "zeroCostModels": 101,
   "metaCoverage": 306,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
@@ -38,7 +38,7 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
+    "added": 1,
     "updated": 387,
     "previousTotal": 406
   }
