@@ -2766,6 +2766,27 @@
     "category": "text"
   },
   {
+    "id": "gpt-5.6",
+    "name": "gpt-5.6",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",

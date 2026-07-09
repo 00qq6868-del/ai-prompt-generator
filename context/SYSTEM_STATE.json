@@ -1,15 +1,15 @@
 {
-  "updatedAt": "2026-07-09T18:11:18.460Z",
-  "totalModels": 408,
+  "updatedAt": "2026-07-09T20:05:10.694Z",
+  "totalModels": 409,
   "byCategory": {
-    "text": 377,
+    "text": 378,
     "image": 15,
     "video": 7,
     "tts": 8,
     "ocr": 1
   },
   "byProvider": {
-    "OpenAI": 61,
+    "OpenAI": 62,
     "DeepSeek": 16,
     "Anthropic": 27,
     "Other": 71,
@@ -30,7 +30,7 @@
     "Ollama": 2
   },
   "zeroCostModels": 101,
-  "metaCoverage": 307,
+  "metaCoverage": 308,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
     "added": 0,
@@ -38,7 +38,7 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
+    "added": 1,
     "updated": 383,
     "previousTotal": 408
   }
