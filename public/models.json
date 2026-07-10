@@ -770,6 +770,26 @@
     "category": "text"
   },
   {
+    "id": "gemini-3.1-flash-lite-nothink",
+    "name": "gemini-3.1-flash-lite-nothink",
+    "provider": "Google",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-08-01",
+    "category": "text"
+  },
+  {
     "id": "gpt-5.1-codex-max",
     "name": "gpt-5.1-codex-max",
     "provider": "OpenAI",
@@ -2768,6 +2788,69 @@
   {
     "id": "gpt-5.6",
     "name": "gpt-5.6",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gpt-5.6-luna",
+    "name": "gpt-5.6-luna",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gpt-5.6-sol",
+    "name": "gpt-5.6-sol",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 10,
+    "outputCostPer1M": 40,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "code",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
+    "id": "gpt-5.6-terra",
+    "name": "gpt-5.6-terra",
     "provider": "OpenAI",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
