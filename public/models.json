@@ -5147,6 +5147,26 @@
     "category": "text"
   },
   {
+    "id": "gpt-4o-transcribe-diarize",
+    "name": "gpt-4o-transcribe-diarize",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 2.5,
+    "outputCostPer1M": 10,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "code"
+    ],
+    "releaseDate": "2024-05-13",
+    "category": "text"
+  },
+  {
     "id": "command-r-plus",
     "name": "command-r-plus",
     "provider": "Cohere",
@@ -6829,6 +6849,23 @@
     "tags": [],
     "releaseDate": "",
     "category": "text"
+  },
+  {
+    "id": "gpt-audio-1.5",
+    "name": "gpt-audio-1.5",
+    "provider": "OpenAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "tts"
   },
   {
     "id": "gpt-realtime-1.5",
