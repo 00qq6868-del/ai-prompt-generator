@@ -2910,6 +2910,27 @@
     "category": "text"
   },
   {
+    "id": "glm-5.2-fast-preview",
+    "name": "glm-5.2-fast-preview",
+    "provider": "智谱AI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.7,
+    "outputCostPer1M": 0.7,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese",
+      "code",
+      "vision"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
