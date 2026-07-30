@@ -8057,6 +8057,26 @@
     "category": "text"
   },
   {
+    "id": "gemini-robotics-er-2-preview",
+    "name": "Gemini Robotics-ER 2 Preview",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 131072,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1,
+    "outputCostPer1M": 5,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "robotics"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "gemini-2.5-flash-image",
     "name": "Nano Banana",
     "provider": "Google",
