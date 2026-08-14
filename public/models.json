@@ -7628,6 +7628,23 @@
     "category": "text"
   },
   {
+    "id": "fireworks-deepseek-v4-pro-0813",
+    "name": "fireworks-deepseek-v4-pro-0813",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "gpt-realtime-1.5",
     "name": "GPT Realtime 1.5",
     "provider": "OpenAI",
