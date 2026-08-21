@@ -1094,6 +1094,27 @@
     "category": "text"
   },
   {
+    "id": "deepseek-v4-flash-0731-fast",
+    "name": "deepseek-v4-flash-0731-fast",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code",
+      "math",
+      "reasoning"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
     "id": "o3-pro",
     "name": "o3-pro",
     "provider": "OpenAI",
