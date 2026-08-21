@@ -1115,6 +1115,27 @@
     "category": "text"
   },
   {
+    "id": "deepseek-v4-flash-vision-exp",
+    "name": "deepseek-v4-flash-vision-exp",
+    "provider": "DeepSeek",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.27,
+    "outputCostPer1M": 1.1,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "code",
+      "math",
+      "reasoning"
+    ],
+    "releaseDate": "2025-07-01",
+    "category": "text"
+  },
+  {
     "id": "o3-pro",
     "name": "o3-pro",
     "provider": "OpenAI",
@@ -7748,6 +7769,23 @@
   {
     "id": "mai-thinking-1",
     "name": "mai-thinking-1",
+    "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "ox-alpha",
+    "name": "ox-alpha",
     "provider": "Other",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
