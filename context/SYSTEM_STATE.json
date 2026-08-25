@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-08-25T01:53:17.125Z",
-  "totalModels": 474,
+  "updatedAt": "2026-08-25T03:13:09.939Z",
+  "totalModels": 476,
   "byCategory": {
-    "text": 439,
+    "text": 441,
     "image": 16,
     "video": 9,
     "tts": 9,
@@ -17,20 +17,20 @@
     "阿里巴巴": 55,
     "xAI": 20,
     "百度": 12,
-    "MiniMax": 27,
+    "MiniMax": 28,
     "智谱AI": 31,
     "ByteDance": 2,
     "Meta": 4,
     "阶跃星辰": 4,
     "Cohere": 8,
     "Mistral AI": 3,
-    "字节豆包": 13,
+    "字节豆包": 14,
     "Groq": 2,
     "月之暗面": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 142,
-  "metaCoverage": 332,
+  "zeroCostModels": 143,
+  "metaCoverage": 333,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
     "added": 0,
@@ -38,7 +38,7 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
+    "added": 2,
     "updated": 437,
     "previousTotal": 474
   }

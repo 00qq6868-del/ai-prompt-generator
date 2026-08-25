@@ -3157,6 +3157,25 @@
     "category": "text"
   },
   {
+    "id": "minimax-m2.7-free",
+    "name": "minimax-m2.7-free",
+    "provider": "MiniMax",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0.3,
+    "outputCostPer1M": 0.9,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "chinese"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
@@ -7821,6 +7840,23 @@
     "id": "baidu-deepseek-v4-pro-0813",
     "name": "baidu-deepseek-v4-pro-0813",
     "provider": "Other",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "doubao-deepseek-v4-flash-0731",
+    "name": "doubao-deepseek-v4-flash-0731",
+    "provider": "字节豆包",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
