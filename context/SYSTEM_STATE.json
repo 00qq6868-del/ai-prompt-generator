@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-08-26T13:40:35.985Z",
-  "totalModels": 479,
+  "updatedAt": "2026-08-26T14:27:05.552Z",
+  "totalModels": 480,
   "byCategory": {
-    "text": 444,
+    "text": 445,
     "image": 16,
     "video": 9,
     "tts": 9,
@@ -18,7 +18,7 @@
     "xAI": 20,
     "百度": 12,
     "MiniMax": 29,
-    "智谱AI": 32,
+    "智谱AI": 33,
     "ByteDance": 2,
     "Meta": 4,
     "阶跃星辰": 4,
@@ -30,7 +30,7 @@
     "Ollama": 2
   },
   "zeroCostModels": 145,
-  "metaCoverage": 334,
+  "metaCoverage": 335,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
     "added": 0,
@@ -38,7 +38,7 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
+    "added": 1,
     "updated": 441,
     "previousTotal": 479
   }
