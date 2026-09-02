@@ -8829,6 +8829,26 @@
     "category": "text"
   },
   {
+    "id": "gemini-3.8-flash",
+    "name": "Gemini 3.8 Flash",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "gemini-2.5-flash-image",
     "name": "Nano Banana",
     "provider": "Google",
