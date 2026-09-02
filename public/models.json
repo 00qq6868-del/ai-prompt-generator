@@ -3217,6 +3217,26 @@
     "category": "text"
   },
   {
+    "id": "gemini-3.8-flash-free",
+    "name": "gemini-3.8-flash-free",
+    "provider": "Google",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
@@ -9113,6 +9133,27 @@
     "tags": [
       "ultra-cheap",
       "fast"
+    ],
+    "releaseDate": "2025-02-05",
+    "category": "text"
+  },
+  {
+    "id": "gemini-flash-latest-high-res-exp",
+    "name": "Gemini Flash Latest",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0.1,
+    "outputCostPer1M": 0.4,
+    "speed": "ultrafast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "fast",
+      "cheap",
+      "vision"
     ],
     "releaseDate": "2025-02-05",
     "category": "text"
