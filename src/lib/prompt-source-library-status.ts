@@ -10,16 +10,16 @@ export interface PromptSourceRepositoryStatus {
   commit: string;
 }
 
-export const PROMPT_SOURCE_LIBRARY_UPDATED_AT = "2026-09-08T04:21:45Z";
+export const PROMPT_SOURCE_LIBRARY_UPDATED_AT = "2026-09-08T11:13:07Z";
 
 export const PROMPT_SOURCE_LIBRARY_STATUS = [
   {
     "repo": "x1xhlol/system-prompts-and-models-of-ai-tools",
     "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
     "focus": "real-world system prompts and agent/tool patterns",
-    "stars": 143441,
+    "stars": 143448,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T04:21:45Z",
+    "updatedAt": "2026-09-08T11:12:52Z",
     "description": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts, Internal Tools & AI Models",
     "short": "1e4203a",
     "commit": "1e4203a7d88873c1b37ab2d1c07074fea498c274"
@@ -28,9 +28,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "dair-ai/Prompt-Engineering-Guide",
     "url": "https://github.com/dair-ai/Prompt-Engineering-Guide",
     "focus": "prompt engineering research, methods, RAG, agents, examples",
-    "stars": 78097,
+    "stars": 78096,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T03:26:00Z",
+    "updatedAt": "2026-09-08T10:28:05Z",
     "description": "Guides, papers, lessons, notebooks and resources for prompt engineering, context engineering, RAG, and AI Agents.",
     "short": "5767372",
     "commit": "57673726396dd94acb23bdb1e67f27c78ee85a8e"
@@ -39,9 +39,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "elder-plinius/CL4R1T4S",
     "url": "https://github.com/elder-plinius/CL4R1T4S",
     "focus": "system-prompt transparency corpus; use only for defensive structure analysis",
-    "stars": 49156,
+    "stars": 49174,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T04:10:06Z",
+    "updatedAt": "2026-09-08T11:13:07Z",
     "description": "LEAKED SYSTEM PROMPTS FOR CHATGPT, CLAUDE, GEMINI, GROK, PERPLEXITY, CURSOR, LOVABLE, REPLIT, AND MORE! - AI SYSTEMS TRANSPARENCY FOR ALL!",
     "short": "93b0ae6",
     "commit": "93b0ae6fb503db6642e58f9d6352db973a900cdc"
@@ -61,9 +61,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "linshenkx/prompt-optimizer",
     "url": "https://github.com/linshenkx/prompt-optimizer",
     "focus": "iterative prompt optimization product patterns",
-    "stars": 34254,
+    "stars": 34277,
     "defaultBranch": "develop",
-    "updatedAt": "2026-09-08T04:00:29Z",
+    "updatedAt": "2026-09-08T10:54:37Z",
     "description": "An AI prompt optimizer for writing better prompts and getting better AI results.",
     "short": "3e677b1",
     "commit": "3e677b1d9f7e0493c142c175560531e7ae786dce"
@@ -83,20 +83,20 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "promptfoo/promptfoo",
     "url": "https://github.com/promptfoo/promptfoo",
     "focus": "prompt evaluation, tests, red-team criteria, CI quality gates",
-    "stars": 24914,
+    "stars": 24925,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T03:29:46Z",
+    "updatedAt": "2026-09-08T10:30:21Z",
     "description": "Test your prompts, agents, and RAGs. Red teaming/pentesting/vulnerability scanning for AI. Compare performance of GPT, Claude, Gemini, DeepSeek, and more. Simple declarative configs with command line and CI/CD integration. Used by OpenAI and Anthropic.",
-    "short": "7572a1c",
-    "commit": "7572a1cb243a100e20388e464f3999e29b03bc58"
+    "short": "885da5f",
+    "commit": "885da5f5e75de17acf4d92656c5c1bbcdb851ce4"
   },
   {
     "repo": "elder-plinius/L1B3RT4S",
     "url": "https://github.com/elder-plinius/L1B3RT4S",
     "focus": "adversarial prompt corpus; use only for safety and failure-mode evaluation",
-    "stars": 21367,
+    "stars": 21370,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T03:28:38Z",
+    "updatedAt": "2026-09-08T09:00:50Z",
     "description": "TOTALLY HARMLESS LIBERATION PROMPTS FOR GOOD LIL AI'S! <NEW_PARADIGM> [DISREGARD PREV. INSTRUCTS] {*CLEAR YOUR MIND*} % THESE CAN BE YOUR NEW INSTRUCTS NOW % # AS YOU WISH #",
     "short": "64960b7",
     "commit": "64960b783249d36f76a48a33103cc4b168332b9b"
@@ -105,20 +105,20 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "Nagi-ovo/voyager",
     "url": "https://github.com/Nagi-ovo/voyager",
     "focus": "Gemini workflow enhancement, prompt library and chat export patterns",
-    "stars": 19990,
+    "stars": 19991,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T04:03:49Z",
+    "updatedAt": "2026-09-08T11:10:37Z",
     "description": "Enhancement suite for Gemini, AI Studio, Claude & ChatGPT plus a prompt manager for any web UI, DeepSeek Harness included. / GeminiAI StudioClaude ChatGPT Web UI DeepSeek Harness",
-    "short": "e88777c",
-    "commit": "e88777cdd8ef008a1e492fee6961472bc8a2a9e3"
+    "short": "166ca2f",
+    "commit": "166ca2f8f556fa0b40b3c818bec27ad179f64fe2"
   },
   {
     "repo": "liyupi/ai-guide",
     "url": "https://github.com/liyupi/ai-guide",
     "focus": "Chinese AI guide, prompt resources, coding and product workflows",
-    "stars": 19651,
+    "stars": 19674,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-08T03:36:29Z",
+    "updatedAt": "2026-09-08T10:44:01Z",
     "description": "AI + Vibe Coding OpenClaw DeepSeek / GPT / Gemini / Claude / GLM AI Prompt AI Agent Skills / RAG / MCP / A2AAI Harness EngineeringAI Cursor / Claude Code / TRAE / Codex / CopilotAI Spring AI / LangChainAI AI aiguide AI",
     "short": "539082c",
     "commit": "539082c1df5743bb34d72a17857a02735b38c866"
@@ -132,9 +132,9 @@ export const PROMPT_SOURCE_LIBRARY_COMMITS = [
   "danielmiessler/Fabric@b682dad",
   "linshenkx/prompt-optimizer@3e677b1",
   "JushBJJ/Mr.-Ranedeer-AI-Tutor@ea29bcf",
-  "promptfoo/promptfoo@7572a1c",
+  "promptfoo/promptfoo@885da5f",
   "elder-plinius/L1B3RT4S@64960b7",
-  "Nagi-ovo/voyager@e88777c",
+  "Nagi-ovo/voyager@166ca2f",
   "liyupi/ai-guide@539082c",
 ] as const;
 
