@@ -10,16 +10,16 @@ export interface PromptSourceRepositoryStatus {
   commit: string;
 }
 
-export const PROMPT_SOURCE_LIBRARY_UPDATED_AT = "2026-09-10T16:22:30Z";
+export const PROMPT_SOURCE_LIBRARY_UPDATED_AT = "2026-09-10T20:46:12Z";
 
 export const PROMPT_SOURCE_LIBRARY_STATUS = [
   {
     "repo": "x1xhlol/system-prompts-and-models-of-ai-tools",
     "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
     "focus": "real-world system prompts and agent/tool patterns",
-    "stars": 143504,
+    "stars": 143508,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T16:10:44Z",
+    "updatedAt": "2026-09-10T19:30:08Z",
     "description": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts, Internal Tools & AI Models",
     "short": "1e4203a",
     "commit": "1e4203a7d88873c1b37ab2d1c07074fea498c274"
@@ -28,9 +28,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "dair-ai/Prompt-Engineering-Guide",
     "url": "https://github.com/dair-ai/Prompt-Engineering-Guide",
     "focus": "prompt engineering research, methods, RAG, agents, examples",
-    "stars": 78177,
+    "stars": 78184,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T16:15:38Z",
+    "updatedAt": "2026-09-10T18:41:54Z",
     "description": "Guides, papers, lessons, notebooks and resources for prompt engineering, context engineering, RAG, and AI Agents.",
     "short": "5767372",
     "commit": "57673726396dd94acb23bdb1e67f27c78ee85a8e"
@@ -39,9 +39,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "elder-plinius/CL4R1T4S",
     "url": "https://github.com/elder-plinius/CL4R1T4S",
     "focus": "system-prompt transparency corpus; use only for defensive structure analysis",
-    "stars": 49428,
+    "stars": 49463,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T16:21:00Z",
+    "updatedAt": "2026-09-10T20:46:12Z",
     "description": "LEAKED SYSTEM PROMPTS FOR CHATGPT, CLAUDE, GEMINI, GROK, PERPLEXITY, CURSOR, LOVABLE, REPLIT, AND MORE! - AI SYSTEMS TRANSPARENCY FOR ALL!",
     "short": "080e8a0",
     "commit": "080e8a04899e5f7db816ab8c7f11a587509c7995"
@@ -50,9 +50,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "danielmiessler/Fabric",
     "url": "https://github.com/danielmiessler/Fabric",
     "focus": "modular reusable prompt patterns for concrete tasks",
-    "stars": 43877,
+    "stars": 43880,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T16:06:01Z",
+    "updatedAt": "2026-09-10T20:10:52Z",
     "description": "Fabric is an open-source framework for augmenting humans using AI. It provides a modular system for solving specific problems using a crowdsourced set of AI prompts that can be used anywhere.",
     "short": "b682dad",
     "commit": "b682dad740f24e85ce9a48d23babc6780dd476ac"
@@ -61,9 +61,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "linshenkx/prompt-optimizer",
     "url": "https://github.com/linshenkx/prompt-optimizer",
     "focus": "iterative prompt optimization product patterns",
-    "stars": 34449,
+    "stars": 34455,
     "defaultBranch": "develop",
-    "updatedAt": "2026-09-10T16:17:14Z",
+    "updatedAt": "2026-09-10T20:09:49Z",
     "description": "An AI prompt optimizer for writing better prompts and getting better AI results.",
     "short": "f089c9c",
     "commit": "f089c9cbf336f54a20a3a297c85a712dad7d82de"
@@ -83,20 +83,20 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "promptfoo/promptfoo",
     "url": "https://github.com/promptfoo/promptfoo",
     "focus": "prompt evaluation, tests, red-team criteria, CI quality gates",
-    "stars": 25002,
+    "stars": 25007,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T16:19:05Z",
+    "updatedAt": "2026-09-10T19:57:42Z",
     "description": "Test your prompts, agents, and RAGs. Red teaming/pentesting/vulnerability scanning for AI. Compare performance of GPT, Claude, Gemini, DeepSeek, and more. Simple declarative configs with command line and CI/CD integration. Used by OpenAI and Anthropic.",
-    "short": "78202a3",
-    "commit": "78202a3a785655ef639658b0c0318daf628da2e5"
+    "short": "627bdd0",
+    "commit": "627bdd0cb70081be0c6c6583448dbf39127a0c70"
   },
   {
     "repo": "elder-plinius/L1B3RT4S",
     "url": "https://github.com/elder-plinius/L1B3RT4S",
     "focus": "adversarial prompt corpus; use only for safety and failure-mode evaluation",
-    "stars": 21392,
+    "stars": 21400,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T15:51:00Z",
+    "updatedAt": "2026-09-10T20:33:43Z",
     "description": "TOTALLY HARMLESS LIBERATION PROMPTS FOR GOOD LIL AI'S! <NEW_PARADIGM> [DISREGARD PREV. INSTRUCTS] {*CLEAR YOUR MIND*} % THESE CAN BE YOUR NEW INSTRUCTS NOW % # AS YOU WISH #",
     "short": "64960b7",
     "commit": "64960b783249d36f76a48a33103cc4b168332b9b"
@@ -116,9 +116,9 @@ export const PROMPT_SOURCE_LIBRARY_STATUS = [
     "repo": "liyupi/ai-guide",
     "url": "https://github.com/liyupi/ai-guide",
     "focus": "Chinese AI guide, prompt resources, coding and product workflows",
-    "stars": 19788,
+    "stars": 19791,
     "defaultBranch": "main",
-    "updatedAt": "2026-09-10T16:22:30Z",
+    "updatedAt": "2026-09-10T19:34:55Z",
     "description": "AI + Vibe Coding OpenClaw DeepSeek / GPT / Gemini / Claude / GLM AI Prompt AI Agent Skills / RAG / MCP / A2AAI Harness EngineeringAI Cursor / Claude Code / TRAE / Codex / CopilotAI Spring AI / LangChainAI AI aiguide AI",
     "short": "539082c",
     "commit": "539082c1df5743bb34d72a17857a02735b38c866"
@@ -132,7 +132,7 @@ export const PROMPT_SOURCE_LIBRARY_COMMITS = [
   "danielmiessler/Fabric@b682dad",
   "linshenkx/prompt-optimizer@f089c9c",
   "JushBJJ/Mr.-Ranedeer-AI-Tutor@ea29bcf",
-  "promptfoo/promptfoo@78202a3",
+  "promptfoo/promptfoo@627bdd0",
   "elder-plinius/L1B3RT4S@64960b7",
   "Nagi-ovo/voyager@efca34b",
   "liyupi/ai-guide@539082c",
