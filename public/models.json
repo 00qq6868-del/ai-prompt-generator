@@ -3279,6 +3279,26 @@
     "category": "text"
   },
   {
+    "id": "grok-4.7",
+    "name": "grok-4.7",
+    "provider": "xAI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 5,
+    "outputCostPer1M": 20,
+    "speed": "fast",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "reasoning",
+      "real-time-web"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "text"
+  },
+  {
     "id": "codex-mini-latest",
     "name": "codex-mini-latest",
     "provider": "Other",
@@ -8371,6 +8391,23 @@
     "id": "step-5-preview",
     "name": "step-5-preview",
     "provider": "阶跃星辰",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
+    "id": "doubao-seed-2-1-pro-260628",
+    "name": "doubao-seed-2-1-pro-260628",
+    "provider": "字节豆包",
     "apiProvider": "aihubmix",
     "contextWindow": 128000,
     "maxOutput": 16384,
