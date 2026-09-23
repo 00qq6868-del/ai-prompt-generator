@@ -9560,6 +9560,46 @@
     "category": "text"
   },
   {
+    "id": "gemini-3.8-flash-tts",
+    "name": "Gemini 3.8 Flash TTS",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "tts"
+  },
+  {
+    "id": "gemini-3.8-flash-lite-tts",
+    "name": "Gemini 3.8 Flash Lite TTS",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 8192,
+    "maxOutput": 16384,
+    "inputCostPer1M": 1.25,
+    "outputCostPer1M": 10,
+    "speed": "medium",
+    "accuracy": "supreme",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "vision",
+      "reasoning"
+    ],
+    "releaseDate": "2025-06-01",
+    "category": "tts"
+  },
+  {
     "id": "gemini-2.5-flash-image",
     "name": "Nano Banana",
     "provider": "Google",
