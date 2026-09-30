@@ -1,15 +1,15 @@
 {
-  "updatedAt": "2026-09-30T00:46:34.505Z",
-  "totalModels": 532,
+  "updatedAt": "2026-09-30T06:02:12.106Z",
+  "totalModels": 533,
   "byCategory": {
-    "text": 493,
+    "text": 494,
     "image": 18,
     "video": 9,
     "tts": 11,
     "ocr": 1
   },
   "byProvider": {
-    "OpenAI": 73,
+    "OpenAI": 74,
     "DeepSeek": 21,
     "Anthropic": 31,
     "Other": 131,
@@ -29,7 +29,7 @@
     "月之暗面": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 183,
+  "zeroCostModels": 184,
   "metaCoverage": 349,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
@@ -38,8 +38,8 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
-    "updated": 455,
+    "added": 1,
+    "updated": 454,
     "previousTotal": 532
   }
 }
