@@ -9958,6 +9958,23 @@
     "category": "text"
   },
   {
+    "id": "gemini-nano-banana-2.1",
+    "name": "Nano Banana 2.1",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 65536,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "llama-3.3-70b-versatile",
     "name": "Llama 3.3 70B",
     "provider": "Groq",
