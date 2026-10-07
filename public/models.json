@@ -5498,6 +5498,26 @@
     "category": "text"
   },
   {
+    "id": "mistral-large-4-0",
+    "name": "mistral-large-4-0",
+    "provider": "Mistral AI",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 2,
+    "outputCostPer1M": 6,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [
+      "multilingual",
+      "code"
+    ],
+    "releaseDate": "2024-11-18",
+    "category": "text"
+  },
+  {
     "id": "gpt-4o-mini-audio-preview",
     "name": "gpt-4o-mini-audio-preview",
     "provider": "OpenAI",
