@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-11-10T11:16:09.200Z",
-  "totalModels": 822,
+  "updatedAt": "2026-11-10T18:42:13.150Z",
+  "totalModels": 823,
   "byCategory": {
-    "text": 783,
+    "text": 784,
     "image": 18,
     "video": 9,
     "tts": 11,
@@ -13,7 +13,7 @@
     "DeepSeek": 39,
     "Anthropic": 40,
     "Other": 256,
-    "Google": 90,
+    "Google": 91,
     "阿里巴巴": 87,
     "xAI": 27,
     "百度": 13,
@@ -29,7 +29,7 @@
     "Groq": 1,
     "Ollama": 2
   },
-  "zeroCostModels": 422,
+  "zeroCostModels": 423,
   "metaCoverage": 400,
   "latestVerifiedAt": "2026-05-02",
   "latestEnsures": {
@@ -38,8 +38,8 @@
     "verifiedAt": "2026-05-02"
   },
   "lastUpdate": {
-    "added": 0,
-    "updated": 698,
+    "added": 1,
+    "updated": 699,
     "previousTotal": 822
   }
 }
