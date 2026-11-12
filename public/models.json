@@ -13943,6 +13943,23 @@
     "category": "text"
   },
   {
+    "id": "ernie-5.5-flash-preview-free",
+    "name": "ernie-5.5-flash-preview-free",
+    "provider": "百度",
+    "apiProvider": "aihubmix",
+    "contextWindow": 128000,
+    "maxOutput": 16384,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "medium",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "gpt-realtime-1.5",
     "name": "GPT Realtime 1.5",
     "provider": "OpenAI",
