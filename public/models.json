@@ -15346,6 +15346,23 @@
     "category": "text"
   },
   {
+    "id": "gemini-4-neon",
+    "name": "Gemini 4 Neon",
+    "provider": "Google",
+    "apiProvider": "google",
+    "contextWindow": 1048576,
+    "maxOutput": 65536,
+    "inputCostPer1M": 0,
+    "outputCostPer1M": 0,
+    "speed": "fast",
+    "accuracy": "high",
+    "supportsStreaming": true,
+    "isLatest": false,
+    "tags": [],
+    "releaseDate": "",
+    "category": "text"
+  },
+  {
     "id": "llama-3.3-70b-versatile",
     "name": "Llama 3.3 70B",
     "provider": "Groq",
